@@ -3,7 +3,8 @@ import discord
 from discord_slash import SlashCommand
 import requests
 
-TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
+# TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
+TOKEN = "ODU2MDk3NzIwODc0Njk2NzI0.YM8FIg.zofuI468KD_GcZqtI2JayjIj6-M"
 
 client = discord.Client(intents=discord.Intents.all())
 slash = SlashCommand(client, sync_commands=True) # Declares slash commands through the client.
@@ -20,7 +21,9 @@ async def on_ready():
 async def rate(ctx):
     r = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
     last_rate = int(r["results"][0]["last_rate"]) / 10000
-    await ctx.send(f"`Last Trade Rate: ${last_rate}`")
+    embed = discord.Embed()
+    embed.add_field(name = f"Last Trade Rate: ${last_rate}", value = "Use /trades to check recent verified trades!!")
+    await ctx.send(embed=embed)
 
 
 @slash.slash(name="trades", description="Recent trades!!")
