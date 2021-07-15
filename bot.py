@@ -3,8 +3,7 @@ import discord
 from discord_slash import SlashCommand
 import requests
 
-# TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
-TOKEN = "ODU2MDk3NzIwODc0Njk2NzI0.YM8FIg.zofuI468KD_GcZqtI2JayjIj6-M"
+TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
 
 client = discord.Client(intents=discord.Intents.all())
 slash = SlashCommand(client, sync_commands=True) # Declares slash commands through the client.
