@@ -1,4 +1,5 @@
 import os
+import humanize
 import discord
 from discord_slash import SlashCommand
 import requests
@@ -6,7 +7,7 @@ import requests
 TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
 
 client = discord.Client(intents=discord.Intents.all())
-slash = SlashCommand(client, sync_commands=True) # Declares slash commands through the client.
+slash = SlashCommand(client, sync_commands=True)  # Declares slash commands through the client.
 
 @client.event
 async def on_ready():
@@ -47,5 +48,23 @@ async def help(ctx):
     embed.add_field(name="/rate", value="Last verified trade of TNBC!", inline=False)
     embed.add_field(name="/trades", value="Recent verified trades!", inline=False)
     await ctx.send(embed=embed, hidden=True)
+
+@slash.slash(name="stats", description="TNBC Price Statistics!!")
+async def stats(ctx):
+    r1 = requests.get("https://raw.githubusercontent.com/itsnikhil/tnb-analysis/master/web/js/static.json").json()
+    circulating_supply = r1["Total"]
+    humanized_supply = humanize.intcomma(circulating_supply)
+    
+    r2 = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
+    last_rate = int(r2["results"][0]["last_rate"]) / 10000
+
+    market_cap = int(circulating_supply * last_rate)
+    humanized_cap = humanize.intcomma(market_cap)
+    
+    embed=discord.Embed(title="TNBC Price Statistics")
+    embed.add_field(name="Circulating Supply", value=humanized_supply, inline=False)
+    embed.add_field(name="Last Trade Rate", value=f"${last_rate}", inline=False)
+    embed.add_field(name="Market Cap", value=f"${humanized_cap}", inline=False)
+    await ctx.send(embed=embed)
     
 client.run(TOKEN)
