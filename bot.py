@@ -67,4 +67,16 @@ async def stats(ctx):
     embed.add_field(name="Market Cap", value=f"${humanized_cap}", inline=False)
     await ctx.send(embed=embed)
     
+@client.event
+async def on_message(message):
+    #ignore bot's own message
+    if message.author.id == client.user.id:
+        return
+      
+    # Delete old messages by the user in #trade channel
+    if message.channel.id == int(os.environ.get('TRADE_CHANNEL_ID')):
+        async for oldMessage in message.channel.history():
+            if oldMessage.author == message.author and oldMessage.id != message.id:
+                await oldMessage.delete()
+    
 client.run(TOKEN)
