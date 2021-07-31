@@ -1,10 +1,12 @@
-import os
+import os, sys
 import humanize
 import discord
 from discord_slash import SlashCommand
 import requests
 
 TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
+TRADE_CHANNEL_ID = int(os.environ.get('TRADE_CHANNEL_ID'))
+MANAGER_ID = int(os.environ.get('MANAGER_ID'))
 
 client = discord.Client(intents=discord.Intents.all())
 slash = SlashCommand(client, sync_commands=True)  # Declares slash commands through the client.
@@ -84,9 +86,19 @@ async def on_message(message):
         return
 
     # Delete old messages by the user in #trade channel
-    if message.channel.id == int(os.environ.get('TRADE_CHANNEL_ID')):
+    if message.channel.id == TRADE_CHANNEL_ID:
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
+
+
+@slash.slash(name="kill", description="Kill the bot!!")
+async def kill(ctx):
+    if int(ctx.author.id) == MANAGER_ID:
+        print("Shutting Down the bot")
+        await ctx.send("Bot shut Down", hidden=True)
+        await client.close()
+    else:
+        print("nah")
 
 client.run(TOKEN)
