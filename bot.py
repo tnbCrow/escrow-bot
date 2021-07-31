@@ -19,7 +19,9 @@ async def on_ready():
 
 @slash.slash(name="rate", description="Last trade rate of TNBC.")
 async def rate(ctx):
+    # Gets the last trade rate through tnbcrow API
     r = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
+    # parse the rate to decimal since the rates are 10^4 of the actual rate
     last_rate = int(r["results"][0]["last_rate"]) / 10000
     embed = discord.Embed()
     embed.add_field(name = f"Last Trade Rate: ${last_rate}", value = "Use /trades to check recent verified trades!!")
@@ -28,15 +30,18 @@ async def rate(ctx):
 
 @slash.slash(name="trades", description="Recent trades!!")
 async def trades(ctx):
+    # gets the recent trades using the tnbcrow API
     r = requests.get('https://tnbcrow.pythonanywhere.com/recent-trades').json()
     trades = r["results"]
     cleaned_trades = []
     cleaned_trades.append("| Amount | Rate |")
 
+    # create a list of trade post and append it to cleaned_trades list
     for trade in trades:
         data = f"| {trade['amount']} | ${trade['rate']/10000} |"
         cleaned_trades.append(data)
-        
+
+    # convert the list into string
     joined_string = "\n".join(cleaned_trades)
     
     await ctx.send(f"```{joined_string} ```", hidden=True)
@@ -45,22 +50,27 @@ async def trades(ctx):
 @slash.slash(name="help", description="Crow Bot help!!")
 async def help(ctx):
     embed=discord.Embed(title="Commands", color=discord.Color.blue())
-    embed.add_field(name="/rate", value="Last verified trade of TNBC!", inline=False)
-    embed.add_field(name="/trades", value="Recent verified trades!", inline=False)
+    embed.add_field(name="/rate", value="Last verified trade of TNBC!!", inline=False)
+    embed.add_field(name="/trades", value="Recent verified trades!!", inline=False)
+    embed.add_field(name="/stats", value="TNBC Price Statistics!!", inline=False)
     await ctx.send(embed=embed, hidden=True)
 
 @slash.slash(name="stats", description="TNBC Price Statistics!!")
 async def stats(ctx):
+    # get the total circulating supply through tnb-analytics github
     r1 = requests.get("https://raw.githubusercontent.com/itsnikhil/tnb-analysis/master/web/js/static.json").json()
     circulating_supply = r1["Total"]
     humanized_supply = humanize.intcomma(circulating_supply)
-    
+
+    # get the last trade rate using tnbcrow API
     r2 = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
     last_rate = int(r2["results"][0]["last_rate"]) / 10000
 
+    # calculate the market cap
     market_cap = int(circulating_supply * last_rate)
     humanized_cap = humanize.intcomma(market_cap)
-    
+
+    # create an embed and show it to users
     embed=discord.Embed(title="TNBC Price Statistics")
     embed.add_field(name="Circulating Supply", value=humanized_supply, inline=False)
     embed.add_field(name="Last Trade Rate", value=f"${last_rate}", inline=False)
@@ -72,11 +82,11 @@ async def on_message(message):
     #ignore bot's own message
     if message.author.id == client.user.id:
         return
-      
+
     # Delete old messages by the user in #trade channel
     if message.channel.id == int(os.environ.get('TRADE_CHANNEL_ID')):
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
-    
+
 client.run(TOKEN)
