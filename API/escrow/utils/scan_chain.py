@@ -108,5 +108,3 @@ def match_transaction():
         else:
             txs.transaction_status = Transaction.UNIDENTIFIED
             txs.save()
-
-match_transaction()
