@@ -4,6 +4,8 @@ from django.db import models
 
 from .user import User
 
+from ..utils.scan_chain import scan_chain
+
 
 class Escrow(models.Model):
 
@@ -28,6 +30,9 @@ class Escrow(models.Model):
     successor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="successor")
 
     status = models.CharField(max_length=255, choices=status_choices)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Amount: {self.amount}; Status: {self.status}"

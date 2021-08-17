@@ -109,3 +109,7 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+BANK_IP = '13.233.77.254'
+ACCOUNT_NUMBER = '7594d6d5ea7cb34d6e4ea09e161532bc41f171d4f0af6c189d8f05637e7dfe76'
+TNBC_TRANSACTION_FEE = 2
