@@ -16,7 +16,7 @@ TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?accoun
 def check_confirmation():
 
     waiting_confirmations_txs = Transaction.objects.filter(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                                                 created_at__gt=timezone.now() - timedelta(hours=1))
+                                                           created_at__gt=timezone.now() - timedelta(hours=1))
 
     for txs in waiting_confirmations_txs:
 
@@ -98,11 +98,13 @@ def match_transaction():
     scan_chain()
 
     confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.CONFIRMED,
-                                               transaction_status=Transaction.NEW)
-    
+                                               transaction_status=Transaction.NEW,
+                                               direction=Transaction.INCOMING)
+
     for txs in confirmed_txs:
-        
+
         if User.objects.filter(memo=txs.memo).exists():
+            User.objects.filter(memo=txs.memo).update(balance=F('balance') + txs.amount)
             txs.transaction_status = Transaction.IDENTIFIED
             txs.save()
         else:

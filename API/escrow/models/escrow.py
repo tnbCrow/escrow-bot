@@ -4,8 +4,6 @@ from django.db import models
 
 from .user import User
 
-from ..utils.scan_chain import scan_chain
-
 
 class Escrow(models.Model):
 
