@@ -8,6 +8,7 @@ from django.db.models import F
 from ..models.scan_tracker import ScanTracker
 from ..models.transaction import Transaction
 from ..models.statistic import Statistic
+from ..models.user import User
 
 TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
 
@@ -90,3 +91,22 @@ def scan_chain():
     scan_tracker.save()
 
     check_confirmation()
+
+
+def match_transaction():
+
+    scan_chain()
+
+    confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.CONFIRMED,
+                                               transaction_status=Transaction.NEW)
+    
+    for txs in confirmed_txs:
+        
+        if User.objects.filter(memo=txs.memo).exists():
+            txs.transaction_status = Transaction.IDENTIFIED
+            txs.save()
+        else:
+            txs.transaction_status = Transaction.UNIDENTIFIED
+            txs.save()
+
+match_transaction()
