@@ -116,7 +116,7 @@ async def balance(ctx):
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
     embed = discord.Embed()
-    embed.add_field(name='Withdrawl Address', value="22d0f0047b572a6acb6615f7aae646b0b96ddc58bfd54ed2775f885baeba3d6a", inline=False)
+    embed.add_field(name='Withdrawl Address', value=obj.withdrawl_address, inline=False)
     embed.add_field(name='Balance', value=obj.balance)
     embed.add_field(name='Locked Amount', value=obj.locked)
     embed.add_field(name='Available Balance', value=obj.get_available_balance())
