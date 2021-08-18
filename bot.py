@@ -5,6 +5,7 @@ import django
 import humanize
 import discord
 from discord_slash import SlashCommand
+from discord_slash.utils.manage_commands import create_option
 
 # Django Setup on bot
 sys.path.append(os.getcwd() + '/API')
@@ -37,8 +38,10 @@ async def on_ready():
 async def rate(ctx):
     # Gets the last trade rate through tnbcrow API
     r = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
+
     # parse the rate to decimal since the rates are 10^4 of the actual rate
     last_rate = int(r["results"][0]["last_rate"]) / 10000
+
     embed = discord.Embed()
     embed.add_field(name = f"Last Trade Rate: ${last_rate}", value = "Use /trades to check recent verified trades!!")
     await ctx.send(embed=embed)
@@ -133,6 +136,33 @@ async def deposit(ctx):
     embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
     embed.add_field(name='MEMO', value=obj.memo, inline=False)
     embed.add_field(name="Sent?", value="Use /balance command to check the deposit!!")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="setwithdrawladdress",
+             description="Set new withdrawl address!!",
+             options=[
+                 create_option(
+                    name="address",
+                    description="Enter your withdrawl address.",
+                    option_type=3,
+                    required=True
+                    )
+                ])
+async def set_withdrawl_address(ctx, address: str):
+
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    if len(address) == 64:
+        obj.withdrawl_address = address
+        obj.save()
+        embed = discord.Embed()
+        embed.add_field(name='Success!!', value=f"Successfully set {address} as your withdrawl address!!")
+
+    else:
+        embed = discord.Embed()
+        embed.add_field(name='Error!!', value="Please enter a valid TNBC account number!!")
 
     await ctx.send(embed=embed, hidden=True)
 
