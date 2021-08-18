@@ -14,7 +14,9 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 from django.conf import settings
 from escrow.models.user import User
+from escrow.models.transaction import Transaction
 from escrow.utils.scan_chain import match_transaction
+from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 # Environment Variables
 TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
@@ -28,9 +30,9 @@ slash = SlashCommand(client, sync_commands=True)
 
 @client.event
 async def on_ready():
-    print ("------------------------------------")
-    print(f"tnbCrow Bot Running:")
-    print ("------------------------------------")
+    print("------------------------------------")
+    print("tnbCrow Bot Running:")
+    print("------------------------------------")
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="TNBC grow"))
 
 
@@ -43,7 +45,7 @@ async def rate(ctx):
     last_rate = int(r["results"][0]["last_rate"]) / 10000
 
     embed = discord.Embed()
-    embed.add_field(name = f"Last Trade Rate: ${last_rate}", value = "Use /trades to check recent verified trades!!")
+    embed.add_field(name=f"Last Trade Rate: ${last_rate}", value="Use /trades to check recent verified trades!!")
     await ctx.send(embed=embed)
 
 
@@ -62,13 +64,13 @@ async def trades(ctx):
 
     # convert the list into string
     joined_string = "\n".join(cleaned_trades)
-    
+
     await ctx.send(f"```{joined_string} ```", hidden=True)
 
 
 @slash.slash(name="help", description="Crow Bot help!!")
 async def help(ctx):
-    embed=discord.Embed(title="Commands", color=discord.Color.blue())
+    embed = discord.Embed(title="Commands", color=discord.Color.blue())
     embed.add_field(name="/rate", value="Last verified trade of TNBC!!", inline=False)
     embed.add_field(name="/trades", value="Recent verified trades!!", inline=False)
     embed.add_field(name="/stats", value="TNBC Price Statistics!!", inline=False)
@@ -91,7 +93,7 @@ async def stats(ctx):
     humanized_cap = humanize.intcomma(market_cap)
 
     # create an embed and show it to users
-    embed=discord.Embed(title="TNBC Price Statistics")
+    embed = discord.Embed(title="TNBC Price Statistics")
     embed.add_field(name="Circulating Supply", value=humanized_supply, inline=False)
     embed.add_field(name="Last Trade Rate", value=f"${last_rate}", inline=False)
     embed.add_field(name="Market Cap", value=f"${humanized_cap}", inline=False)
@@ -100,7 +102,7 @@ async def stats(ctx):
 
 @client.event
 async def on_message(message):
-    #ignore bot's own message
+    # ignore bot's own message
     if message.author.id == client.user.id:
         return
 
@@ -144,11 +146,11 @@ async def deposit(ctx):
              description="Set new withdrawal address!!",
              options=[
                  create_option(
-                    name="address",
-                    description="Enter your withdrawal address.",
-                    option_type=3,
-                    required=True
-                    )
+                     name="address",
+                     description="Enter your withdrawal address.",
+                     option_type=3,
+                     required=True
+                     )
                 ])
 async def set_withdrawal_address(ctx, address: str):
 
@@ -163,6 +165,55 @@ async def set_withdrawal_address(ctx, address: str):
     else:
         embed = discord.Embed()
         embed.add_field(name='Error!!', value="Please enter a valid TNBC account number!!")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="withdraw",
+             description="Withdraw TNBC into your account!!",
+             options=[
+                 create_option(
+                     name="amount",
+                     description="Enter the amount to withdraw.",
+                     option_type=4,
+                     required=True
+                    )
+                ])
+async def withdraw(ctx, amount: int):
+
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    if obj.withdrawal_address:
+
+        fee = estimate_fee()
+
+        if obj.get_available_balance() < amount + fee:
+            embed = discord.Embed(title="Inadequate Funds!!",
+                                  description=f"You only have {obj.get_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit` to deposit TNBC!!")
+
+        else:
+            block_response, fee = withdraw_tnbc(obj.withdrawal_address, amount, obj.memo)
+
+            if block_response.status_code == 201:
+
+                Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                           transaction_status=Transaction.IDENTIFIED,
+                                           direction=Transaction.OUTGOING,
+                                           account_number=obj.withdrawal_address,
+                                           amount=amount,
+                                           fee=fee,
+                                           signature=block_response.json()['signature'],
+                                           block=block_response.json()['id'],
+                                           memo=obj.memo)
+                obj.balance -= amount + fee
+                obj.save()
+                embed = discord.Embed(title="Coins Withdrawn!",
+                                      description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/balance` to check your new balance.")
+            else:
+                embed = discord.Embed(title="Error!",
+                                      description="Please try again later!!")
+    else:
+        embed = discord.Embed(title="No withdrawal address set!!", description="Use `/setwithdrawaladdress` to set withdrawl address!!")
 
     await ctx.send(embed=embed, hidden=True)
 

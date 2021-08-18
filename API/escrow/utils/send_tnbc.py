@@ -65,3 +65,12 @@ def withdraw_tnbc(recipient, amount, memo):
     r = requests.request("POST", f'http://{settings.BANK_IP}/blocks', headers=headers, data=data)
 
     return r, fee
+
+
+def estimate_fee():
+
+    bank_config = requests.get(f'http://{settings.BANK_IP}/config?format=json').json()
+
+    fee = int(bank_config['default_transaction_fee']) + int(bank_config['primary_validator']['default_transaction_fee'])
+
+    return fee
