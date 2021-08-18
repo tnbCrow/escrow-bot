@@ -1,15 +1,29 @@
-import os, sys
+import os
+import sys
+import requests
+import django
 import humanize
 import discord
 from discord_slash import SlashCommand
-import requests
 
+# Django Setup on bot
+sys.path.append(os.getcwd() + '/API')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+django.setup()
+from django.conf import settings
+from escrow.models.user import User
+from escrow.utils.scan_chain import match_transaction
+
+# Environment Variables
 TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
 TRADE_CHANNEL_ID = int(os.environ.get('TRADE_CHANNEL_ID'))
 MANAGER_ID = int(os.environ.get('MANAGER_ID'))
 
+# Initialize the Slash commands
 client = discord.Client(intents=discord.Intents.all())
-slash = SlashCommand(client, sync_commands=True)  # Declares slash commands through the client.
+slash = SlashCommand(client, sync_commands=True)
+
 
 @client.event
 async def on_ready():
@@ -17,7 +31,7 @@ async def on_ready():
     print(f"tnbCrow Bot Running:")
     print ("------------------------------------")
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="TNBC grow"))
-    
+
 
 @slash.slash(name="rate", description="Last trade rate of TNBC.")
 async def rate(ctx):
@@ -57,6 +71,7 @@ async def help(ctx):
     embed.add_field(name="/stats", value="TNBC Price Statistics!!", inline=False)
     await ctx.send(embed=embed, hidden=True)
 
+
 @slash.slash(name="stats", description="TNBC Price Statistics!!")
 async def stats(ctx):
     # get the total circulating supply through tnb-analytics github
@@ -78,7 +93,8 @@ async def stats(ctx):
     embed.add_field(name="Last Trade Rate", value=f"${last_rate}", inline=False)
     embed.add_field(name="Market Cap", value=f"${humanized_cap}", inline=False)
     await ctx.send(embed=embed)
-    
+
+
 @client.event
 async def on_message(message):
     #ignore bot's own message
@@ -90,6 +106,35 @@ async def on_message(message):
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
+
+
+@slash.slash(name="balance", description="Check User Balance!!")
+async def balance(ctx):
+
+    match_transaction()
+
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    embed = discord.Embed()
+    embed.add_field(name='Withdrawl Address', value="22d0f0047b572a6acb6615f7aae646b0b96ddc58bfd54ed2775f885baeba3d6a", inline=False)
+    embed.add_field(name='Balance', value=obj.balance)
+    embed.add_field(name='Locked Amount', value=obj.locked)
+    embed.add_field(name='Available Balance', value=obj.get_available_balance())
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="deposit", description="Check User Balance!!")
+async def deposit(ctx):
+
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    embed = discord.Embed(title="Send TNBC to the address with memo!!")
+    embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
+    embed.add_field(name='MEMO', value=obj.memo, inline=False)
+    embed.add_field(name="Sent?", value="Use /balance command to check the deposit!!")
+
+    await ctx.send(embed=embed, hidden=True)
 
 
 @slash.slash(name="kill", description="Kill the bot!!")
