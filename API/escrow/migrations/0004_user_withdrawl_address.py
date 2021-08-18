@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='user',
-            name='withdrawl_address',
+            name='withdrawal_address',
             field=models.CharField(blank=True, max_length=64, null=True),
         ),
     ]

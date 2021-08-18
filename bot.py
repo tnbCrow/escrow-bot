@@ -119,7 +119,7 @@ async def balance(ctx):
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
     embed = discord.Embed()
-    embed.add_field(name='Withdrawl Address', value=obj.withdrawl_address, inline=False)
+    embed.add_field(name='Withdrawal Address', value=obj.withdrawal_address, inline=False)
     embed.add_field(name='Balance', value=obj.balance)
     embed.add_field(name='Locked Amount', value=obj.locked)
     embed.add_field(name='Available Balance', value=obj.get_available_balance())
@@ -127,7 +127,7 @@ async def balance(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="deposit", description="Check User Balance!!")
+@slash.slash(name="deposit", description="Deposit TNBC into your crow account!!")
 async def deposit(ctx):
 
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -140,25 +140,25 @@ async def deposit(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="setwithdrawladdress",
-             description="Set new withdrawl address!!",
+@slash.slash(name="setwithdrawaladdress",
+             description="Set new withdrawal address!!",
              options=[
                  create_option(
                     name="address",
-                    description="Enter your withdrawl address.",
+                    description="Enter your withdrawal address.",
                     option_type=3,
                     required=True
                     )
                 ])
-async def set_withdrawl_address(ctx, address: str):
+async def set_withdrawal_address(ctx, address: str):
 
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
     if len(address) == 64:
-        obj.withdrawl_address = address
+        obj.withdrawal_address = address
         obj.save()
         embed = discord.Embed()
-        embed.add_field(name='Success!!', value=f"Successfully set {address} as your withdrawl address!!")
+        embed.add_field(name='Success!!', value=f"Successfully set {address} as your withdrawal address!!")
 
     else:
         embed = discord.Embed()

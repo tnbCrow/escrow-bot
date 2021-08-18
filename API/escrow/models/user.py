@@ -11,7 +11,7 @@ class User(models.Model):
     balance = models.IntegerField(default=0)
     locked = models.IntegerField(default=0)
     memo = models.CharField(max_length=255, unique=True)
-    withdrawl_address = models.CharField(max_length=64, blank=True, null=True)
+    withdrawal_address = models.CharField(max_length=64, blank=True, null=True)
 
     def get_available_balance(self):
         return self.balance - self.locked
