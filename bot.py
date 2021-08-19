@@ -271,6 +271,8 @@ async def escrow(ctx, amount:int, user):
                 ])
 async def status(ctx, escrow_id:str):
 
+    user, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
     if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
 
@@ -287,6 +289,29 @@ async def status(ctx, escrow_id:str):
 
     else:
         embed = discord.Embed(title="Error, 404 Not Found!!",
+                                  description="")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="my_escrow", description="All your active escrows!!")
+async def my_escrow(ctx):
+
+    user, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.OPEN)).exists():
+        escrows = Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.OPEN))
+
+        embed = discord.Embed()
+
+        for escrow in escrows:
+
+            embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{escrow.amount}")
+            embed.add_field(name='Status', value=f"{escrow.status}")
+
+    else:
+        embed = discord.Embed(title="No active escrows found!!",
                                   description="")
 
     await ctx.send(embed=embed, hidden=True)
