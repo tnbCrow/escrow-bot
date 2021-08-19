@@ -30,6 +30,9 @@ class Escrow(models.Model):
 
     status = models.CharField(max_length=255, choices=status_choices)
 
+    initiator_cancelled = models.BooleanField(default=False)
+    successor_cancelled = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
