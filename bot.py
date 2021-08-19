@@ -439,6 +439,58 @@ async def agent_cancel(ctx, escrow_id:str):
     await ctx.send(embed=embed, hidden=True)
 
 
+@slash.slash(name="agent_release",
+             description="Cancel escrow!!",
+             options=[
+                 create_option(
+                     name="escrow_id",
+                     description="Enter escrow id you want to cancel!",
+                     option_type=3,
+                     required=True
+                    ),
+                    create_option(
+                     name="user",
+                     description="Enter user to release the funds to.",
+                     option_type=6,
+                     required=True
+                    )
+                ])
+async def agent_release(ctx, escrow_id:str, user):
+    
+    if Agent.objects.filter(discord_id=ctx.author.id).exists():
+
+        if Escrow.objects.filter(Q(uuid_hex=escrow_id),
+                                 Q(status=Escrow.OPEN),
+                                 Q(initiator__discord_id=user.id) | Q(successor__discord_id=user.id)).exists():
+
+            escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+            escrow_obj.status = Escrow.ADMIN_SETTLED
+
+            if user.id == escrow_obj.initiator.discord_id:
+                escrow_obj.initiator.locked -= escrow_obj.amount
+                escrow_obj.initiator.save()
+            else:
+                escrow_obj.initiator.locked -= escrow_obj.amount
+                escrow_obj.initiator.balance -= escrow_obj.amount
+                escrow_obj.successor.balance += escrow_obj.amount
+                escrow_obj.initiator.save()
+                escrow_obj.successor.save()
+
+            embed = discord.Embed(title="Success!!", description="")
+            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+            embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+        else:
+            embed = discord.Embed()
+            embed.add_field(name='Error', value="Either there's no open escrow or the user doesnot exist for the escrow", inline=False)
+    else:
+        embed = discord.Embed(title="Nope, you're not allowed to do this!!", description="")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+
 @slash.slash(name="kill", description="Kill the bot!!")
 async def kill(ctx):
     if int(ctx.author.id) == MANAGER_ID:
