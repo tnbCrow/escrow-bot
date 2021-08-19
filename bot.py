@@ -312,7 +312,41 @@ async def my_escrow(ctx):
 
     else:
         embed = discord.Embed(title="No active escrows found!!",
-                                  description="")
+                              description="")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="release",
+             description="Release escrow to successor!!",
+             options=[
+                 create_option(
+                     name="escrow_id",
+                     description="Enter escrow id you want to check the status of!",
+                     option_type=3,
+                     required=True
+                    )
+                ])
+async def release(ctx, escrow_id:str):
+    if Escrow.objects.filter(uuid_hex=escrow_id, initiator__discord_id=ctx.author.id, status=Escrow.OPEN).exists():
+
+        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+
+        escrow_obj.status = Escrow.COMPLETED
+        escrow_obj.initiator.balance -= escrow_obj.amount
+        escrow_obj.initiator.locked -= escrow_obj.amount
+        escrow_obj.successor.balance += escrow_obj.amount
+        escrow_obj.save()
+        escrow_obj.initiator.save()
+        escrow_obj.successor.save()
+
+        embed = discord.Embed(title="Success!!", description="")
+        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+        embed.add_field(name='Status', value=f"{escrow_obj.status}")
+    else:
+        embed = discord.Embed(title="Error!!",
+                              description="You do not have permission to perform the action.")
 
     await ctx.send(embed=embed, hidden=True)
 
