@@ -13,6 +13,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 from django.conf import settings
+from django.db.models import Q
 from escrow.models.user import User
 from escrow.models.escrow import Escrow
 from escrow.models.transaction import Transaction
@@ -252,9 +253,41 @@ async def escrow(ctx, amount:int, user):
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
         embed.add_field(name='Amount', value=f"{amount}")
         embed.add_field(name='Initiator', value=f"{ctx.author}")
-        embed.add_field(name='Successor', value=f"{ctx.author}")
+        embed.add_field(name='Successor', value=f"{user}")
         embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
-        # successor = await client.fetch_user(successor.discord_id)
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="status",
+             description="Escrow TNBC with another user!!",
+             options=[
+                 create_option(
+                     name="escrow_id",
+                     description="Enter escrow id you want to check the status of!",
+                     option_type=3,
+                     required=True
+                    )
+                ])
+async def status(ctx, escrow_id:str):
+
+    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
+        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+
+        initiator = await client.fetch_user(escrow_obj.initiator.discord_id)
+        successor = await client.fetch_user(escrow_obj.successor.discord_id)
+        
+        embed = discord.Embed(title="Success!!",
+                              description="")
+        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+        embed.add_field(name='Initiator', value=f"{initiator}")
+        embed.add_field(name='Successor', value=f"{successor}")
+        embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
+
+    else:
+        embed = discord.Embed(title="Error, 404 Not Found!!",
+                                  description="")
 
     await ctx.send(embed=embed, hidden=True)
 

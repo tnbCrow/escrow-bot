@@ -22,7 +22,7 @@ class Escrow(models.Model):
     ]
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-    uuid_hex = models.CharField(max_length=255)
+    uuid_hex = models.CharField(max_length=255, unique=True)
 
     amount = models.IntegerField()
     initiator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="initiator")
