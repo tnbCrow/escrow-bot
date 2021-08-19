@@ -115,7 +115,7 @@ async def on_message(message):
                 await oldMessage.delete()
 
 
-@slash.slash(name="balance", description="Check User Balance!!")
+@slash.slash(name="user_balance", description="Check User Balance!!")
 async def balance(ctx):
 
     match_transaction()
@@ -131,7 +131,7 @@ async def balance(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="deposit", description="Deposit TNBC into your crow account!!")
+@slash.slash(name="user_deposit", description="Deposit TNBC into your crow account!!")
 async def deposit(ctx):
 
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -144,7 +144,7 @@ async def deposit(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="setwithdrawaladdress",
+@slash.slash(name="user_setwithdrawaladdress",
              description="Set new withdrawal address!!",
              options=[
                  create_option(
@@ -171,7 +171,7 @@ async def set_withdrawal_address(ctx, address: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="withdraw",
+@slash.slash(name="user_withdraw",
              description="Withdraw TNBC into your account!!",
              options=[
                  create_option(
@@ -220,7 +220,7 @@ async def withdraw(ctx, amount: int):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow",
+@slash.slash(name="escrow_add",
              description="Escrow TNBC with another user!!",
              options=[
                  create_option(
@@ -259,7 +259,7 @@ async def escrow(ctx, amount:int, user):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="status",
+@slash.slash(name="escrow_status",
              description="Escrow TNBC with another user!!",
              options=[
                  create_option(
@@ -294,7 +294,7 @@ async def status(ctx, escrow_id:str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="my_escrow", description="All your active escrows!!")
+@slash.slash(name="escrow_all", description="All your active escrows!!")
 async def my_escrow(ctx):
 
     user, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -317,7 +317,7 @@ async def my_escrow(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="release",
+@slash.slash(name="escrow_release",
              description="Release escrow to successor!!",
              options=[
                  create_option(
