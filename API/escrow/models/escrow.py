@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 
 from .user import User
+from .agent import Agent
 
 
 class Escrow(models.Model):
@@ -32,6 +33,7 @@ class Escrow(models.Model):
 
     initiator_cancelled = models.BooleanField(default=False)
     successor_cancelled = models.BooleanField(default=False)
+    agent = models.ForeignKey(Agent, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

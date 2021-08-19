@@ -16,6 +16,7 @@ from django.conf import settings
 from django.db.models import Q
 from escrow.models.user import User
 from escrow.models.escrow import Escrow
+from escrow.models.agent import Agent
 from escrow.models.transaction import Transaction
 from escrow.utils.scan_chain import match_transaction
 from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
@@ -407,11 +408,42 @@ async def escrow_cancel(ctx, escrow_id:str):
     await ctx.send(embed=embed, hidden=True)
 
 
+@slash.slash(name="agent_cancel",
+             description="Cancel escrow!!",
+             options=[
+                 create_option(
+                     name="escrow_id",
+                     description="Enter escrow id you want to cancel!",
+                     option_type=3,
+                     required=True
+                    )
+                ])
+async def agent_cancel(ctx, escrow_id:str):
+
+    if Agent.objects.filter(discord_id=ctx.author.id).exists():
+        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+        escrow_obj.status = Escrow.ADMIN_CANCELLED
+        escrow_obj.agent = Agent.objects.get(discord_id=ctx.author.id)
+        escrow_obj.initiator.locked -= escrow_obj.amount
+        escrow_obj.initiator.save()
+        escrow_obj.save()
+
+        embed = discord.Embed(title="Success!!", description="")
+        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+        embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+    else:
+        embed = discord.Embed(title="Nope, you're not allowed to do this!!", description="")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
 @slash.slash(name="kill", description="Kill the bot!!")
 async def kill(ctx):
     if int(ctx.author.id) == MANAGER_ID:
         print("Shutting Down the bot")
-        await ctx.send("Bot shut Down", hidden=True)
+        await ctx.send("Bot Shut Down", hidden=True)
         await client.close()
     else:
         print("nah")
