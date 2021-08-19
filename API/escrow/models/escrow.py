@@ -22,6 +22,7 @@ class Escrow(models.Model):
     ]
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    uuid_hex = models.CharField(max_length=255)
 
     amount = models.IntegerField()
     initiator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="initiator")
@@ -34,3 +35,25 @@ class Escrow(models.Model):
 
     def __str__(self):
         return f"Amount: {self.amount}; Status: {self.status}"
+
+
+# generate a random memo and check if its already taken.
+# If taken, generate another memo again until we find a valid memo
+def generate_hex_uuid(instance):
+
+    while True:
+
+        uuid_hex = f'{uuid.uuid4().hex}'
+
+        if not Escrow.objects.filter(uuid_hex=uuid_hex).exists():
+            return uuid_hex
+
+
+def pre_save_post_receiver(sender, instance, *args, **kwargs):
+
+    if not instance.uuid_hex:
+        instance.uuid_hex = generate_hex_uuid(instance)
+
+
+# save the memo before the User model is saved with the unique memo
+models.signals.pre_save.connect(pre_save_post_receiver, sender=Escrow)

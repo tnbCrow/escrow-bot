@@ -14,6 +14,7 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 from django.conf import settings
 from escrow.models.user import User
+from escrow.models.escrow import Escrow
 from escrow.models.transaction import Transaction
 from escrow.utils.scan_chain import match_transaction
 from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
@@ -214,6 +215,46 @@ async def withdraw(ctx, amount: int):
                                       description="Please try again later!!")
     else:
         embed = discord.Embed(title="No withdrawal address set!!", description="Use `/setwithdrawaladdress` to set withdrawl address!!")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="escrow",
+             description="Escrow TNBC with another user!!",
+             options=[
+                 create_option(
+                     name="amount",
+                     description="Enter TNBC amount you want to escrow.",
+                     option_type=4,
+                     required=True
+                    ),
+                 create_option(
+                     name="user",
+                     description="Enter your escrow partner.",
+                     option_type=6,
+                     required=True
+                    )
+                ])
+async def escrow(ctx, amount:int, user):
+
+    initiator, created = User.objects.get_or_create(discord_id=ctx.author.id)
+    successor, created = User.objects.get_or_create(discord_id=user.id)
+
+    if initiator.get_available_balance() < amount:
+        embed = discord.Embed(title="Inadequate Funds!!",
+                                  description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/deposit` to deposit TNBC!!")
+    else:
+        escrow_obj = Escrow.objects.create(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
+        initiator.locked += amount
+        initiator.save()
+        embed = discord.Embed(title="Success!!",
+                              description="")
+        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+        embed.add_field(name='Amount', value=f"{amount}")
+        embed.add_field(name='Initiator', value=f"{ctx.author}")
+        embed.add_field(name='Successor', value=f"{ctx.author}")
+        embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
+        # successor = await client.fetch_user(successor.discord_id)
 
     await ctx.send(embed=embed, hidden=True)
 
