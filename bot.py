@@ -243,20 +243,25 @@ async def escrow_add(ctx, amount:int, user):
     initiator, created = User.objects.get_or_create(discord_id=ctx.author.id)
     successor, created = User.objects.get_or_create(discord_id=user.id)
 
-    if initiator.get_available_balance() < amount:
-        embed = discord.Embed(title="Inadequate Funds!!",
-                                  description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/deposit` to deposit TNBC!!")
+    if amount < settings.MIN_TNBC_ALLOWED:
+        embed = discord.Embed(title="Error!!", description="You can only escrow more than 100 TNBC.")
+
     else:
-        escrow_obj = Escrow.objects.create(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
-        initiator.locked += amount
-        initiator.save()
-        embed = discord.Embed(title="Success!!",
-                              description="")
-        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-        embed.add_field(name='Amount', value=f"{amount}")
-        embed.add_field(name='Initiator', value=f"{ctx.author}")
-        embed.add_field(name='Successor', value=f"{user}")
-        embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
+
+        if initiator.get_available_balance() < amount:
+            embed = discord.Embed(title="Inadequate Funds!!",
+                                    description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/deposit` to deposit TNBC!!")
+        else:
+            escrow_obj = Escrow.objects.create(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
+            initiator.locked += amount
+            initiator.save()
+            embed = discord.Embed(title="Success!!",
+                                description="")
+            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{amount}")
+            embed.add_field(name='Initiator', value=f"{ctx.author}")
+            embed.add_field(name='Successor', value=f"{user}")
+            embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -272,8 +277,6 @@ async def escrow_add(ctx, amount:int, user):
                     )
                 ])
 async def escrow_status(ctx, escrow_id:str):
-
-    user, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
     if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
@@ -298,8 +301,6 @@ async def escrow_status(ctx, escrow_id:str):
 
 @slash.slash(name="escrow_all", description="All your active escrows!!")
 async def escrow_all(ctx):
-
-    user, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
     if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.OPEN)).exists():
         escrows = Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.OPEN))
@@ -337,7 +338,7 @@ async def escrow_release(ctx, escrow_id:str):
         escrow_obj.status = Escrow.COMPLETED
         escrow_obj.initiator.balance -= escrow_obj.amount
         escrow_obj.initiator.locked -= escrow_obj.amount
-        escrow_obj.successor.balance += escrow_obj.amount
+        escrow_obj.successor.balance += int(escrow_obj.amount * (100 - settings.CROW_BOT_FEE) / 100)
         escrow_obj.save()
         escrow_obj.initiator.save()
         escrow_obj.successor.save()
@@ -473,7 +474,7 @@ async def agent_release(ctx, escrow_id:str, user):
             else:
                 escrow_obj.initiator.locked -= escrow_obj.amount
                 escrow_obj.initiator.balance -= escrow_obj.amount
-                escrow_obj.successor.balance += escrow_obj.amount
+                escrow_obj.successor.balance += int(escrow_obj.amount * (100 - settings.CROW_BOT_FEE) / 100)
                 escrow_obj.initiator.save()
                 escrow_obj.successor.save()
 
@@ -491,7 +492,6 @@ async def agent_release(ctx, escrow_id:str, user):
     await ctx.send(embed=embed, hidden=True)
 
 
-
 @slash.slash(name="kill", description="Kill the bot!!")
 async def kill(ctx):
     if int(ctx.author.id) == MANAGER_ID:
@@ -499,6 +499,6 @@ async def kill(ctx):
         await ctx.send("Bot Shut Down", hidden=True)
         await client.close()
     else:
-        print("nah")
+        await ctx.send("#DonotKillCrowBot", hidden=True)
 
 client.run(TOKEN)
