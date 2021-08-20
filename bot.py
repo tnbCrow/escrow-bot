@@ -6,6 +6,7 @@ import humanize
 import discord
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option
+from datetime import datetime, timedelta
 
 # Django Setup on bot
 sys.path.append(os.getcwd() + '/API')
@@ -13,6 +14,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 from django.conf import settings
+from django.utils import timezone
 from django.db.models import Q
 from escrow.models.user import User
 from escrow.models.escrow import Escrow
@@ -56,19 +58,18 @@ async def rate(ctx):
 async def trades(ctx):
     # gets the recent trades using the tnbcrow API
     r = requests.get('https://tnbcrow.pythonanywhere.com/recent-trades').json()
+
     trades = r["results"]
-    cleaned_trades = []
-    cleaned_trades.append("| Amount | Rate |")
 
-    # create a list of trade post and append it to cleaned_trades list
+    embed = discord.Embed(title="tnbCrow recent OTC trades!!")
+
     for trade in trades:
-        data = f"| {trade['amount']} | ${trade['rate']/10000} |"
-        cleaned_trades.append(data)
+        humanized_amount = humanize.intcomma(trade['amount'])
+        transaction_time = datetime.strptime(trade['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        humanized_date = humanize.naturaltime(transaction_time)
+        embed.add_field(name="\u200b", value=f"{humanized_amount} TNBC at ${trade['rate']/10000} - {humanized_date}", inline=False)
 
-    # convert the list into string
-    joined_string = "\n".join(cleaned_trades)
-
-    await ctx.send(f"```{joined_string} ```", hidden=True)
+    await ctx.send(embed=embed, hidden=True)
 
 
 @slash.slash(name="help", description="Crow Bot help!!")
