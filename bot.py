@@ -222,7 +222,7 @@ async def user_withdraw(ctx, amount: int):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_add",
+@slash.slash(name="escrow_new",
              description="Escrow TNBC with another user!!",
              options=[
                  create_option(
@@ -238,7 +238,7 @@ async def user_withdraw(ctx, amount: int):
                      required=True
                     )
                 ])
-async def escrow_add(ctx, amount:int, user):
+async def escrow_new(ctx, amount:int, user):
 
     initiator, created = User.objects.get_or_create(discord_id=ctx.author.id)
     successor, created = User.objects.get_or_create(discord_id=user.id)
