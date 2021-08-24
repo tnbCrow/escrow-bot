@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db.models import F
 
 from ..models.scan_tracker import ScanTracker
-from ..models.transaction import Transaction
+from ..models.transaction import Transaction, UserTransactionHistory
 from ..models.statistic import Statistic
 from ..models.user import User
 
@@ -104,7 +104,10 @@ def match_transaction():
     for txs in confirmed_txs:
 
         if User.objects.filter(memo=txs.memo).exists():
-            User.objects.filter(memo=txs.memo).update(balance=F('balance') + txs.amount)
+            user = User.objects.get(memo=txs.memo)
+            user.balance += txs.amount
+            UserTransactionHistory.objects.create(user=user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT)
+            user.save()
             txs.transaction_status = Transaction.IDENTIFIED
             txs.save()
         else:

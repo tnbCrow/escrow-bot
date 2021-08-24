@@ -6,7 +6,7 @@ import humanize
 import discord
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Django Setup on bot
 sys.path.append(os.getcwd() + '/API')
@@ -14,12 +14,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 from django.conf import settings
-from django.utils import timezone
 from django.db.models import Q
 from escrow.models.user import User
 from escrow.models.escrow import Escrow
 from escrow.models.agent import Agent
-from escrow.models.transaction import Transaction
+from escrow.models.transaction import Transaction, UserTransactionHistory
 from escrow.utils.scan_chain import match_transaction
 from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
@@ -154,8 +153,9 @@ async def user_deposit(ctx):
                      description="Enter your withdrawal address.",
                      option_type=3,
                      required=True
-                     )
-                ])
+                 )
+             ]
+             )
 async def user_setwithdrawaladdress(ctx, address: str):
 
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -181,8 +181,9 @@ async def user_setwithdrawaladdress(ctx, address: str):
                      description="Enter the amount to withdraw.",
                      option_type=4,
                      required=True
-                    )
-                ])
+                 )
+             ]
+             )
 async def user_withdraw(ctx, amount: int):
 
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -211,13 +212,32 @@ async def user_withdraw(ctx, amount: int):
                                            memo=obj.memo)
                 obj.balance -= amount + fee
                 obj.save()
+                UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW)
                 embed = discord.Embed(title="Coins Withdrawn!",
                                       description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/balance` to check your new balance.")
             else:
                 embed = discord.Embed(title="Error!",
                                       description="Please try again later!!")
     else:
-        embed = discord.Embed(title="No withdrawal address set!!", description="Use `/setwithdrawaladdress` to set withdrawl address!!")
+        embed = discord.Embed(title="No withdrawal address set!!", description="Use `/setwithdrawaladdress` to set withdrawal address!!")
+
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.slash(name="user_transactions", description="Check Transaction History!!")
+async def user_transactions(ctx):
+
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    transactions = UserTransactionHistory.objects.filter(user=obj).order_by('-created_at')[:8]
+
+    embed = discord.Embed(title="Transaction History", description="")
+
+    for txs in transactions:
+
+        natural_day = humanize.naturalday(txs.created_at)
+
+        embed.add_field(name='\u200b', value=f"{txs.type} - {txs.amount} TNBC - {natural_day}", inline=False)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -230,15 +250,16 @@ async def user_withdraw(ctx, amount: int):
                      description="Enter TNBC amount you want to escrow.",
                      option_type=4,
                      required=True
-                    ),
+                 ),
                  create_option(
                      name="user",
                      description="Enter your escrow partner.",
                      option_type=6,
                      required=True
-                    )
-                ])
-async def escrow_new(ctx, amount:int, user):
+                 )
+             ]
+             )
+async def escrow_new(ctx, amount: int, user):
 
     initiator, created = User.objects.get_or_create(discord_id=ctx.author.id)
     successor, created = User.objects.get_or_create(discord_id=user.id)
@@ -250,13 +271,13 @@ async def escrow_new(ctx, amount:int, user):
 
         if initiator.get_available_balance() < amount:
             embed = discord.Embed(title="Inadequate Funds!!",
-                                    description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/deposit` to deposit TNBC!!")
+                                  description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/deposit` to deposit TNBC!!")
         else:
             escrow_obj = Escrow.objects.create(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
             initiator.locked += amount
             initiator.save()
             embed = discord.Embed(title="Success!!",
-                                description="")
+                                  description="")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{amount}")
             embed.add_field(name='Initiator', value=f"{ctx.author}")
@@ -274,16 +295,17 @@ async def escrow_new(ctx, amount:int, user):
                      description="Enter escrow id you want to check the status of!",
                      option_type=3,
                      required=True
-                    )
-                ])
-async def escrow_status(ctx, escrow_id:str):
+                 )
+             ]
+             )
+async def escrow_status(ctx, escrow_id: str):
 
     if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
 
         initiator = await client.fetch_user(escrow_obj.initiator.discord_id)
         successor = await client.fetch_user(escrow_obj.successor.discord_id)
-        
+
         embed = discord.Embed(title="Success!!", description="")
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
         embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
@@ -328,9 +350,10 @@ async def escrow_all(ctx):
                      description="Enter escrow id you want to check the status of!",
                      option_type=3,
                      required=True
-                    )
-                ])
-async def escrow_release(ctx, escrow_id:str):
+                 )
+             ]
+             )
+async def escrow_release(ctx, escrow_id: str):
     if Escrow.objects.filter(uuid_hex=escrow_id, initiator__discord_id=ctx.author.id, status=Escrow.OPEN).exists():
 
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
@@ -362,9 +385,10 @@ async def escrow_release(ctx, escrow_id:str):
                      description="Enter escrow id you want to check the status of!",
                      option_type=3,
                      required=True
-                    )
-                ])
-async def escrow_cancel(ctx, escrow_id:str):
+                 )
+             ]
+             )
+async def escrow_cancel(ctx, escrow_id: str):
 
     # Check if the user is initiator or successor
     if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) |
@@ -373,23 +397,23 @@ async def escrow_cancel(ctx, escrow_id:str):
 
         # Check if initiator is author and update field initiator_cancelled field accordingly
         if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id),
-                                Q(status=Escrow.OPEN),
-                                Q(uuid_hex=escrow_id)).exists():
-            
+                                 Q(status=Escrow.OPEN),
+                                 Q(uuid_hex=escrow_id)).exists():
+
             Escrow.objects.filter(uuid_hex=escrow_id).update(initiator_cancelled=True)
 
         # Check if success is author and update field successor_cancelled field accordingly
         elif Escrow.objects.filter(Q(successor__discord_id=ctx.author.id),
-                                Q(status=Escrow.OPEN),
-                                Q(uuid_hex=escrow_id)).exists():
+                                   Q(status=Escrow.OPEN),
+                                   Q(uuid_hex=escrow_id)).exists():
 
             Escrow.objects.filter(uuid_hex=escrow_id).update(successor_cancelled=True)
-        
+
         # Check if both initiator and successor has cancelled the escrow. If yes, updates the tables.
         if Escrow.objects.filter(Q(initiator_cancelled=True),
-                                Q(successor_cancelled=True),
-                                Q(status=Escrow.OPEN),
-                                Q(uuid_hex=escrow_id)).exists():
+                                 Q(successor_cancelled=True),
+                                 Q(status=Escrow.OPEN),
+                                 Q(uuid_hex=escrow_id)).exists():
             escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
             escrow_obj.status = Escrow.CANCELLED
             escrow_obj.save()
@@ -418,9 +442,10 @@ async def escrow_cancel(ctx, escrow_id:str):
                      description="Enter escrow id you want to cancel!",
                      option_type=3,
                      required=True
-                    )
-                ])
-async def agent_cancel(ctx, escrow_id:str):
+                 )
+             ]
+             )
+async def agent_cancel(ctx, escrow_id: str):
 
     if Agent.objects.filter(discord_id=ctx.author.id).exists():
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
@@ -449,16 +474,17 @@ async def agent_cancel(ctx, escrow_id:str):
                      description="Enter escrow id you want to cancel!",
                      option_type=3,
                      required=True
-                    ),
-                    create_option(
+                 ),
+                 create_option(
                      name="user",
                      description="Enter user to release the funds to.",
                      option_type=6,
                      required=True
-                    )
-                ])
-async def agent_release(ctx, escrow_id:str, user):
-    
+                 )
+             ]
+             )
+async def agent_release(ctx, escrow_id: str, user):
+
     if Agent.objects.filter(discord_id=ctx.author.id).exists():
 
         if Escrow.objects.filter(Q(uuid_hex=escrow_id),
