@@ -1,4 +1,5 @@
 from uuid import uuid4
+import random
 
 from django.db import models
 
@@ -26,7 +27,7 @@ def generate_memo(instance):
 
     while True:
 
-        memo = f'CrowBot{uuid4().hex}'
+        memo = str(random.randint(100000, 999999))
 
         if not User.objects.filter(memo=memo).exists():
             return memo
