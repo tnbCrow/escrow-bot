@@ -24,8 +24,6 @@ from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 # Environment Variables
 TOKEN = os.environ.get('CROW_DISCORD_TOKEN')
-TRADE_CHANNEL_ID = int(os.environ.get('TRADE_CHANNEL_ID'))
-MANAGER_ID = int(os.environ.get('MANAGER_ID'))
 
 # Initialize the Slash commands
 client = discord.Client(intents=discord.Intents.all())
@@ -110,7 +108,7 @@ async def on_message(message):
         return
 
     # Delete old messages by the user in #trade channel
-    if message.channel.id == TRADE_CHANNEL_ID:
+    if message.channel.id == int(settings.TRADE_CHANNEL_ID):
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
@@ -549,7 +547,7 @@ async def agent_release(ctx, escrow_id: str, user):
 
 @slash.slash(name="kill", description="Kill the bot!!")
 async def kill(ctx):
-    if int(ctx.author.id) == MANAGER_ID:
+    if int(ctx.author.id) == int(settings.MANAGER_ID):
         print("Shutting Down the bot")
         await ctx.send("Bot Shut Down", hidden=True)
         await client.close()
