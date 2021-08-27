@@ -4,6 +4,7 @@ import requests
 import django
 import humanize
 import discord
+from discord.ext import commands
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option
 from datetime import datetime
@@ -17,7 +18,6 @@ from django.conf import settings
 from django.db.models import Q
 from escrow.models.user import User
 from escrow.models.escrow import Escrow
-from escrow.models.agent import Agent
 from escrow.models.transaction import Transaction, UserTransactionHistory
 from escrow.utils.scan_chain import match_transaction
 from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
@@ -446,7 +446,7 @@ async def escrow_cancel(ctx, escrow_id: str):
             escrow_obj.save()
             escrow_obj.initiator.locked -= escrow_obj.amount
             escrow_obj.initiator.save()
-
+ 
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
         embed = discord.Embed(title="Success!!", description="")
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
@@ -525,11 +525,11 @@ async def escrow_dispute(ctx, escrow_id: str):
              )
 async def agent_cancel(ctx, escrow_id: str):
 
-    if Agent.objects.filter(discord_id=ctx.author.id).exists():
+    if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
         if Escrow.objects.filter(uuid_hex=escrow_id, status=Escrow.OPEN):
             escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
             escrow_obj.status = Escrow.ADMIN_CANCELLED
-            escrow_obj.agent = Agent.objects.get(discord_id=ctx.author.id)
+            escrow_obj.agent = User.objects.get(discord_id=ctx.author.id)
             escrow_obj.initiator.locked -= escrow_obj.amount
             escrow_obj.initiator.save()
             escrow_obj.save()
@@ -565,7 +565,7 @@ async def agent_cancel(ctx, escrow_id: str):
              )
 async def agent_release(ctx, escrow_id: str, user):
 
-    if Agent.objects.filter(discord_id=ctx.author.id).exists():
+    if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
         if Escrow.objects.filter(Q(uuid_hex=escrow_id),
                                  Q(status=Escrow.DISPUTE),
@@ -578,12 +578,14 @@ async def agent_release(ctx, escrow_id: str, user):
                 escrow_obj.initiator.locked -= escrow_obj.amount
                 escrow_obj.settled_towards = Escrow.INITIATOR
                 escrow_obj.initiator.save()
+                escrow_obj.save()
             else:
                 escrow_obj.initiator.locked -= escrow_obj.amount
                 escrow_obj.initiator.balance -= escrow_obj.amount
                 escrow_obj.successor.balance += int(escrow_obj.amount * (100 - settings.CROW_BOT_FEE) / 100)
                 escrow_obj.initiator.save()
                 escrow_obj.successor.save()
+                escrow_obj.save()
 
             embed = discord.Embed(title="Success!!", description="")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
