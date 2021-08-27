@@ -4,6 +4,7 @@ import requests
 import django
 import humanize
 import discord
+from asgiref.sync import sync_to_async
 from discord.ext import commands
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option
@@ -119,7 +120,7 @@ async def user_balance(ctx):
 
     match_transaction()
 
-    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+    obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
 
     embed = discord.Embed()
     embed.add_field(name='Withdrawal Address', value=obj.withdrawal_address, inline=False)
@@ -133,7 +134,7 @@ async def user_balance(ctx):
 @slash.slash(name="user_deposit", description="Deposit TNBC into your crow account!!")
 async def user_deposit(ctx):
 
-    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+    obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
 
     embed = discord.Embed(title="Send TNBC to the address with memo!!")
     embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
@@ -156,7 +157,7 @@ async def user_deposit(ctx):
              )
 async def user_setwithdrawaladdress(ctx, address: str):
 
-    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+    obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
 
     if len(address) == 64:
         if not address in settings.PROHIBITED_ACCOUNT_NUMBERS:
@@ -187,7 +188,7 @@ async def user_setwithdrawaladdress(ctx, address: str):
              )
 async def user_withdraw(ctx, amount: int):
 
-    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+    obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
 
     if obj.withdrawal_address:
 
@@ -228,9 +229,9 @@ async def user_withdraw(ctx, amount: int):
 @slash.slash(name="user_transactions", description="Check Transaction History!!")
 async def user_transactions(ctx):
 
-    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+    obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
 
-    transactions = UserTransactionHistory.objects.filter(user=obj).order_by('-created_at')[:8]
+    transactions = (await sync_to_async(UserTransactionHistory.objects.filter)(user=obj)).order_by('-created_at')[:8]
 
     embed = discord.Embed(title="Transaction History", description="")
 
@@ -262,8 +263,8 @@ async def user_transactions(ctx):
              )
 async def escrow_new(ctx, amount: int, user):
 
-    initiator, created = User.objects.get_or_create(discord_id=ctx.author.id)
-    successor, created = User.objects.get_or_create(discord_id=user.id)
+    initiator, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
+    successor, created = await sync_to_async(User.objects.get_or_create)(discord_id=user.id)
 
     if amount < settings.MIN_TNBC_ALLOWED:
         embed = discord.Embed(title="Error!!", description="You can only escrow more than 100 TNBC.")
@@ -274,7 +275,7 @@ async def escrow_new(ctx, amount: int, user):
             embed = discord.Embed(title="Inadequate Funds!!",
                                   description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/user_deposit` to deposit TNBC!!")
         else:
-            escrow_obj = Escrow.objects.create(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
+            escrow_obj = await sync_to_async(Escrow.objects.create)(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
             initiator.locked += amount
             initiator.save()
             embed = discord.Embed(title="Success!!",
@@ -301,8 +302,10 @@ async def escrow_new(ctx, amount: int, user):
              )
 async def escrow_status(ctx, escrow_id: str):
 
-    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
-        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    if Escrow.objects.filter(Q(initiator=obj) | Q(successor=obj)).exists():
+        escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
         initiator = await client.fetch_user(escrow_obj.initiator.discord_id)
         successor = await client.fetch_user(escrow_obj.successor.discord_id)
@@ -324,9 +327,11 @@ async def escrow_status(ctx, escrow_id: str):
 
 @slash.slash(name="escrow_all", description="All your active escrows!!")
 async def escrow_all(ctx):
+    
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
-    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE)).exists():
-        escrows = Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE))
+    if Escrow.objects.filter(Q(initiator=obj) | Q(successor=obj), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE)).exists():
+        escrows = await sync_to_async(Escrow.objects.filter)(Q(initiator=obj) | Q(successor=obj), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE))
 
         embed = discord.Embed()
 
@@ -345,19 +350,16 @@ async def escrow_all(ctx):
 @slash.slash(name="escrow_history", description="All your recent escrows!!")
 async def escrow_history(ctx):
 
-    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
-        escrows = Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id))
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    if Escrow.objects.filter(Q(initiator=obj) | Q(successor=obj)).exists():
+        escrows = (await sync_to_async(Escrow.objects.filter)(Q(initiator=obj) | Q(successor=obj)))[:8]
 
         embed = discord.Embed()
 
         for escrow in escrows:
 
-            initiator = await client.fetch_user(escrow.initiator.discord_id)
-            successor = await client.fetch_user(escrow.successor.discord_id)
-
             embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-            embed.add_field(name='Initiator', value=f"{initiator}")
-            embed.add_field(name='Successor', value=f"{successor}")
             embed.add_field(name='Amount', value=f"{escrow.amount}")
             embed.add_field(name='Status', value=f"{escrow.status}")
 
@@ -379,9 +381,12 @@ async def escrow_history(ctx):
              ]
              )
 async def escrow_release(ctx, escrow_id: str):
-    if Escrow.objects.filter(uuid_hex=escrow_id, initiator__discord_id=ctx.author.id).exists():
 
-        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
+    if Escrow.objects.filter(uuid_hex=escrow_id, initiator=obj).exists():
+
+        escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
         if escrow_obj.status == Escrow.OPEN:
 
@@ -419,12 +424,14 @@ async def escrow_release(ctx, escrow_id: str):
              )
 async def escrow_cancel(ctx, escrow_id: str):
 
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
+
     # Check if the user is initiator or successor
-    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) |
-                             Q(successor__discord_id=ctx.author.id),
+    if Escrow.objects.filter(Q(initiator=obj) |
+                             Q(successor=obj),
                              Q(uuid_hex=escrow_id)).exists():
 
-        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+        escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
         if escrow_obj.status == Escrow.OPEN:
 
@@ -472,12 +479,14 @@ async def escrow_cancel(ctx, escrow_id: str):
              ]
              )
 async def escrow_dispute(ctx, escrow_id: str):
+    
+    obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
 
-    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) |
-                             Q(successor__discord_id=ctx.author.id),
+    if Escrow.objects.filter(Q(initiator=obj) |
+                             Q(successor=obj),
                              Q(uuid_hex=escrow_id)).exists():
 
-        escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+        escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
         if escrow_obj.status == Escrow.OPEN:
             escrow_obj.status = Escrow.DISPUTE
@@ -529,7 +538,9 @@ async def agent_cancel(ctx, escrow_id: str):
 
     if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
         if Escrow.objects.filter(uuid_hex=escrow_id).exists():
-            escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
+
             if escrow_obj.status == Escrow.DISPUTE:
                 escrow_obj.status = Escrow.ADMIN_CANCELLED
                 escrow_obj.agent = User.objects.get(discord_id=ctx.author.id)
@@ -576,7 +587,7 @@ async def agent_release(ctx, escrow_id: str, user):
                                  Q(status=Escrow.DISPUTE),
                                  Q(initiator__discord_id=user.id) | Q(successor__discord_id=user.id)).exists():
 
-            escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
             escrow_obj.status = Escrow.ADMIN_SETTLED
 
             if user.id == escrow_obj.initiator.discord_id:
