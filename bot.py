@@ -422,32 +422,24 @@ async def escrow_cancel(ctx, escrow_id: str):
                              Q(successor__discord_id=ctx.author.id),
                              Q(uuid_hex=escrow_id)).exists():
 
-        # Check if initiator is author and update field initiator_cancelled field accordingly
-        if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id),
-                                 Q(status=Escrow.OPEN),
-                                 Q(uuid_hex=escrow_id)).exists():
-
-            Escrow.objects.filter(uuid_hex=escrow_id).update(initiator_cancelled=True)
-
-        # Check if success is author and update field successor_cancelled field accordingly
-        elif Escrow.objects.filter(Q(successor__discord_id=ctx.author.id),
-                                   Q(status=Escrow.OPEN),
-                                   Q(uuid_hex=escrow_id)).exists():
-
-            Escrow.objects.filter(uuid_hex=escrow_id).update(successor_cancelled=True)
-
-        # Check if both initiator and successor has cancelled the escrow. If yes, updates the tables.
-        if Escrow.objects.filter(Q(initiator_cancelled=True),
-                                 Q(successor_cancelled=True),
-                                 Q(status=Escrow.OPEN),
-                                 Q(uuid_hex=escrow_id)).exists():
-            escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
-            escrow_obj.status = Escrow.CANCELLED
-            escrow_obj.save()
-            escrow_obj.initiator.locked -= escrow_obj.amount
-            escrow_obj.initiator.save()
- 
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
+
+        if escrow_obj.initiator.discord_id == ctx.author.id:
+            escrow_obj.initiator_cancelled = True
+            if escrow_obj.successor_cancelled == True:
+                escrow_obj.status = Escrow.CANCELLED
+                escrow_obj.initiator.locked -= escrow_obj.amount
+                escrow_obj.initiator.save()
+
+        else:
+            escrow_obj.successor_cancelled = True
+            if escrow_obj.initiator_cancelled == True:
+                escrow_obj.status = Escrow.CANCELLED
+                escrow_obj.initiator.locked -= escrow_obj.amount
+                escrow_obj.initiator.save()
+
+        escrow_obj.save()
+ 
         embed = discord.Embed(title="Success!!", description="")
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
         embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
@@ -456,7 +448,8 @@ async def escrow_cancel(ctx, escrow_id: str):
         embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
 
     else:
-        embed = discord.Embed(title="Error, 404 Not Found!!", description="")
+        embed = discord.Embed()
+        embed.add_field(name='Error!!', value="Not Found")
 
     await ctx.send(embed=embed, hidden=True)
 
