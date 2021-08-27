@@ -317,7 +317,7 @@ async def escrow_status(ctx, escrow_id: str):
         embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
 
     else:
-        embed = discord.Embed(title="Error, 404 Not Found!!", description="")
+        embed = discord.Embed(title="Error!!", description="404 Not Found.")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -337,8 +337,7 @@ async def escrow_all(ctx):
             embed.add_field(name='Status', value=f"{escrow.status}")
 
     else:
-        embed = discord.Embed(title="No active escrows found!!",
-                              description="")
+        embed = discord.Embed(title="Error!!", description="404 Not Found.")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -346,8 +345,8 @@ async def escrow_all(ctx):
 @slash.slash(name="escrow_history", description="All your recent escrows!!")
 async def escrow_history(ctx):
 
-    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.COMPLETED)).exists():
-        escrows = Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id), Q(status=Escrow.COMPLETED))
+    if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id)).exists():
+        escrows = Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) | Q(successor__discord_id=ctx.author.id))
 
         embed = discord.Embed()
 
@@ -363,8 +362,7 @@ async def escrow_history(ctx):
             embed.add_field(name='Status', value=f"{escrow.status}")
 
     else:
-        embed = discord.Embed(title="No active escrows found!!",
-                              description="")
+        embed = discord.Embed(title="Error!!", description="404 Not Found.")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -381,25 +379,29 @@ async def escrow_history(ctx):
              ]
              )
 async def escrow_release(ctx, escrow_id: str):
-    if Escrow.objects.filter(uuid_hex=escrow_id, initiator__discord_id=ctx.author.id, status=Escrow.OPEN).exists():
+    if Escrow.objects.filter(uuid_hex=escrow_id, initiator__discord_id=ctx.author.id).exists():
 
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
 
-        escrow_obj.status = Escrow.COMPLETED
-        escrow_obj.initiator.balance -= escrow_obj.amount
-        escrow_obj.initiator.locked -= escrow_obj.amount
-        escrow_obj.successor.balance += int(escrow_obj.amount * (100 - settings.CROW_BOT_FEE) / 100)
-        escrow_obj.save()
-        escrow_obj.initiator.save()
-        escrow_obj.successor.save()
+        if escrow_obj.status == Escrow.OPEN:
 
-        embed = discord.Embed(title="Success!!", description="")
-        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-        embed.add_field(name='Status', value=f"{escrow_obj.status}")
+            escrow_obj.status = Escrow.COMPLETED
+            escrow_obj.initiator.balance -= escrow_obj.amount
+            escrow_obj.initiator.locked -= escrow_obj.amount
+            escrow_obj.successor.balance += int(escrow_obj.amount * (100 - settings.CROW_BOT_FEE) / 100)
+            escrow_obj.save()
+            escrow_obj.initiator.save()
+            escrow_obj.successor.save()
+
+            embed = discord.Embed(title="Success!!", description="")
+            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+            embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+        else:
+            embed = discord.Embed(title="Error!!", description=f"You cannot release the escrow of status {escrow_obj.status}.")
     else:
-        embed = discord.Embed(title="Error!!",
-                              description="You do not have permission to perform the action.")
+        embed = discord.Embed(title="Error!!", description="You do not have permission to perform the action.")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -424,32 +426,36 @@ async def escrow_cancel(ctx, escrow_id: str):
 
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
 
-        if escrow_obj.initiator.discord_id == ctx.author.id:
-            escrow_obj.initiator_cancelled = True
-            if escrow_obj.successor_cancelled == True:
-                escrow_obj.status = Escrow.CANCELLED
-                escrow_obj.initiator.locked -= escrow_obj.amount
-                escrow_obj.initiator.save()
+        if escrow_obj.status == Escrow.OPEN:
 
+            if escrow_obj.initiator.discord_id == ctx.author.id:
+                escrow_obj.initiator_cancelled = True
+                if escrow_obj.successor_cancelled == True:
+                    escrow_obj.status = Escrow.CANCELLED
+                    escrow_obj.initiator.locked -= escrow_obj.amount
+                    escrow_obj.initiator.save()
+
+            else:
+                escrow_obj.successor_cancelled = True
+                if escrow_obj.initiator_cancelled == True:
+                    escrow_obj.status = Escrow.CANCELLED
+                    escrow_obj.initiator.locked -= escrow_obj.amount
+                    escrow_obj.initiator.save()
+
+            escrow_obj.save()
+    
+            embed = discord.Embed(title="Success!!", description="")
+            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+            embed.add_field(name='Status', value=f"{escrow_obj.status}")
+            embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
+            embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
         else:
-            escrow_obj.successor_cancelled = True
-            if escrow_obj.initiator_cancelled == True:
-                escrow_obj.status = Escrow.CANCELLED
-                escrow_obj.initiator.locked -= escrow_obj.amount
-                escrow_obj.initiator.save()
-
-        escrow_obj.save()
- 
-        embed = discord.Embed(title="Success!!", description="")
-        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-        embed.add_field(name='Status', value=f"{escrow_obj.status}")
-        embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
-        embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
+            embed = discord.Embed(title="Error!!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.")
 
     else:
-        embed = discord.Embed()
-        embed.add_field(name='Error!!', value="Not Found")
+        embed = discord.Embed(title="Error!!", description="404 Not Found.")
+
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -469,38 +475,41 @@ async def escrow_dispute(ctx, escrow_id: str):
 
     if Escrow.objects.filter(Q(initiator__discord_id=ctx.author.id) |
                              Q(successor__discord_id=ctx.author.id),
-                             Q(status=Escrow.OPEN),
                              Q(uuid_hex=escrow_id)).exists():
 
         escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
-        escrow_obj.status = Escrow.DISPUTE
-        escrow_obj.save()
-        
-        dispute = client.get_channel(int(settings.DISPUTE_CHANNEL_ID))
 
-        initiator = await client.fetch_user(escrow_obj.initiator.discord_id)
-        successor = await client.fetch_user(escrow_obj.successor.discord_id)
+        if escrow_obj.status == Escrow.OPEN:
+            escrow_obj.status = Escrow.DISPUTE
+            escrow_obj.save()
+            
+            dispute = client.get_channel(int(settings.DISPUTE_CHANNEL_ID))
 
-        dispute_embed = discord.Embed(title="Dispute Alert!!", description="")
-        dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-        dispute_embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-        dispute_embed.add_field(name='Initiator', value=f"{initiator}")
-        dispute_embed.add_field(name='Successor', value=f"{successor}")
-        dispute_embed.add_field(name='Status', value=f"{escrow_obj.status}")
-        dispute = await dispute.send(embed=dispute_embed)
+            initiator = await client.fetch_user(escrow_obj.initiator.discord_id)
+            successor = await client.fetch_user(escrow_obj.successor.discord_id)
 
-        await dispute.add_reaction("👀")
-        await dispute.add_reaction("✅")
+            dispute_embed = discord.Embed(title="Dispute Alert!!", description="")
+            dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            dispute_embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+            dispute_embed.add_field(name='Initiator', value=f"{initiator}")
+            dispute_embed.add_field(name='Successor', value=f"{successor}")
+            dispute_embed.add_field(name='Status', value=f"{escrow_obj.status}")
+            dispute = await dispute.send(embed=dispute_embed)
 
-        embed = discord.Embed(title="Success!!", description="")
-        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-        embed.add_field(name='Initiator', value=f"{initiator}")
-        embed.add_field(name='Successor', value=f"{successor}")
-        embed.add_field(name='Status', value=f"{escrow_obj.status}")
+            await dispute.add_reaction("👀")
+            await dispute.add_reaction("✅")
+
+            embed = discord.Embed(title="Success!!", description="")
+            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+            embed.add_field(name='Initiator', value=f"{initiator}")
+            embed.add_field(name='Successor', value=f"{successor}")
+            embed.add_field(name='Status', value=f"{escrow_obj.status}")
+        else:
+            embed = discord.Embed(title="Error!!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.")
 
     else:
-        embed = discord.Embed(title="Nope, you're not allowed to do this!!", description="")
+        embed = discord.Embed(title="Error!!", description="404 Not Found.")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -519,22 +528,25 @@ async def escrow_dispute(ctx, escrow_id: str):
 async def agent_cancel(ctx, escrow_id: str):
 
     if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
-        if Escrow.objects.filter(uuid_hex=escrow_id, status=Escrow.OPEN):
+        if Escrow.objects.filter(uuid_hex=escrow_id).exists():
             escrow_obj = Escrow.objects.get(uuid_hex=escrow_id)
-            escrow_obj.status = Escrow.ADMIN_CANCELLED
-            escrow_obj.agent = User.objects.get(discord_id=ctx.author.id)
-            escrow_obj.initiator.locked -= escrow_obj.amount
-            escrow_obj.initiator.save()
-            escrow_obj.save()
+            if escrow_obj.status == Escrow.DISPUTE:
+                escrow_obj.status = Escrow.ADMIN_CANCELLED
+                escrow_obj.agent = User.objects.get(discord_id=ctx.author.id)
+                escrow_obj.initiator.locked -= escrow_obj.amount
+                escrow_obj.initiator.save()
+                escrow_obj.save()
 
-            embed = discord.Embed(title="Success!!", description="")
-            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-            embed.add_field(name='Status', value=f"{escrow_obj.status}")
+                embed = discord.Embed(title="Success!!", description="")
+                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
+                embed.add_field(name='Status', value=f"{escrow_obj.status}")
+            else:                
+                embed = discord.Embed(title="Error!!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.")
         else:
-            embed = discord.Embed(title="Sorry, You cannot cancel this escrow!!", description="")
+            embed = discord.Embed(title="Error!!", description="404 Not Found.")
     else:
-        embed = discord.Embed(title="Nope, you're not allowed to do this!!", description="")
+        embed = discord.Embed(title="Error!!", description="You donot have permission to perform this action.")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -586,10 +598,9 @@ async def agent_release(ctx, escrow_id: str, user):
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
         else:
-            embed = discord.Embed()
-            embed.add_field(name='Error', value="Either there's no open escrow or the user doesnot exist for the escrow", inline=False)
+            embed = discord.Embed(title="Error!!", description="Disputed escrow Not found or the user does not exist for the escrow.")
     else:
-        embed = discord.Embed(title="Nope, you're not allowed to do this!!", description="")
+        embed = discord.Embed(title="Error!!", description="You donot have permission to perform this action.")
 
     await ctx.send(embed=embed, hidden=True)
 
