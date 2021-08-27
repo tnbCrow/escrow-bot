@@ -266,25 +266,29 @@ async def escrow_new(ctx, amount: int, user):
     initiator, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
     successor, created = await sync_to_async(User.objects.get_or_create)(discord_id=user.id)
 
-    if amount < settings.MIN_TNBC_ALLOWED:
-        embed = discord.Embed(title="Error!!", description="You can only escrow more than 100 TNBC.")
+    if initiator != successor:
 
-    else:
+        if amount < settings.MIN_TNBC_ALLOWED:
+            embed = discord.Embed(title="Error!!", description="You can only escrow more than 100 TNBC.")
 
-        if initiator.get_available_balance() < amount:
-            embed = discord.Embed(title="Inadequate Funds!!",
-                                  description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/user_deposit` to deposit TNBC!!")
         else:
-            escrow_obj = await sync_to_async(Escrow.objects.create)(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
-            initiator.locked += amount
-            initiator.save()
-            embed = discord.Embed(title="Success!!",
-                                  description="")
-            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{amount}")
-            embed.add_field(name='Initiator', value=f"{ctx.author}")
-            embed.add_field(name='Successor', value=f"{user}")
-            embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
+
+            if initiator.get_available_balance() < amount:
+                embed = discord.Embed(title="Inadequate Funds!!",
+                                    description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/user_deposit` to deposit TNBC!!")
+            else:
+                escrow_obj = await sync_to_async(Escrow.objects.create)(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
+                initiator.locked += amount
+                initiator.save()
+                embed = discord.Embed(title="Success!!",
+                                    description="")
+                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{amount}")
+                embed.add_field(name='Initiator', value=f"{ctx.author}")
+                embed.add_field(name='Successor', value=f"{user}")
+                embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
+    else:
+        embed = discord.Embed(title="Error!!", description="You cannot escrow yourself tnbc.")
 
     await ctx.send(embed=embed, hidden=True)
 
