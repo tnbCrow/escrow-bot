@@ -115,7 +115,7 @@ async def on_message(message):
                 await oldMessage.delete()
 
 
-@slash.slash(name="user_balance", description="Check User Balance!!")
+@slash.subcommand(base="user", name="balance", description="Check User Balance!!")
 async def user_balance(ctx):
 
     match_transaction()
@@ -131,7 +131,7 @@ async def user_balance(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="user_deposit", description="Deposit TNBC into your crow account!!")
+@slash.subcommand(base="user", name="deposit", description="Deposit TNBC into your crow account!!")
 async def user_deposit(ctx):
 
     obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
@@ -144,7 +144,8 @@ async def user_deposit(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="user_setwithdrawaladdress",
+@slash.subcommand(base="user",
+             name="set_withdrawal_address",
              description="Set new withdrawal address!!",
              options=[
                  create_option(
@@ -175,7 +176,8 @@ async def user_setwithdrawaladdress(ctx, address: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="user_withdraw",
+@slash.subcommand(base="user", 
+             name="withdraw",
              description="Withdraw TNBC into your account!!",
              options=[
                  create_option(
@@ -226,7 +228,7 @@ async def user_withdraw(ctx, amount: int):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="user_transactions", description="Check Transaction History!!")
+@slash.subcommand(base="user", name="transactions", description="Check Transaction History!!")
 async def user_transactions(ctx):
 
     obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=ctx.author.id)
@@ -244,7 +246,8 @@ async def user_transactions(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_new",
+@slash.subcommand(base="escrow",
+             name="new",
              description="Escrow TNBC with another user!!",
              options=[
                  create_option(
@@ -293,7 +296,8 @@ async def escrow_new(ctx, amount: int, user):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_status",
+@slash.subcommand(base="escrow",
+             name="status",
              description="Escrow TNBC with another user!!",
              options=[
                  create_option(
@@ -329,7 +333,7 @@ async def escrow_status(ctx, escrow_id: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_all", description="All your active escrows!!")
+@slash.subcommand(base="escrow", name="all", description="All your active escrows!!")
 async def escrow_all(ctx):
     
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -351,7 +355,7 @@ async def escrow_all(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_history", description="All your recent escrows!!")
+@slash.subcommand(base="escrow", name="history", description="All your recent escrows!!")
 async def escrow_history(ctx):
 
     obj, created = User.objects.get_or_create(discord_id=ctx.author.id)
@@ -373,7 +377,8 @@ async def escrow_history(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_release",
+@slash.subcommand(base="escrow",
+             name="release",
              description="Release escrow to successor!!",
              options=[
                  create_option(
@@ -415,7 +420,8 @@ async def escrow_release(ctx, escrow_id: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_cancel",
+@slash.subcommand(base="escrow",
+             name="cancel",
              description="Cancel escrow!!",
              options=[
                  create_option(
@@ -471,7 +477,8 @@ async def escrow_cancel(ctx, escrow_id: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="escrow_dispute",
+@slash.subcommand(base="escrow",
+             name="dispute",
              description="Start an dispute!!",
              options=[
                  create_option(
@@ -527,7 +534,8 @@ async def escrow_dispute(ctx, escrow_id: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="agent_cancel",
+@slash.subcommand(base="agent",
+             name="cancel",
              description="Cancel escrow!!",
              options=[
                  create_option(
@@ -566,7 +574,8 @@ async def agent_cancel(ctx, escrow_id: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.slash(name="agent_release",
+@slash.subcommand(base="agent",
+             name="release",
              description="Cancel escrow!!",
              options=[
                  create_option(
