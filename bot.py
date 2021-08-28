@@ -139,7 +139,7 @@ async def user_deposit(ctx):
     embed = discord.Embed(title="Send TNBC to the address with memo!!")
     embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
     embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=obj.memo, inline=False)
-    embed.add_field(name="Sent?", value="Use `/user_balance` command to check the deposit!!")
+    embed.add_field(name="Sent?", value="Use `/user balance` command to check the deposit!!")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -196,34 +196,36 @@ async def user_withdraw(ctx, amount: int):
 
         fee = estimate_fee()
 
-        if obj.get_available_balance() < amount + fee:
-            embed = discord.Embed(title="Inadequate Funds!!",
-                                  description=f"You only have {obj.get_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/user_deposit` to deposit TNBC!!")
+        if fee:
+            if obj.get_available_balance() < amount + fee:
+                embed = discord.Embed(title="Inadequate Funds!!",
+                                    description=f"You only have {obj.get_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/user deposit` to deposit TNBC!!")
 
-        else:
-            block_response, fee = withdraw_tnbc(obj.withdrawal_address, amount, obj.memo)
-
-            if block_response.status_code == 201:
-
-                Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                           transaction_status=Transaction.IDENTIFIED,
-                                           direction=Transaction.OUTGOING,
-                                           account_number=obj.withdrawal_address,
-                                           amount=amount,
-                                           fee=fee,
-                                           signature=block_response.json()['signature'],
-                                           block=block_response.json()['id'],
-                                           memo=obj.memo)
-                obj.balance -= amount + fee
-                obj.save()
-                UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW)
-                embed = discord.Embed(title="Coins Withdrawn!",
-                                      description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user_balance` to check your new balance.")
             else:
-                embed = discord.Embed(title="Error!",
-                                      description="Please try again later!!")
+                block_response, fee = withdraw_tnbc(obj.withdrawal_address, amount, obj.memo)
+
+                if block_response.status_code == 201:
+
+                    Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                            transaction_status=Transaction.IDENTIFIED,
+                                            direction=Transaction.OUTGOING,
+                                            account_number=obj.withdrawal_address,
+                                            amount=amount,
+                                            fee=fee,
+                                            signature=block_response.json()['signature'],
+                                            block=block_response.json()['id'],
+                                            memo=obj.memo)
+                    obj.balance -= amount + fee
+                    obj.save()
+                    UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW)
+                    embed = discord.Embed(title="Coins Withdrawn!",
+                                        description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
+                else:
+                    embed = discord.Embed(title="Error!", description="Please try again later!!")
+        else:
+            embed = discord.Embed(title="Error!", description="Could not retrive fee info from the bank!!")
     else:
-        embed = discord.Embed(title="No withdrawal address set!!", description="Use `/user_setwithdrawaladdress` to set withdrawal address!!")
+        embed = discord.Embed(title="No withdrawal address set!!", description="Use `/user setwithdrawaladdress` to set withdrawal address!!")
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -278,7 +280,7 @@ async def escrow_new(ctx, amount: int, user):
 
             if initiator.get_available_balance() < amount:
                 embed = discord.Embed(title="Inadequate Funds!!",
-                                    description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/user_deposit` to deposit TNBC!!")
+                                    description=f"You only have {initiator.get_available_balance()} TNBC available. \n Use `/user deposit` to deposit TNBC!!")
             else:
                 escrow_obj = await sync_to_async(Escrow.objects.create)(amount=amount, initiator=initiator, successor=successor, status=Escrow.OPEN)
                 initiator.locked += amount
