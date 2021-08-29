@@ -17,9 +17,9 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 from django.conf import settings
 from django.db.models import Q
-from escrow.models.user import User
+from escrow.models.user import User, UserTransactionHistory
 from escrow.models.escrow import Escrow
-from escrow.models.transaction import Transaction, UserTransactionHistory
+from escrow.models.transaction import Transaction
 from escrow.utils.scan_chain import match_transaction
 from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
@@ -206,18 +206,18 @@ async def user_withdraw(ctx, amount: int):
 
                 if block_response.status_code == 201:
 
-                    Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                            transaction_status=Transaction.IDENTIFIED,
-                                            direction=Transaction.OUTGOING,
-                                            account_number=obj.withdrawal_address,
-                                            amount=amount,
-                                            fee=fee,
-                                            signature=block_response.json()['signature'],
-                                            block=block_response.json()['id'],
-                                            memo=obj.memo)
+                    txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                                     transaction_status=Transaction.IDENTIFIED,
+                                                     direction=Transaction.OUTGOING,
+                                                     account_number=obj.withdrawal_address,
+                                                     amount=amount,
+                                                     fee=fee,
+                                                     signature=block_response.json()['signature'],
+                                                     block=block_response.json()['id'],
+                                                     memo=obj.memo)
                     obj.balance -= amount + fee
                     obj.save()
-                    UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW)
+                    UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
                     embed = discord.Embed(title="Coins Withdrawn!",
                                         description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
                 else:
@@ -320,14 +320,19 @@ async def escrow_status(ctx, escrow_id: str):
         initiator = await client.fetch_user(escrow_obj.initiator.discord_id)
         successor = await client.fetch_user(escrow_obj.successor.discord_id)
 
-        embed = discord.Embed(title="Success!!", description="")
+        embed = discord.Embed()
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
         embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
         embed.add_field(name='Initiator', value=f"{initiator}")
         embed.add_field(name='Successor', value=f"{successor}")
-        embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
-        embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}")
-        embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
+        embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+        if escrow_obj.status == Escrow.ADMIN_SETTLED:            
+            embed.add_field(name='Settled Towards', value=f"{escrow_obj.settled_towards}")
+            embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
+        else:
+            embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}")
+            embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
 
     else:
         embed = discord.Embed(title="Error!!", description="404 Not Found.")
@@ -515,13 +520,12 @@ async def escrow_dispute(ctx, escrow_id: str):
             dispute_embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
             dispute_embed.add_field(name='Initiator', value=f"{initiator}")
             dispute_embed.add_field(name='Successor', value=f"{successor}")
-            dispute_embed.add_field(name='Status', value=f"{escrow_obj.status}")
             dispute = await dispute.send(embed=dispute_embed)
 
             await dispute.add_reaction("👀")
             await dispute.add_reaction("✅")
 
-            embed = discord.Embed(title="Success!!", description="")
+            embed = discord.Embed(title="Success!!", description="Agent will create a private channel within this server to resolve dispute. **Agent will never DM you!!**")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
             embed.add_field(name='Initiator', value=f"{initiator}")
@@ -545,10 +549,16 @@ async def escrow_dispute(ctx, escrow_id: str):
                      description="Enter escrow id you want to cancel!",
                      option_type=3,
                      required=True
+                 ),
+                 create_option(
+                     name="remarks",
+                     description="Summary of the escrow.",
+                     option_type=3,
+                     required=True
                  )
              ]
              )
-async def agent_cancel(ctx, escrow_id: str):
+async def agent_cancel(ctx, escrow_id: str, remarks: str):
 
     if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
         if Escrow.objects.filter(uuid_hex=escrow_id).exists():
@@ -557,6 +567,7 @@ async def agent_cancel(ctx, escrow_id: str):
 
             if escrow_obj.status == Escrow.DISPUTE:
                 escrow_obj.status = Escrow.ADMIN_CANCELLED
+                escrow_obj.remarks = remarks
                 escrow_obj.agent = User.objects.get(discord_id=ctx.author.id)
                 escrow_obj.initiator.locked -= escrow_obj.amount
                 escrow_obj.initiator.save()
@@ -591,10 +602,16 @@ async def agent_cancel(ctx, escrow_id: str):
                      description="Enter user to release the funds to.",
                      option_type=6,
                      required=True
+                 ),
+                 create_option(
+                     name="remarks",
+                     description="Summary of the dispute.",
+                     option_type=3,
+                     required=True
                  )
              ]
              )
-async def agent_release(ctx, escrow_id: str, user):
+async def agent_release(ctx, escrow_id: str, user, remarks: str):
 
     if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
@@ -604,6 +621,7 @@ async def agent_release(ctx, escrow_id: str, user):
 
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
             escrow_obj.status = Escrow.ADMIN_SETTLED
+            escrow_obj.remarks = remarks
 
             if user.id == escrow_obj.initiator.discord_id:
                 escrow_obj.initiator.locked -= escrow_obj.amount
@@ -622,6 +640,7 @@ async def agent_release(ctx, escrow_id: str, user):
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
+            embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
         else:
             embed = discord.Embed(title="Error!!", description="Disputed escrow Not found or the user does not exist for the escrow.")

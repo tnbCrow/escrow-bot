@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from .models.escrow import Escrow
-from .models.transaction import Transaction, UserTransactionHistory
-from .models.user import User
+from .models.transaction import Transaction
+from .models.user import User, UserTransactionHistory
 from .models.scan_tracker import ScanTracker
 from .models.statistic import Statistic
 

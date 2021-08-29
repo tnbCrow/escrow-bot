@@ -44,6 +44,7 @@ class Escrow(models.Model):
     successor_cancelled = models.BooleanField(default=False)
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True, related_name="agent")
     settled_towards = models.CharField(max_length=255, choices=settled_towards_choices, default="SUCCESSOR")
+    remarks = models.CharField(max_length=255, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

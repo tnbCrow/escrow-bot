@@ -2,8 +2,6 @@ import uuid
 
 from django.db import models
 
-from .user import User
-
 
 class Transaction(models.Model):
 
@@ -55,26 +53,3 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f'{self.direction} | {self.amount} | {self.transaction_status} | {self.confirmation_status}'
-
-
-class UserTransactionHistory(models.Model):
-
-    DEPOSIT = 'DEPOSIT'
-    WITHDRAW = 'WITHDRAW'
-
-    type_choices = [
-        (DEPOSIT, 'Deposit'),
-        (WITHDRAW, 'Withdraw')
-    ]
-
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    type = models.CharField(max_length=255, choices=type_choices)
-    amount = models.IntegerField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"User: {self.user} - {self.type} - {self.amount}"

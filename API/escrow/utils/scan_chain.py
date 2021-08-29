@@ -6,9 +6,9 @@ from django.conf import settings
 from django.db.models import F
 
 from ..models.scan_tracker import ScanTracker
-from ..models.transaction import Transaction, UserTransactionHistory
+from ..models.transaction import Transaction
 from ..models.statistic import Statistic
-from ..models.user import User
+from ..models.user import User, UserTransactionHistory
 
 TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
 
@@ -106,7 +106,7 @@ def match_transaction():
         if User.objects.filter(memo=txs.memo).exists():
             user = User.objects.get(memo=txs.memo)
             user.balance += txs.amount
-            UserTransactionHistory.objects.create(user=user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT)
+            UserTransactionHistory.objects.create(user=user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT, transaction=txs)
             user.save()
             txs.transaction_status = Transaction.IDENTIFIED
             txs.save()

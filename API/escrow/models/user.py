@@ -2,6 +2,7 @@ from uuid import uuid4
 import random
 
 from django.db import models
+from ..models.transaction import Transaction
 
 
 class User(models.Model):
@@ -41,3 +42,27 @@ def pre_save_post_receiver(sender, instance, *args, **kwargs):
 
 # save the memo before the User model is saved with the unique memo
 models.signals.pre_save.connect(pre_save_post_receiver, sender=User)
+
+
+class UserTransactionHistory(models.Model):
+
+    DEPOSIT = 'DEPOSIT'
+    WITHDRAW = 'WITHDRAW'
+
+    type_choices = [
+        (DEPOSIT, 'Deposit'),
+        (WITHDRAW, 'Withdraw')
+    ]
+
+    uuid = models.UUIDField(default=uuid4, editable=False, primary_key=True)
+
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    type = models.CharField(max_length=255, choices=type_choices)
+    amount = models.IntegerField()
+    transaction = models.ForeignKey(Transaction, on_delete=models.DO_NOTHING)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"User: {self.user} - {self.type} - {self.amount}"
