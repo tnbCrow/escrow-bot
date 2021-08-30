@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
+from django.conf import settings
 
-project_folder = os.path.expanduser('~/crow bot')  # adjust as appropriate
-load_dotenv(os.path.join(project_folder, '.env'))
+load_dotenv(os.path.join(settings.BASE_DIR, '.env'))
 
 from django.core.wsgi import get_wsgi_application
 

@@ -1,1 +1,0 @@
-web: gunicorn API.config.wsgi
