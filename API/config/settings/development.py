@@ -3,7 +3,7 @@ from .base import *  # noqa: F401
 
 # Project Artitecture Constants
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 # Business Logic Constants
 MIN_TNBC_ALLOWED = 5  # In TNBC

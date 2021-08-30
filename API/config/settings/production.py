@@ -3,7 +3,7 @@ from decouple import config
 
 # Project Artitecture Constants
 DEBUG = False
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['iskush.pythonanywhere.com']
 
 # Business Logic Constants
 MIN_TNBC_ALLOWED = 100  # In TNBC
