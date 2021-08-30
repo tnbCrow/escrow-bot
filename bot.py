@@ -13,11 +13,14 @@ from discord_slash.utils.manage_commands import create_option
 from discord_slash.utils.manage_components import create_button, create_actionrow, wait_for_component
 from discord_slash.model import ButtonStyle
 from datetime import datetime
-from decouple import config
+from dotenv import load_dotenv
+
 
 # Django Setup on bot
 sys.path.append(os.getcwd() + '/API')
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", config("DJANGO_SETTINGS_MODULE"))
+DJANGO_DIRECTORY = os.getcwd() + '/API'
+load_dotenv(os.path.join(DJANGO_DIRECTORY, '.env'))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.getenv("DJANGO_SETTINGS_MODULE"))
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 
@@ -31,7 +34,7 @@ from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
 from escrow.models.statistic import Statistic
 
 # Environment Variables
-TOKEN = config('CROW_DISCORD_TOKEN')
+TOKEN = os.getenv('CROW_DISCORD_TOKEN')
 
 # Initialize the Slash commands
 client = discord.Client(intents=discord.Intents.all())

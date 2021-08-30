@@ -1,12 +1,14 @@
 from pathlib import Path
-from decouple import config
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-bl98=byppq*j)n)x&#jb6xg$sjaa_5_1ws45(2t!-1=$*j5^*+')
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # Application definition
 
@@ -105,3 +107,4 @@ ACCOUNT_NUMBER = '7594d6d5ea7cb34d6e4ea09e161532bc41f171d4f0af6c189d8f05637e7dfe
 TNBC_TRANSACTION_FEE = 2  # In TNBC
 CROW_BOT_FEE = 2  # In Percentage
 PROHIBITED_ACCOUNT_NUMBERS = ['7594d6d5ea7cb34d6e4ea09e161532bc41f171d4f0af6c189d8f05637e7dfe76']
+SIGNING_KEY = os.getenv('SIGNING_KEY')

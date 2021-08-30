@@ -1,5 +1,4 @@
 import requests
-from decouple import config
 import os
 import json
 
@@ -9,7 +8,7 @@ from nacl.encoding import HexEncoder
 import nacl.signing
 from operator import itemgetter
 
-signing_key = nacl.signing.SigningKey(str.encode(config('SIGNING_KEY')), encoder=nacl.encoding.HexEncoder)
+signing_key = nacl.signing.SigningKey(str.encode(settings.SIGNING_KEY), encoder=nacl.encoding.HexEncoder)
 payment_account_number = signing_key.verify_key.encode(encoder=nacl.encoding.HexEncoder).decode('utf-8')
 
 
