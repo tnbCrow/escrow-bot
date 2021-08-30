@@ -9,7 +9,7 @@ class User(models.Model):
 
     uuid = models.UUIDField(default=uuid4, editable=False, primary_key=True)
 
-    discord_id = models.IntegerField(unique=True)
+    discord_id = models.CharField(max_length=255, unique=True)
     balance = models.IntegerField(default=0)
     locked = models.IntegerField(default=0)
     memo = models.CharField(max_length=255, unique=True)

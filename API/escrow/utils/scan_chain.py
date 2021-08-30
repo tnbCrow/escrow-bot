@@ -90,12 +90,8 @@ def scan_chain():
     scan_tracker.total_scans += 1
     scan_tracker.save()
 
-    check_confirmation()
-
 
 def match_transaction():
-
-    scan_chain()
 
     confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.CONFIRMED,
                                                transaction_status=Transaction.NEW,
