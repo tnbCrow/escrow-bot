@@ -28,6 +28,7 @@ from escrow.models.escrow import Escrow
 from escrow.models.transaction import Transaction
 from escrow.utils.scan_chain import match_transaction, check_confirmation, scan_chain
 from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
+from escrow.models.statistic import Statistic
 
 # Environment Variables
 TOKEN = config('CROW_DISCORD_TOKEN')
@@ -47,6 +48,9 @@ async def on_ready():
 
 @slash.slash(name="rate", description="Last trade rate of TNBC.")
 async def rate(ctx):
+
+    await ctx.defer()
+
     # Gets the last trade rate through tnbcrow API
     r = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
 
@@ -60,6 +64,9 @@ async def rate(ctx):
 
 @slash.slash(name="trades", description="Recent trades!!")
 async def trades(ctx):
+
+    await ctx.defer(hidden=True)
+
     # gets the recent trades using the tnbcrow API
     r = requests.get('https://tnbcrow.pythonanywhere.com/recent-trades').json()
 
@@ -78,6 +85,9 @@ async def trades(ctx):
 
 @slash.slash(name="help", description="Crow Bot help!!")
 async def help(ctx):
+
+    await ctx.defer(hidden=True)
+
     embed = discord.Embed(title="Commands", color=discord.Color.blue())
     embed.add_field(name="/rate", value="Last verified trade of TNBC!!", inline=False)
     embed.add_field(name="/trades", value="Recent verified trades!!", inline=False)
@@ -87,6 +97,9 @@ async def help(ctx):
 
 @slash.slash(name="stats", description="TNBC Price Statistics!!")
 async def stats(ctx):
+
+    await ctx.defer()
+
     # get the total circulating supply through tnb-analytics github
     r1 = requests.get("https://raw.githubusercontent.com/itsnikhil/tnb-analysis/master/web/js/static.json").json()
     circulating_supply = r1["Total"]
@@ -161,7 +174,7 @@ async def chain_scan(ctx: ComponentContext):
     check_confirmation()
 
     match_transaction()
-    
+
     obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=str(ctx.author.id))
 
     embed = discord.Embed(title="Scan Completed")
@@ -250,6 +263,9 @@ async def user_withdraw(ctx, amount: int):
                     obj.balance -= amount + fee
                     obj.save()
                     UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
+                    statistic = Statistic.objects.first()
+                    statistic.total_tnbc -= (amount + fee)
+                    statistic.save()
                     embed = discord.Embed(title="Coins Withdrawn!",
                                         description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
                 else:
@@ -310,7 +326,7 @@ async def escrow_new(ctx, amount: int, user):
     if initiator != successor:
 
         if amount < settings.MIN_TNBC_ALLOWED:
-            embed = discord.Embed(title="Error!!", description="You can only escrow more than 100 TNBC.")
+            embed = discord.Embed(title="Error!!", description=f"You can only escrow more than {settings.MIN_TNBC_ALLOWED} TNBC.")
 
         else:
 
