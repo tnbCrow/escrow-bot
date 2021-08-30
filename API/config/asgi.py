@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
-from django.conf import settings
 
-load_dotenv(os.path.join(settings.BASE_DIR, '.env'))
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 from django.core.asgi import get_asgi_application
 
