@@ -161,24 +161,15 @@ async def chain_scan(ctx: ComponentContext):
     check_confirmation()
 
     match_transaction()
-
-    await ctx.send("Chain Scan completed.", hidden=True, components=[create_actionrow(create_button(custom_id="user_balance", style=ButtonStyle.green, label="Check Balance"))])
-
-
-@slash.component_callback()
-async def user_balance(ctx: ComponentContext):
-
-    await ctx.defer(hidden=True)
-
+    
     obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=str(ctx.author.id))
 
-    embed = discord.Embed()
-    embed.add_field(name='Withdrawal Address', value=obj.withdrawal_address, inline=False)
-    embed.add_field(name='Balance', value=obj.balance)
+    embed = discord.Embed(title="Scan Completed")
+    embed.add_field(name='New Balance', value=obj.balance)
     embed.add_field(name='Locked Amount', value=obj.locked)
     embed.add_field(name='Available Balance', value=obj.get_available_balance())
 
-    await ctx.send(embed=embed, hidden=True)
+    await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
 
 
 @slash.subcommand(base="user",
