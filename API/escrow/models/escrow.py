@@ -35,6 +35,7 @@ class Escrow(models.Model):
     uuid_hex = models.CharField(max_length=255, unique=True)
 
     amount = models.IntegerField()
+    fee = models.IntegerField()
     initiator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="initiator")
     successor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="successor")
 
@@ -42,8 +43,10 @@ class Escrow(models.Model):
 
     initiator_cancelled = models.BooleanField(default=False)
     successor_cancelled = models.BooleanField(default=False)
+
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True, related_name="agent")
     settled_towards = models.CharField(max_length=255, choices=settled_towards_choices, default="SUCCESSOR")
+
     remarks = models.CharField(max_length=255, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

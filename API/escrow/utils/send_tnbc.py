@@ -1,5 +1,4 @@
 import requests
-import os
 import json
 
 from django.conf import settings
@@ -73,7 +72,7 @@ def estimate_fee():
         bank_config = requests.get(f'http://{settings.BANK_IP}/config?format=json').json()
 
     except:
-        
+
         return
 
     fee = int(bank_config['default_transaction_fee']) + int(bank_config['primary_validator']['default_transaction_fee'])
