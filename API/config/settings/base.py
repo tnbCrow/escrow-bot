@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'escrow',
+    'core',
+    'maakay',
 ]
 
 MIDDLEWARE = [
@@ -109,3 +111,4 @@ TNBC_TRANSACTION_FEE = 2  # In TNBC
 CROW_BOT_FEE = 2  # In Percentage
 PROHIBITED_ACCOUNT_NUMBERS = ['7594d6d5ea7cb34d6e4ea09e161532bc41f171d4f0af6c189d8f05637e7dfe76']
 SIGNING_KEY = os.getenv('SIGNING_KEY')
+BOT_MANAGER_ID = '534628936571813889'

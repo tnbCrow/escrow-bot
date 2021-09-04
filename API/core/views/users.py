@@ -1,7 +1,7 @@
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAdminUser
 
-from ..models.user import User
+from ..models.users import User
 from ..serializers.users import UserSerializer
 
 

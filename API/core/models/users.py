@@ -2,7 +2,7 @@ from uuid import uuid4
 import random
 
 from django.db import models
-from ..models.transaction import Transaction
+from ..models.transactions import Transaction
 
 
 class User(models.Model):

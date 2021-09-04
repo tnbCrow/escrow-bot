@@ -24,12 +24,13 @@ django.setup()
 
 from django.conf import settings
 from django.db.models import Q
-from escrow.models.user import User, UserTransactionHistory
+from core.models.users import User, UserTransactionHistory
 from escrow.models.escrow import Escrow
-from escrow.models.transaction import Transaction
-from escrow.utils.scan_chain import match_transaction, check_confirmation, scan_chain
-from escrow.utils.send_tnbc import estimate_fee, withdraw_tnbc
-from escrow.models.statistic import Statistic
+from core.models.transactions import Transaction
+from core.models.guilds import Guild
+from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
+from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
+from core.models.statistics import Statistic
 
 # Environment Variables
 TOKEN = os.getenv('CROW_DISCORD_TOKEN')
@@ -129,7 +130,8 @@ async def on_message(message):
         return
 
     # Delete old messages by the user in #trade channel
-    if message.channel.id == int(settings.TRADE_CHANNEL_ID):
+    guild = Guild.objects.get(guild_id=message.guild)
+    if message.channel.id == guild.trade_channel_id:
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
@@ -735,7 +737,7 @@ async def kill(ctx):
 
     await ctx.defer(hidden=True)
 
-    if int(ctx.author.id) == int(settings.MANAGER_ID):
+    if int(ctx.author.id) == int(settings.BOT_MANAGER_ID):
         print("Shutting Down the bot")
         await ctx.send("Bot Shut Down", hidden=True)
         await client.close()

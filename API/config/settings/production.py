@@ -7,14 +7,10 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Project Artitecture Constants
 DEBUG = False
-ALLOWED_HOSTS = ['iskush.pythonanywhere.com']
+ALLOWED_HOSTS = ['*']
 
 # Business Logic Constants
 MIN_TNBC_ALLOWED = 100  # In TNBC
-TRADE_CHANNEL_ID = '826324743145390090'
-DISPUTE_CHANNEL_ID = '880645101913768046'
-AGENT_ROLE_ID = '880647875976114177'
-MANAGER_ID = '534628936571813889'
 
 
 DATABASES = {

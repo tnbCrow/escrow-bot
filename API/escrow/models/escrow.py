@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from .user import User
+from core.models.users import User
 
 
 class Escrow(models.Model):
