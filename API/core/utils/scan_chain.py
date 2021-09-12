@@ -9,6 +9,7 @@ from ..models.scan_tracker import ScanTracker
 from ..models.transactions import Transaction
 from ..models.statistics import Statistic
 from ..models.users import User, UserTransactionHistory
+from ..models.wallets import ThenewbostonWallet
 
 TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
 
@@ -99,11 +100,11 @@ def match_transaction():
 
     for txs in confirmed_txs:
 
-        if User.objects.filter(memo=txs.memo).exists():
-            user = User.objects.get(memo=txs.memo)
-            user.balance += txs.amount
-            UserTransactionHistory.objects.create(user=user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT, transaction=txs)
-            user.save()
+        if ThenewbostonWallet.objects.filter(memo=txs.memo).exists():
+            wallet = ThenewbostonWallet.objects.get(memo=txs.memo)
+            wallet.balance += txs.amount
+            UserTransactionHistory.objects.create(user=wallet.user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT, transaction=txs)
+            wallet.save()
             txs.transaction_status = Transaction.IDENTIFIED
             txs.save()
         else:
