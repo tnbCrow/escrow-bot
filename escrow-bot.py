@@ -224,7 +224,6 @@ async def user_setwithdrawaladdress(ctx, address: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-
 @slash.subcommand(base="withdraw", name="tnbc", description="Withdraw TNBC into your account!!",
                   options=[
                       create_option(
@@ -257,14 +256,14 @@ async def user_withdraw(ctx, amount: int):
                     if block_response:
                         if block_response.status_code == 201:
                             txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                                            transaction_status=Transaction.IDENTIFIED,
-                                                            direction=Transaction.OUTGOING,
-                                                            account_number=obj.withdrawal_address,
-                                                            amount=amount,
-                                                            fee=fee,
-                                                            signature=block_response.json()['signature'],
-                                                            block=block_response.json()['id'],
-                                                            memo=obj.memo)
+                                                             transaction_status=Transaction.IDENTIFIED,
+                                                             direction=Transaction.OUTGOING,
+                                                             account_number=obj.withdrawal_address,
+                                                             amount=amount,
+                                                             fee=fee,
+                                                             signature=block_response.json()['signature'],
+                                                             block=block_response.json()['id'],
+                                                             memo=obj.memo)
                             obj.balance -= amount + fee
                             obj.save()
                             UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
@@ -272,7 +271,7 @@ async def user_withdraw(ctx, amount: int):
                             statistic.total_balance -= (amount + fee)
                             statistic.save()
                             embed = discord.Embed(title="Coins Withdrawn!",
-                                                description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
+                                                  description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
                         else:
                             embed = discord.Embed(title="Error!", description="Please try again later!!")
                     else:

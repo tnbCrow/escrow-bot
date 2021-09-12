@@ -21,7 +21,6 @@ INSTALLED_APPS = [
 
     'escrow',
     'core',
-    'maakay',
 ]
 
 MIDDLEWARE = [
