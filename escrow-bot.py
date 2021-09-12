@@ -88,10 +88,20 @@ async def help(ctx):
 
     await ctx.defer(hidden=True)
 
-    embed = discord.Embed(title="Commands", color=discord.Color.blue())
-    embed.add_field(name="/rate", value="Last verified trade of TNBC!!", inline=False)
-    embed.add_field(name="/trades", value="Recent verified trades!!", inline=False)
-    embed.add_field(name="/stats", value="TNBC Price Statistics!!", inline=False)
+    embed=discord.Embed(title="Getting Started to crow discord bot!", url="https://bot.tnbcrow.com/", description="Command List", color=0xe81111)
+    embed.add_field(name="Check Balance", value="/balance")
+    embed.add_field(name="Deposit TNBC", value="/deposit tnbc")
+    embed.add_field(name="Withdraw TNBC", value="/withdraw tnbc")
+    embed.add_field(name="Create an escrow", value="/escrow new amount: AMOUNT user: DISCORD_USER", inline=False)
+    embed.add_field(name="Check escrow status", value="/escrow status escrow_id: ESCROW_ID")
+    embed.add_field(name="List all active escrow", value="/escrow all", inline=False)
+    embed.add_field(name="Release the escrow", value="/escrow release escrow_id: ESCROW_ID", inline=False)
+    embed.add_field(name="Cancel the escrow", value="/escrow cancel escrow_id: ESCROW_ID")
+    embed.add_field(name="Dispute the escrow", value="/escrow dispute escrow_id: ESCROW_ID", inline=False)
+    embed.add_field(name="Check all completed escrows", value="/escrow history escrow_id: ESCROW_ID", inline=False)
+    embed.add_field(name="Check last verified trade rate", value="/rate")
+    embed.add_field(name="Check TNBC price statistics", value="/stats")
+
     await ctx.send(embed=embed, hidden=True)
 
 
