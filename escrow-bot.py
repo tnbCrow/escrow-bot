@@ -135,7 +135,7 @@ async def on_message(message):
                 await oldMessage.delete()
 
 
-@slash.subcommand(base="user", name="balance", description="Check User Balance!!")
+@slash.slash(name="balance", description="Check User Balance!!")
 async def user_balance(ctx):
 
     await ctx.defer(hidden=True)
@@ -151,16 +151,20 @@ async def user_balance(ctx):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.subcommand(base="user", name="deposit", description="Deposit TNBC into your crow account!!")
+@slash.subcommand(base="deposit", name="tnbc", description="Deposit TNBC into your crow account!!")
 async def user_deposit(ctx):
 
     await ctx.defer(hidden=True)
 
     obj, created = await sync_to_async(User.objects.get_or_create)(discord_id=str(ctx.author.id))
 
+    qr_data = f"{{'address':{settings.ACCOUNT_NUMBER},'memo':'{obj.memo}'}}"
+
     embed = discord.Embed(title="Send TNBC to the address with memo!!")
     embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
     embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=obj.memo, inline=False)
+    embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
+    embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
 
     await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Sent? Scan Chain"))])
 
@@ -172,7 +176,7 @@ async def chain_scan(ctx: ComponentContext):
 
     scan_chain()
 
-    check_confirmation()
+    # check_confirmation()
 
     match_transaction()
 
@@ -186,8 +190,8 @@ async def chain_scan(ctx: ComponentContext):
     await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
 
 
-@slash.subcommand(base="user",
-                  name="set_withdrawal_address",
+@slash.subcommand(base="set_withdrawal_address",
+                  name="tnbc",
                   description="Set new withdrawal address!!",
                   options=[
                       create_option(
@@ -220,9 +224,8 @@ async def user_setwithdrawaladdress(ctx, address: str):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.subcommand(base="user",
-                  name="withdraw",
-                  description="Withdraw TNBC into your account!!",
+
+@slash.subcommand(base="withdraw", name="tnbc", description="Withdraw TNBC into your account!!",
                   options=[
                       create_option(
                           name="amount",
@@ -243,37 +246,39 @@ async def user_withdraw(ctx, amount: int):
         fee = estimate_fee()
 
         if fee:
-            if not amount < 3:
+            if not amount < 1:
                 if obj.get_available_balance() < amount + fee:
                     embed = discord.Embed(title="Inadequate Funds!!",
-                                        description=f"You only have {obj.get_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/user deposit` to deposit TNBC!!")
+                                          description=f"You only have {obj.get_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/user deposit` to deposit TNBC!!")
 
                 else:
                     block_response, fee = withdraw_tnbc(obj.withdrawal_address, amount, obj.memo)
 
-                    if block_response.status_code == 201:
-
-                        txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                                        transaction_status=Transaction.IDENTIFIED,
-                                                        direction=Transaction.OUTGOING,
-                                                        account_number=obj.withdrawal_address,
-                                                        amount=amount,
-                                                        fee=fee,
-                                                        signature=block_response.json()['signature'],
-                                                        block=block_response.json()['id'],
-                                                        memo=obj.memo)
-                        obj.balance -= amount + fee
-                        obj.save()
-                        UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
-                        statistic = Statistic.objects.first()
-                        statistic.total_balance -= (amount + fee)
-                        statistic.save()
-                        embed = discord.Embed(title="Coins Withdrawn!",
-                                            description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
+                    if block_response:
+                        if block_response.status_code == 201:
+                            txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                                            transaction_status=Transaction.IDENTIFIED,
+                                                            direction=Transaction.OUTGOING,
+                                                            account_number=obj.withdrawal_address,
+                                                            amount=amount,
+                                                            fee=fee,
+                                                            signature=block_response.json()['signature'],
+                                                            block=block_response.json()['id'],
+                                                            memo=obj.memo)
+                            obj.balance -= amount + fee
+                            obj.save()
+                            UserTransactionHistory.objects.create(user=obj, amount=amount + fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
+                            statistic = Statistic.objects.first()
+                            statistic.total_balance -= (amount + fee)
+                            statistic.save()
+                            embed = discord.Embed(title="Coins Withdrawn!",
+                                                description=f"Successfully withdrawn {amount} TNBC to {obj.withdrawal_address} \n Use `/user balance` to check your new balance.")
+                        else:
+                            embed = discord.Embed(title="Error!", description="Please try again later!!")
                     else:
                         embed = discord.Embed(title="Error!", description="Please try again later!!")
             else:
-                embed = discord.Embed(title="Error!", description="You cannot withdraw less than 3 TNBC!!")
+                embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC!!")
         else:
             embed = discord.Embed(title="Error!", description="Could not retrive fee info from the bank!!")
     else:
@@ -282,7 +287,7 @@ async def user_withdraw(ctx, amount: int):
     await ctx.send(embed=embed, hidden=True)
 
 
-@slash.subcommand(base="user", name="transactions", description="Check Transaction History!!")
+@slash.subcommand(base="transactions", name="tnbc", description="Check Transaction History!!")
 async def user_transactions(ctx):
 
     await ctx.defer(hidden=True)
