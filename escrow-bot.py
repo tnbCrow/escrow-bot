@@ -22,10 +22,9 @@ django.setup()
 
 from django.conf import settings
 from django.db.models import Q, F
-from core.models.users import User, UserTransactionHistory
+from core.models.users import UserTransactionHistory
 from escrow.models.escrow import Escrow
 from core.models.transactions import Transaction
-from core.models.guilds import Guild
 from core.models.wallets import ThenewbostonWallet
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
 from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
@@ -167,7 +166,7 @@ async def user_balance(ctx):
 async def user_deposit(ctx):
 
     await ctx.defer(hidden=True)
-    
+
     discord_user = get_or_create_discord_user(ctx.author.id)
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
@@ -252,7 +251,7 @@ async def user_setwithdrawaladdress(ctx, address: str):
 async def user_withdraw(ctx, amount: int):
 
     await ctx.defer(hidden=True)
-    
+
     discord_user = get_or_create_discord_user(ctx.author.id)
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
@@ -291,11 +290,11 @@ async def user_withdraw(ctx, amount: int):
                         else:
                             embed = discord.Embed(title="Error!", description="Please try again later.")
                     else:
-                        embed = discord.Embed(title="Error!", description=f"Can not send transaction block to the bank, Try Again.")
+                        embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.")
             else:
                 embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.")
         else:
-            embed = discord.Embed(title="Error!", description=f"Could not fee info from the bank.")
+            embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.")
     else:
         embed = discord.Embed(title="No withdrawal address set!", description="Use `/set_withdrawal_address` to set withdrawal address.")
 
@@ -346,7 +345,7 @@ async def escrow_new(ctx, amount: int, user):
 
     initiator_discord_user = get_or_create_discord_user(ctx.author.id)
     initiator_tnbc_wallet = get_or_create_tnbc_wallet(initiator_discord_user)
-    
+
     successor_discord_user = get_or_create_discord_user(user.id)
 
     if initiator_discord_user != successor_discord_user:
@@ -392,7 +391,7 @@ async def escrow_new(ctx, amount: int, user):
 async def escrow_status(ctx, escrow_id: str):
 
     await ctx.defer(hidden=True)
-    
+
     discord_user = get_or_create_discord_user(ctx.author.id)
 
     if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user), Q(uuid_hex=escrow_id)).exists():
@@ -530,7 +529,7 @@ async def escrow_release(ctx, escrow_id: str):
 async def escrow_cancel(ctx, escrow_id: str):
 
     await ctx.defer(hidden=True)
-    
+
     discord_user = get_or_create_discord_user(ctx.author.id)
 
     # Check if the user is initiator or successor

@@ -8,7 +8,7 @@ from django.db.models import F
 from ..models.scan_tracker import ScanTracker
 from ..models.transactions import Transaction
 from ..models.statistics import Statistic
-from ..models.users import User, UserTransactionHistory
+from ..models.users import UserTransactionHistory
 from ..models.wallets import ThenewbostonWallet
 
 TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
