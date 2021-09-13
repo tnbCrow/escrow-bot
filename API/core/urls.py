@@ -1,7 +1,7 @@
 from rest_framework.routers import SimpleRouter
 
-from .views.users import UserViewSet
+from .views.wallets import ThenewbostonWalletViewSet
 
 
 router = SimpleRouter(trailing_slash=False)
-router.register('users', UserViewSet)
+router.register('tnbc-wallet', ThenewbostonWalletViewSet)
