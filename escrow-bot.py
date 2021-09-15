@@ -24,6 +24,7 @@ from django.conf import settings
 from django.db.models import Q, F
 from core.models.users import UserTransactionHistory
 from escrow.models.escrow import Escrow
+from escrow.models.trade_offers import TradeOffer
 from core.models.transactions import Transaction
 from core.models.wallets import ThenewbostonWallet
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
@@ -138,11 +139,16 @@ async def on_message(message):
     if message.author.id == client.user.id:
         return
 
+    discord_user = get_or_create_discord_user(message.author.id)
+
     # Delete old messages by the user in #trade channel
     if message.channel.id == int(settings.TRADE_CHANNEL_ID):
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
+                TradeOffer.objects.filter(user=discord_user).delete()
+    
+    TradeOffer.objects.create(user=discord_user, message=message.content, discord_username=message.author)
 
 
 @slash.slash(name="balance", description="Check User Balance.")

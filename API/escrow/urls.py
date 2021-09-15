@@ -1,7 +1,6 @@
 from rest_framework.routers import SimpleRouter
 
-from .views.users import UserViewSet
-
+from .views.trade_offers import TradeOfferViewSet
 
 router = SimpleRouter(trailing_slash=False)
-router.register('users', UserViewSet)
+router.register('trade-offers', TradeOfferViewSet)
