@@ -763,6 +763,8 @@ async def kill(ctx):
         await ctx.send("Bot Shut Down", hidden=True)
         await client.close()
     else:
-        await ctx.send("#DonotKillCrowBot", hidden=True)
+        embed = discord.Embed(title="Nope", description="")
+        embed.set_image(url="https://i.ibb.co/zQc3xDp/download-min-1.png")
+        await ctx.send(embed=embed, hidden=True)
 
 client.run(TOKEN)
