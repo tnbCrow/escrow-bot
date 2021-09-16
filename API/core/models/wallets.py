@@ -9,8 +9,8 @@ class ThenewbostonWallet(models.Model):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
 
-    balance = models.IntegerField(default=0)
-    locked = models.IntegerField(default=0)
+    balance = models.BigIntegerField(default=0)
+    locked = models.BigIntegerField(default=0)
     memo = models.CharField(max_length=255, unique=True)
     withdrawal_address = models.CharField(max_length=64, blank=True, null=True)
 
@@ -21,6 +21,15 @@ class ThenewbostonWallet(models.Model):
 
     def get_available_balance(self):
         return self.balance - self.locked
+    
+    def get_int_balance(self):
+        return int(self.balance / 100000000)
+    
+    def get_int_locked(self):
+        return int(self.locked / 100000000)
+    
+    def get_int_available_balance(self):
+        return int((self.balance - self.locked) / 100000000)
 
     def __str__(self):
         return f"User: {self.user}; Balance: {self.balance}; Available: {self.get_available_balance()}"

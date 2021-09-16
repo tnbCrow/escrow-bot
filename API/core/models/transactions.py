@@ -40,7 +40,7 @@ class Transaction(models.Model):
     transaction_status = models.CharField(max_length=255, choices=transaction_status_choices)
 
     account_number = models.CharField(max_length=64)
-    amount = models.IntegerField()
+    amount = models.BigIntegerField()
     fee = models.IntegerField(default=0)
     signature = models.CharField(max_length=255)
     block = models.CharField(max_length=255)
@@ -50,6 +50,9 @@ class Transaction(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_int_amount(self):
+        return int(self.amount / 100000000)
 
     def __str__(self):
         return f'{self.direction} | {self.amount} | {self.transaction_status} | {self.confirmation_status}'

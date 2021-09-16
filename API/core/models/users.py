@@ -31,11 +31,14 @@ class UserTransactionHistory(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     type = models.CharField(max_length=255, choices=type_choices)
-    amount = models.IntegerField()
+    amount = models.BigIntegerField()
     transaction = models.ForeignKey(Transaction, on_delete=models.DO_NOTHING)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_int_amount(self):
+        return int(self.amount / 100000000)
 
     def __str__(self):
         return f"User: {self.user} - {self.type} - {self.amount}"

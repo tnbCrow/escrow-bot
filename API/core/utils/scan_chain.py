@@ -78,7 +78,7 @@ def scan_chain():
                                                direction=direction,
                                                transaction_status=Transaction.NEW,
                                                account_number=account_number,
-                                               amount=amount,
+                                               amount=amount * 100000000,
                                                fee=transaction_fee,
                                                block=transaction['block']['id'],
                                                signature=transaction['block']['signature'],

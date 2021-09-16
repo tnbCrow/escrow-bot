@@ -34,8 +34,8 @@ class Escrow(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     uuid_hex = models.CharField(max_length=255, unique=True)
 
-    amount = models.IntegerField()
-    fee = models.IntegerField()
+    amount = models.BigIntegerField()
+    fee = models.BigIntegerField()
     initiator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="initiator")
     successor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="successor")
 
@@ -51,6 +51,12 @@ class Escrow(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_int_amount(self):
+        return int(self.amount / 100000000)
+    
+    def get_int_fee(self):
+        return int(self.fee / 100000000)
 
     def __str__(self):
         return f"Amount: {self.amount}; Status: {self.status}"

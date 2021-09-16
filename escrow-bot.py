@@ -161,9 +161,9 @@ async def user_balance(ctx):
 
     embed = discord.Embed()
     embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-    embed.add_field(name='Balance', value=tnbc_wallet.balance)
-    embed.add_field(name='Locked Amount', value=tnbc_wallet.locked)
-    embed.add_field(name='Available Balance', value=tnbc_wallet.get_available_balance())
+    embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
+    embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
+    embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -202,9 +202,9 @@ async def chain_scan(ctx: ComponentContext):
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
     embed = discord.Embed(title="Scan Completed")
-    embed.add_field(name='New Balance', value=tnbc_wallet.balance)
-    embed.add_field(name='Locked Amount', value=tnbc_wallet.locked)
-    embed.add_field(name='Available Balance', value=tnbc_wallet.get_available_balance())
+    embed.add_field(name='New Balance', value=tnbc_wallet.get_int_balance())
+    embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
+    embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
 
     await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
 
@@ -267,9 +267,9 @@ async def user_withdraw(ctx, amount: int):
 
         if response:
             if not amount < 1:
-                if tnbc_wallet.get_available_balance() < amount + fee:
+                if tnbc_wallet.get_int_available_balance() < amount + fee:
                     embed = discord.Embed(title="Inadequate Funds!",
-                                          description=f"You only have {tnbc_wallet.get_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.")
+                                          description=f"You only have {tnbc_wallet.get_int_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.")
 
                 else:
                     block_response, fee = withdraw_tnbc(tnbc_wallet.withdrawal_address, amount, tnbc_wallet.memo)
@@ -280,16 +280,17 @@ async def user_withdraw(ctx, amount: int):
                                                              transaction_status=Transaction.IDENTIFIED,
                                                              direction=Transaction.OUTGOING,
                                                              account_number=tnbc_wallet.withdrawal_address,
-                                                             amount=amount,
-                                                             fee=fee,
+                                                             amount=amount * 100000000,
+                                                             fee=fee * 100000000,
                                                              signature=block_response.json()['signature'],
                                                              block=block_response.json()['id'],
                                                              memo=tnbc_wallet.memo)
-                            tnbc_wallet.balance -= amount + fee
+                            converted_amount_plus_fee =  (amount + fee) * 100000000
+                            tnbc_wallet.balance -= converted_amount_plus_fee
                             tnbc_wallet.save()
-                            UserTransactionHistory.objects.create(user=discord_user, amount=amount + fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
+                            UserTransactionHistory.objects.create(user=discord_user, amount=converted_amount_plus_fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
                             statistic = Statistic.objects.first()
-                            statistic.total_balance -= (amount + fee)
+                            statistic.total_balance -= converted_amount_plus_fee
                             statistic.save()
                             embed = discord.Embed(title="Coins Withdrawn.",
                                                   description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.")
@@ -322,7 +323,7 @@ async def user_transactions(ctx):
 
         natural_day = humanize.naturalday(txs.created_at)
 
-        embed.add_field(name='\u200b', value=f"{txs.type} - {txs.amount} TNBC - {natural_day}", inline=False)
+        embed.add_field(name='\u200b', value=f"{txs.type} - {txs.get_int_amount()} TNBC - {natural_day}", inline=False)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -361,18 +362,20 @@ async def escrow_new(ctx, amount: int, user):
 
         else:
 
-            if initiator_tnbc_wallet.get_available_balance() < amount:
+            if initiator_tnbc_wallet.get_int_available_balance() < amount:
                 embed = discord.Embed(title="Inadequate Funds!",
-                                      description=f"You only have {initiator_tnbc_wallet.get_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!")
+                                      description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!")
             else:
-                fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
-                escrow_obj = await sync_to_async(Escrow.objects.create)(amount=amount, initiator=initiator_discord_user, successor=successor_discord_user, status=Escrow.OPEN, fee=fee)
-                initiator_tnbc_wallet.locked += amount
+                integer_fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
+                database_fee = integer_fee * 100000000
+                database_amount = amount * 100000000
+                escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount, initiator=initiator_discord_user, successor=successor_discord_user, status=Escrow.OPEN, fee=database_fee)
+                initiator_tnbc_wallet.locked += database_amount
                 initiator_tnbc_wallet.save()
                 embed = discord.Embed(title="Success.", description="")
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{amount}")
-                embed.add_field(name='Fee', value=f"{fee}")
+                embed.add_field(name='Fee', value=f"{integer_fee}")
                 embed.add_field(name='Initiator', value=f"{ctx.author.mention}")
                 embed.add_field(name='Successor', value=f"{user.mention}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
@@ -408,8 +411,8 @@ async def escrow_status(ctx, escrow_id: str):
 
         embed = discord.Embed()
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-        embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-        embed.add_field(name='Fee', value=f"{escrow_obj.fee}")
+        embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
+        embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
         embed.add_field(name='Initiator', value=f"{initiator.mention}")
         embed.add_field(name='Successor', value=f"{successor.mention}")
         embed.add_field(name='Status', value=f"{escrow_obj.status}")
@@ -442,8 +445,8 @@ async def escrow_all(ctx):
         for escrow in escrows:
 
             embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow.amount}")
-            embed.add_field(name='Fee', value=f"{escrow.fee}")
+            embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
+            embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
             embed.add_field(name='Status', value=f"{escrow.status}")
 
     else:
@@ -467,8 +470,8 @@ async def escrow_history(ctx):
         for escrow in escrows:
 
             embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow.amount}")
-            embed.add_field(name='Fee', value=f"{escrow.fee}")
+            embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
+            embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
             embed.add_field(name='Status', value=f"{escrow.status}")
 
     else:
@@ -508,8 +511,8 @@ async def escrow_release(ctx, escrow_id: str):
 
             embed = discord.Embed(title="Success", description="")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-            embed.add_field(name='Fee', value=f"{escrow_obj.fee}")
+            embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
+            embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
         else:
@@ -562,8 +565,8 @@ async def escrow_cancel(ctx, escrow_id: str):
 
             embed = discord.Embed(title="Success", description="")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-            embed.add_field(name='Fee', value=f"{escrow_obj.fee}")
+            embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
+            embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
             embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
             embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
@@ -621,8 +624,8 @@ async def escrow_dispute(ctx, escrow_id: str):
 
             embed = discord.Embed(title="Success", description="Agent will create a private channel within this server to resolve dispute. **Agent will never DM you!!**")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-            embed.add_field(name='Fee', value=f"{escrow_obj.fee}")
+            embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
+            embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
             embed.add_field(name='Initiator', value=f"{initiator.mention}")
             embed.add_field(name='Successor', value=f"{successor.mention}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
@@ -673,8 +676,8 @@ async def agent_cancel(ctx, escrow_id: str, remarks: str):
 
                 embed = discord.Embed(title="Success", description="")
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-                embed.add_field(name='Fee', value=f"{escrow_obj.fee}")
+                embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
+                embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.")
@@ -737,8 +740,8 @@ async def agent_release(ctx, escrow_id: str, user, remarks: str):
 
             embed = discord.Embed(title="Success", description="")
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
-            embed.add_field(name='Fee', value=f"{escrow_obj.fee}")
+            embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
+            embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
             embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
