@@ -7,11 +7,12 @@ class Statistic(models.Model):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
 
-    total_balance = models.BigIntegerField()
-    total_fees_collected = models.BigIntegerField()
+    title = models.CharField(max_length=255)
+    total_balance = models.BigIntegerField(default=0)
+    total_fees_collected = models.BigIntegerField(default=0)
 
-    total_servers = models.IntegerField()
-    total_users = models.IntegerField()
+    total_servers = models.IntegerField(default=0)
+    total_users = models.IntegerField(default=0)
 
     def get_int_balance(self):
         return int(self.total_balance / 100000000)

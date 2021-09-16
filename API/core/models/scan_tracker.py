@@ -1,9 +1,14 @@
+import uuid
+
 from django.db import models
 
 
 class ScanTracker(models.Model):
 
-    total_scans = models.IntegerField()
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+
+    title = models.CharField(max_length=255)
+    total_scans = models.IntegerField(default=0)
     last_scanned = models.DateTimeField(auto_now=True)
 
     def __str__(self):

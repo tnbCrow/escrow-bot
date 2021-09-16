@@ -147,8 +147,8 @@ async def on_message(message):
             if oldMessage.author == message.author and oldMessage.id != message.id:
                 await oldMessage.delete()
                 TradeOffer.objects.filter(user=discord_user).delete()
-    
-    TradeOffer.objects.create(user=discord_user, message=message.content, discord_username=message.author)
+
+        TradeOffer.objects.create(user=discord_user, message=message.content, discord_username=message.author)
 
 
 @slash.slash(name="balance", description="Check User Balance.")
@@ -289,7 +289,7 @@ async def user_withdraw(ctx, amount: int):
                             tnbc_wallet.balance -= converted_amount_plus_fee
                             tnbc_wallet.save()
                             UserTransactionHistory.objects.create(user=discord_user, amount=converted_amount_plus_fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
-                            statistic = Statistic.objects.first()
+                            statistic, created = Statistic.objects.get_or_create(title="main")
                             statistic.total_balance -= converted_amount_plus_fee
                             statistic.save()
                             embed = discord.Embed(title="Coins Withdrawn.",
