@@ -1,6 +1,8 @@
 import uuid
 import random
+
 from django.db import models
+from django.conf import settings
 
 from .users import User
 
@@ -21,15 +23,15 @@ class ThenewbostonWallet(models.Model):
 
     def get_available_balance(self):
         return self.balance - self.locked
-    
+
     def get_int_balance(self):
-        return int(self.balance / 100000000)
-    
+        return int(self.balance / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def get_int_locked(self):
-        return int(self.locked / 100000000)
-    
+        return int(self.locked / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def get_int_available_balance(self):
-        return int((self.balance - self.locked) / 100000000)
+        return int((self.balance - self.locked) / settings.TNBC_MULTIPLICATION_FACTOR)
 
     def __str__(self):
         return f"User: {self.user}; Balance: {self.balance}; Available: {self.get_available_balance()}"

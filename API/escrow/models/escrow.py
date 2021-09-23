@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.conf import settings
 
 from core.models.users import User
 
@@ -53,10 +54,10 @@ class Escrow(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def get_int_amount(self):
-        return int(self.amount / 100000000)
-    
+        return int(self.amount / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def get_int_fee(self):
-        return int(self.fee / 100000000)
+        return int(self.fee / settings.TNBC_MULTIPLICATION_FACTOR)
 
     def __str__(self):
         return f"Amount: {self.amount}; Status: {self.status}"

@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 from django.conf import settings
-from django.db.models import F
 
 from ..models.scan_tracker import ScanTracker
 from ..models.transactions import Transaction
@@ -67,7 +66,7 @@ def scan_chain():
 
             if scan_tracker.last_scanned < transaction_time and not transaction_exists:
 
-                amount = int(transaction['amount']) * 100000000
+                amount = int(transaction['amount']) * settings.TNBC_MULTIPLICATION_FACTOR
 
                 if transaction['recipient'] == settings.ACCOUNT_NUMBER:
                     direction = Transaction.INCOMING

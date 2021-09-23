@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.conf import settings
 
 
 class Statistic(models.Model):
@@ -15,10 +16,10 @@ class Statistic(models.Model):
     total_users = models.IntegerField(default=0)
 
     def get_int_balance(self):
-        return int(self.total_balance / 100000000)
-    
+        return int(self.total_balance / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def get_int_fees_collected(self):
-        return int(self.total_fees_collected / 100000000)
+        return int(self.total_fees_collected / settings.TNBC_MULTIPLICATION_FACTOR)
 
     def __str__(self):
         return f"Balance: {self.total_balance}; Servers: {self.total_servers}; Users: {self.total_users}"

@@ -15,6 +15,7 @@ Try `/help` for commands in tnbCrow discord server.
 CROW_DISCORD_TOKEN (Discord bot token)
 DJANGO_SETTINGS_MODULE (config.settings.development or config.settings.production)
 SECRET_KEY (Django Secret Key)
+TNBCROW_BOT_ACCOUNT_NUMBER (TNBC Account Number for receiving payment)
 SIGNING_KEY (TNBC Signing Key handling payments)
 
 # For production

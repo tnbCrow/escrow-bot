@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from django.db import models
+from django.conf import settings
 from ..models.transactions import Transaction
 
 
@@ -38,7 +39,7 @@ class UserTransactionHistory(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def get_int_amount(self):
-        return int(self.amount / 100000000)
+        return int(self.amount / settings.TNBC_MULTIPLICATION_FACTOR)
 
     def __str__(self):
         return f"User: {self.user} - {self.type} - {self.amount}"

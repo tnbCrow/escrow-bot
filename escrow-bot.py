@@ -59,7 +59,7 @@ async def rate(ctx):
     # parse the rate to decimal since the rates are 10^4 of the actual rate
     last_rate = int(r["results"][0]["last_rate"]) / 10000
 
-    embed = discord.Embed()
+    embed = discord.Embed(color=0xe81111)
     embed.add_field(name=f"Last Trade Rate: ${last_rate}", value="Use /trades to check recent verified trades.")
     await ctx.send(embed=embed)
 
@@ -74,7 +74,7 @@ async def trades(ctx):
 
     trades = r["results"]
 
-    embed = discord.Embed(title="tnbCrow recent OTC trades.")
+    embed = discord.Embed(title="Recent verified trades.", color=0xe81111)
 
     for trade in trades:
         humanized_amount = humanize.intcomma(trade['amount'])
@@ -90,7 +90,7 @@ async def help(ctx):
 
     await ctx.defer(hidden=True)
 
-    embed=discord.Embed(title="Getting Started to crow discord bot.", url="https://bot.tnbcrow.com/", description="Command List", color=0xe81111)
+    embed = discord.Embed(title="Getting Started", url="https://bot.tnbcrow.com/", description="Command List", color=0xe81111)
     embed.add_field(name="Check Balance", value="/balance")
     embed.add_field(name="Deposit TNBC", value="/deposit tnbc")
     embed.add_field(name="Withdraw TNBC", value="/withdraw tnbc")
@@ -103,6 +103,7 @@ async def help(ctx):
     embed.add_field(name="List all completed escrows", value="/escrow history escrow_id: ESCROW_ID", inline=False)
     embed.add_field(name="Last Trade Rate", value="/rate")
     embed.add_field(name="TNBC Price Statistics", value="/stats")
+    embed.set_thumbnail(url=client.user.avatar_url)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -126,7 +127,7 @@ async def stats(ctx):
     humanized_cap = humanize.intcomma(market_cap)
 
     # create an embed and show it to users
-    embed = discord.Embed(title="TNBC Price Statistics")
+    embed = discord.Embed(title="TNBC Price Statistics", color=0xe81111)
     embed.add_field(name="Circulating Supply", value=humanized_supply, inline=False)
     embed.add_field(name="Last Trade Rate", value=f"${last_rate}", inline=False)
     embed.add_field(name="Market Cap", value=f"${humanized_cap}", inline=False)
@@ -159,7 +160,7 @@ async def user_balance(ctx):
     discord_user = get_or_create_discord_user(ctx.author.id)
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
-    embed = discord.Embed()
+    embed = discord.Embed(color=0xe81111)
     embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
     embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
     embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
@@ -178,7 +179,7 @@ async def user_deposit(ctx):
 
     qr_data = f"{{'address':{settings.ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
 
-    embed = discord.Embed(title="Send TNBC to the address with memo.")
+    embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
     embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
     embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
     embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
@@ -201,7 +202,7 @@ async def chain_scan(ctx: ComponentContext):
     discord_user = get_or_create_discord_user(ctx.author.id)
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
-    embed = discord.Embed(title="Scan Completed")
+    embed = discord.Embed(title="Scan Completed", color=0xe81111)
     embed.add_field(name='New Balance', value=tnbc_wallet.get_int_balance())
     embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
     embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
@@ -232,13 +233,13 @@ async def user_setwithdrawaladdress(ctx, address: str):
         if address not in settings.PROHIBITED_ACCOUNT_NUMBERS:
             tnbc_wallet.withdrawal_address = address
             tnbc_wallet.save()
-            embed = discord.Embed()
+            embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Success', value=f"Successfully set `{address}` as your withdrawal address.")
         else:
-            embed = discord.Embed()
+            embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Error!', value="You can not set this account number as your withdrawal address.")
     else:
-        embed = discord.Embed()
+        embed = discord.Embed(color=0xe81111)
         embed.add_field(name='Error!', value="Please enter a valid TNBC account number.")
 
     await ctx.send(embed=embed, hidden=True)
@@ -269,7 +270,8 @@ async def user_withdraw(ctx, amount: int):
             if not amount < 1:
                 if tnbc_wallet.get_int_available_balance() < amount + fee:
                     embed = discord.Embed(title="Inadequate Funds!",
-                                          description=f"You only have {tnbc_wallet.get_int_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.")
+                                          description=f"You only have {tnbc_wallet.get_int_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.",
+                                          color=0xe81111)
 
                 else:
                     block_response, fee = withdraw_tnbc(tnbc_wallet.withdrawal_address, amount, tnbc_wallet.memo)
@@ -280,12 +282,12 @@ async def user_withdraw(ctx, amount: int):
                                                              transaction_status=Transaction.IDENTIFIED,
                                                              direction=Transaction.OUTGOING,
                                                              account_number=tnbc_wallet.withdrawal_address,
-                                                             amount=amount * 100000000,
-                                                             fee=fee * 100000000,
+                                                             amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
+                                                             fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
                                                              signature=block_response.json()['signature'],
                                                              block=block_response.json()['id'],
                                                              memo=tnbc_wallet.memo)
-                            converted_amount_plus_fee =  (amount + fee) * 100000000
+                            converted_amount_plus_fee = (amount + fee) * settings.TNBC_MULTIPLICATION_FACTOR
                             tnbc_wallet.balance -= converted_amount_plus_fee
                             tnbc_wallet.save()
                             UserTransactionHistory.objects.create(user=discord_user, amount=converted_amount_plus_fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
@@ -293,17 +295,18 @@ async def user_withdraw(ctx, amount: int):
                             statistic.total_balance -= converted_amount_plus_fee
                             statistic.save()
                             embed = discord.Embed(title="Coins Withdrawn.",
-                                                  description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.")
+                                                  description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.",
+                                                  color=0xe81111)
                         else:
-                            embed = discord.Embed(title="Error!", description="Please try again later.")
+                            embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
                     else:
-                        embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.")
+                        embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.", color=0xe81111)
             else:
-                embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.")
+                embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.", color=0xe81111)
         else:
-            embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.")
+            embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
     else:
-        embed = discord.Embed(title="No withdrawal address set!", description="Use `/set_withdrawal_address` to set withdrawal address.")
+        embed = discord.Embed(title="No withdrawal address set!", description="Use `/set_withdrawal_address` to set withdrawal address.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -317,7 +320,7 @@ async def user_transactions(ctx):
 
     transactions = (await sync_to_async(UserTransactionHistory.objects.filter)(user=discord_user)).order_by('-created_at')[:8]
 
-    embed = discord.Embed(title="Transaction History", description="")
+    embed = discord.Embed(title="Transaction History", description="", color=0xe81111)
 
     for txs in transactions:
 
@@ -358,29 +361,30 @@ async def escrow_new(ctx, amount: int, user):
     if initiator_discord_user != successor_discord_user:
 
         if amount < settings.MIN_TNBC_ALLOWED:
-            embed = discord.Embed(title="Error!", description=f"You can only escrow more than {settings.MIN_TNBC_ALLOWED} TNBC.")
+            embed = discord.Embed(title="Error!", description=f"You can only escrow more than {settings.MIN_TNBC_ALLOWED} TNBC.", color=0xe81111)
 
         else:
 
             if initiator_tnbc_wallet.get_int_available_balance() < amount:
                 embed = discord.Embed(title="Inadequate Funds!",
-                                      description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!")
+                                      description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                                      color=0xe81111)
             else:
                 integer_fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
-                database_fee = integer_fee * 100000000
-                database_amount = amount * 100000000
+                database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
+                database_amount = amount * settings.TNBC_MULTIPLICATION_FACTOR
                 escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount, initiator=initiator_discord_user, successor=successor_discord_user, status=Escrow.OPEN, fee=database_fee)
                 initiator_tnbc_wallet.locked += database_amount
                 initiator_tnbc_wallet.save()
-                embed = discord.Embed(title="Success.", description="")
+                embed = discord.Embed(title="Success.", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{amount}")
                 embed.add_field(name='Fee', value=f"{integer_fee}")
                 embed.add_field(name='Initiator', value=f"{ctx.author.mention}")
                 embed.add_field(name='Successor', value=f"{user.mention}")
-                embed.add_field(name='Status', value=f"{escrow_obj.status}", inline=False)
+                embed.add_field(name='Status', value=f"{escrow_obj.status}")
     else:
-        embed = discord.Embed(title="Error!", description="You can not escrow yourself tnbc.")
+        embed = discord.Embed(title="Error!", description="You can not escrow yourself tnbc.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -409,7 +413,7 @@ async def escrow_status(ctx, escrow_id: str):
         initiator = await client.fetch_user(int(escrow_obj.initiator.discord_id))
         successor = await client.fetch_user(int(escrow_obj.successor.discord_id))
 
-        embed = discord.Embed()
+        embed = discord.Embed(color=0xe81111)
         embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
         embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
         embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
@@ -425,7 +429,7 @@ async def escrow_status(ctx, escrow_id: str):
             embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
 
     else:
-        embed = discord.Embed(title="Error!", description="404 Not Found.")
+        embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -440,7 +444,7 @@ async def escrow_all(ctx):
     if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE)).exists():
         escrows = await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE))
 
-        embed = discord.Embed()
+        embed = discord.Embed(color=0xe81111)
 
         for escrow in escrows:
 
@@ -450,7 +454,7 @@ async def escrow_all(ctx):
             embed.add_field(name='Status', value=f"{escrow.status}")
 
     else:
-        embed = discord.Embed(title="Oops..", description="No active escrows found.")
+        embed = discord.Embed(title="Oops..", description="No active escrows found.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -465,7 +469,7 @@ async def escrow_history(ctx):
     if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user)).exists():
         escrows = (await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user)))[:8]
 
-        embed = discord.Embed()
+        embed = discord.Embed(color=0xe81111)
 
         for escrow in escrows:
 
@@ -475,7 +479,7 @@ async def escrow_history(ctx):
             embed.add_field(name='Status', value=f"{escrow.status}")
 
     else:
-        embed = discord.Embed(title="Oops..", description="You've not complete a single escrow.")
+        embed = discord.Embed(title="Oops..", description="You've not complete a single escrow.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -509,16 +513,16 @@ async def escrow_release(ctx, escrow_id: str):
             ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
             escrow_obj.save()
 
-            embed = discord.Embed(title="Success", description="")
+            embed = discord.Embed(title="Success", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
         else:
-            embed = discord.Embed(title="Error!", description=f"You cannot release the escrow of status {escrow_obj.status}.")
+            embed = discord.Embed(title="Error!", description=f"You cannot release the escrow of status {escrow_obj.status}.", color=0xe81111)
     else:
-        embed = discord.Embed(title="Error!", description="You do not have permission to perform the action.")
+        embed = discord.Embed(title="Error!", description="You do not have permission to perform the action.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -563,7 +567,7 @@ async def escrow_cancel(ctx, escrow_id: str):
 
             escrow_obj.save()
 
-            embed = discord.Embed(title="Success", description="")
+            embed = discord.Embed(title="Success", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
@@ -571,10 +575,10 @@ async def escrow_cancel(ctx, escrow_id: str):
             embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
             embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
         else:
-            embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.")
+            embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
 
     else:
-        embed = discord.Embed(title="Error!", description="404 Not Found.")
+        embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -612,7 +616,7 @@ async def escrow_dispute(ctx, escrow_id: str):
             initiator = await client.fetch_user(int(escrow_obj.initiator.discord_id))
             successor = await client.fetch_user(int(escrow_obj.successor.discord_id))
 
-            dispute_embed = discord.Embed(title="Dispute Alert!", description="")
+            dispute_embed = discord.Embed(title="Dispute Alert!", description="", color=0xe81111)
             dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             dispute_embed.add_field(name='Amount', value=f"{escrow_obj.amount}")
             dispute_embed.add_field(name='Initiator', value=f"{initiator}")
@@ -622,7 +626,7 @@ async def escrow_dispute(ctx, escrow_id: str):
             await dispute.add_reaction("👀")
             await dispute.add_reaction("✅")
 
-            embed = discord.Embed(title="Success", description="Agent will create a private channel within this server to resolve dispute. **Agent will never DM you!!**")
+            embed = discord.Embed(title="Success", description="Agent will create a private channel within this server to resolve dispute. **Agent will never DM you!!**", color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
@@ -630,10 +634,10 @@ async def escrow_dispute(ctx, escrow_id: str):
             embed.add_field(name='Successor', value=f"{successor.mention}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
         else:
-            embed = discord.Embed(title="Error!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.")
+            embed = discord.Embed(title="Error!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.", color=0xe81111)
 
     else:
-        embed = discord.Embed(title="Error!", description="404 Not Found.")
+        embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -674,17 +678,17 @@ async def agent_cancel(ctx, escrow_id: str, remarks: str):
                 ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
                 escrow_obj.save()
 
-                embed = discord.Embed(title="Success", description="")
+                embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
             else:
-                embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.")
+                embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
         else:
-            embed = discord.Embed(title="Error!", description="404 Not Found.")
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
     else:
-        embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.")
+        embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -738,7 +742,7 @@ async def agent_release(ctx, escrow_id: str, user, remarks: str):
                 ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
                 escrow_obj.save()
 
-            embed = discord.Embed(title="Success", description="")
+            embed = discord.Embed(title="Success", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
@@ -746,9 +750,9 @@ async def agent_release(ctx, escrow_id: str, user, remarks: str):
             embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
         else:
-            embed = discord.Embed(title="Error!", description="Disputed escrow not found or the user does not exist for the escrow.")
+            embed = discord.Embed(title="Error!", description="Disputed escrow not found or the user does not exist for the escrow.", color=0xe81111)
     else:
-        embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.")
+        embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
@@ -763,7 +767,7 @@ async def kill(ctx):
         await ctx.send("Bot Shut Down", hidden=True)
         await client.close()
     else:
-        embed = discord.Embed(title="Nope", description="")
+        embed = discord.Embed(title="Nope", description="", color=0xe81111)
         embed.set_image(url="https://i.ibb.co/zQc3xDp/download-min-1.png")
         await ctx.send(embed=embed, hidden=True)
 
