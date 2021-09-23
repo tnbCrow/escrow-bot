@@ -195,7 +195,9 @@ async def chain_scan(ctx: ComponentContext):
 
     scan_chain()
 
-    # check_confirmation()
+    if os.environ['DJANGO_SETTINGS_MODULE'] == 'config.settings.production':
+
+        check_confirmation()
 
     match_transaction()
 
