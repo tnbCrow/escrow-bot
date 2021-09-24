@@ -1,4 +1,5 @@
 import requests
+import os
 from datetime import datetime, timedelta
 
 from django.utils import timezone
@@ -97,7 +98,12 @@ def scan_chain():
 
 def match_transaction():
 
-    confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.WAITING_CONFIRMATION,
+    if os.environ['DJANGO_SETTINGS_MODULE'] == 'config.settings.production':
+        confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.CONFIRMED,
+                                               transaction_status=Transaction.NEW,
+                                               direction=Transaction.INCOMING)
+    else:
+        confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.WAITING_CONFIRMATION,
                                                transaction_status=Transaction.NEW,
                                                direction=Transaction.INCOMING)
 
