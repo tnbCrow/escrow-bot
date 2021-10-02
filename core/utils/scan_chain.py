@@ -11,7 +11,7 @@ from ..models.statistics import Statistic
 from ..models.users import UserTransactionHistory
 from ..models.wallets import ThenewbostonWallet
 
-TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
+TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.TNBCROW_BOT_ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
 
 
 def check_confirmation():
@@ -69,7 +69,7 @@ def scan_chain():
 
                 amount = int(transaction['amount']) * settings.TNBC_MULTIPLICATION_FACTOR
 
-                if transaction['recipient'] == settings.ACCOUNT_NUMBER:
+                if transaction['recipient'] == settings.TNBCROW_BOT_ACCOUNT_NUMBER:
                     direction = Transaction.INCOMING
                     account_number = transaction['block']['sender']
                 else:
@@ -98,14 +98,14 @@ def scan_chain():
 
 def match_transaction():
 
-    if os.environ['DJANGO_SETTINGS_MODULE'] == 'config.settings.production':
+    if os.environ['CHECK_TNBC_CONFIRMATION'] is True:
         confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.CONFIRMED,
-                                               transaction_status=Transaction.NEW,
-                                               direction=Transaction.INCOMING)
+                                                   transaction_status=Transaction.NEW,
+                                                   direction=Transaction.INCOMING)
     else:
         confirmed_txs = Transaction.objects.filter(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                               transaction_status=Transaction.NEW,
-                                               direction=Transaction.INCOMING)
+                                                   transaction_status=Transaction.NEW,
+                                                   direction=Transaction.INCOMING)
 
     for txs in confirmed_txs:
 

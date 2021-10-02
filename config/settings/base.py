@@ -18,14 +18,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'corsheaders',
 
     'escrow',
     'core',
 ]
 
+CORS_ALLOWED_ORIGINS = []  # Add here the site we want to give API access to.
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -102,9 +106,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Constants
 TNBC_MULTIPLICATION_FACTOR = 100000000  # 10^8
-ACCOUNT_NUMBER = os.environ['TNBCROW_BOT_ACCOUNT_NUMBER']
 TNBC_TRANSACTION_FEE = 2 * TNBC_MULTIPLICATION_FACTOR
 CROW_BOT_FEE = 2  # In Percentage
-PROHIBITED_ACCOUNT_NUMBERS = [ACCOUNT_NUMBER]
+
+TNBCROW_BOT_ACCOUNT_NUMBER = os.environ['TNBCROW_BOT_ACCOUNT_NUMBER']
 SIGNING_KEY = os.environ['SIGNING_KEY']
-BOT_MANAGER_ID = '534628936571813889'
+PROHIBITED_ACCOUNT_NUMBERS = [TNBCROW_BOT_ACCOUNT_NUMBER]
+CHECK_TNBC_CONFIRMATION = os.environ['CHECK_TNBC_CONFIRMATION']
+BANK_IP = os.environ['BANK_IP']
+
+BOT_MANAGER_ID = os.environ['BOT_MANAGER_ID']
+TRADE_CHANNEL_ID = os.environ['TRADE_CHANNEL_ID']
+DISPUTE_CHANNEL_ID = os.environ['DISPUTE_CHANNEL_ID']
+AGENT_ROLE_ID = os.environ['AGENT_ROLE_ID']

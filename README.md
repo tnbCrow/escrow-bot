@@ -12,11 +12,19 @@ Try `/help` for commands in tnbCrow discord server.
 
 - Set environment variables:
 ```shell
+TNBCROW_BOT_ACCOUNT_NUMBER (TNBC Account Number for receiving payment)
+SIGNING_KEY (TNBC Signing Key handling payments)
+CHECK_TNBC_CONFIRMATION (True or False)
+BANK_IP (Bank IP to handle TNBC payment)
+
 CROW_DISCORD_TOKEN (Discord bot token)
 DJANGO_SETTINGS_MODULE (config.settings.development or config.settings.production)
 SECRET_KEY (Django Secret Key)
-TNBCROW_BOT_ACCOUNT_NUMBER (TNBC Account Number for receiving payment)
-SIGNING_KEY (TNBC Signing Key handling payments)
+
+BOT_MANAGER_ID
+TRADE_CHANNEL_ID
+DISPUTE_CHANNEL_ID
+AGENT_ROLE_ID
 
 # For production
 POSTGRES_DB
@@ -34,13 +42,9 @@ You'll also need to update the constants on development.py file according to you
 
 ##### To run django server
 
-- Go to API directory.
-
 - Use `python manage.py migrate` to create database.
 
 - Create superuser with the command `python manage.py createsuperuser`.
-
-- Login into the Django admin panel and add an entry in ScanTracker table. (only the transactions created after the entry will be tracked)
 
 - Run the server with `python manage.py runserver`.
 

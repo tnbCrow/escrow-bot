@@ -1,5 +1,4 @@
 import os
-import sys
 import requests
 import django
 import humanize
@@ -14,8 +13,7 @@ from datetime import datetime
 
 
 # Django Setup on bot
-sys.path.append(os.getcwd() + '/API')
-DJANGO_DIRECTORY = os.getcwd() + '/API'
+DJANGO_DIRECTORY = os.getcwd()
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.environ["DJANGO_SETTINGS_MODULE"])
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
@@ -177,13 +175,14 @@ async def user_deposit(ctx):
     discord_user = get_or_create_discord_user(ctx.author.id)
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
-    qr_data = f"{{'address':{settings.ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
+    qr_data = f"{{'address':{settings.TNBCROW_BOT_ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
 
     embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
-    embed.add_field(name='Address', value=settings.ACCOUNT_NUMBER, inline=False)
+    embed.add_field(name='Warning', value="Do not deposit TNBC with Keysign Mobile Wallet/ Keysign Extension or **you'll lose your coins**.", inline=False)
+    embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
     embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
-    embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
-    embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
+    # embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
+    # embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
 
     await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Sent? Scan Chain"))])
 
@@ -194,9 +193,9 @@ async def chain_scan(ctx: ComponentContext):
     await ctx.defer(hidden=True)
 
     scan_chain()
-    
-    if os.environ['DJANGO_SETTINGS_MODULE'] == 'config.settings.production':
-    
+
+    if os.environ['CHECK_TNBC_CONFIRMATION'] is True:
+
         check_confirmation()
 
     match_transaction()
@@ -511,9 +510,9 @@ async def escrow_release(ctx, escrow_id: str):
         if escrow_obj.status == Escrow.OPEN:
 
             escrow_obj.status = Escrow.COMPLETED
+            escrow_obj.save()
             ThenewbostonWallet.objects.filter(user=discord_user).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
             ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
-            escrow_obj.save()
 
             embed = discord.Embed(title="Success", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
