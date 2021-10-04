@@ -511,8 +511,15 @@ async def escrow_release(ctx, escrow_id: str):
 
             escrow_obj.status = Escrow.COMPLETED
             escrow_obj.save()
-            ThenewbostonWallet.objects.filter(user=discord_user).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
-            ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
+
+            seller_wallet = ThenewbostonWallet.objects.get(user=discord_user)
+            seller_wallet.balance -= escrow_obj.amount
+            seller_wallet.locked -= escrow_obj.amount
+            seller_wallet.save()
+
+            buyer_wallet = ThenewbostonWallet.objects.get(user=escrow_obj.successor)
+            buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
+            buyer_wallet.save()
 
             embed = discord.Embed(title="Success", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
