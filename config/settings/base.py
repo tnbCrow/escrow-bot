@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'core',
 ]
 
-CORS_ALLOWED_ORIGINS = []  # Add here the site we want to give API access to.
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

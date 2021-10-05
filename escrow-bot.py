@@ -307,7 +307,7 @@ async def user_withdraw(ctx, amount: int):
         else:
             embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
     else:
-        embed = discord.Embed(title="No withdrawal address set!", description="Use `/set_withdrawal_address` to set withdrawal address.", color=0xe81111)
+        embed = discord.Embed(title="No withdrawal address set!", description="Use `/set_withdrawal_address tnbc` to set withdrawal address.", color=0xe81111)
 
     await ctx.send(embed=embed, hidden=True)
 
