@@ -47,7 +47,7 @@ async def help(ctx):
     embed.add_field(name="Check Balance", value="/balance")
     embed.add_field(name="Deposit TNBC", value="/deposit tnbc")
     embed.add_field(name="Withdraw TNBC", value="/withdraw tnbc")
-    embed.add_field(name="Create an escrow", value="/escrow new amount: AMOUNT user: DISCORD_USER", inline=False)
+    embed.add_field(name="Create an escrow", value="/escrow tnbc amount: AMOUNT user: DISCORD_USER", inline=False)
     embed.add_field(name="Check escrow status", value="/escrow status escrow_id: ESCROW_ID")
     embed.add_field(name="List all active escrow", value="/escrow all", inline=False)
     embed.add_field(name="Release the escrow", value="/escrow release escrow_id: ESCROW_ID", inline=False)

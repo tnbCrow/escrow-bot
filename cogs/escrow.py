@@ -19,7 +19,7 @@ class escrow(commands.Cog):
         self.bot = bot
     
     @cog_ext.cog_subcommand(base="escrow",
-                  name="new",
+                  name="tnbc",
                   description="Escrow TNBC with another user.",
                   options=[
                       create_option(
@@ -36,7 +36,7 @@ class escrow(commands.Cog):
                       )
                   ]
                   )
-    async def escrow_new(self, ctx, amount: int, user):
+    async def escrow_tnbc(self, ctx, amount: int, user):
 
         await ctx.defer(hidden=True)
 
