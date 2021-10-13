@@ -172,12 +172,12 @@ class escrow(commands.Cog):
                 escrow_obj.status = Escrow.COMPLETED
                 escrow_obj.save()
 
-                seller_wallet = ThenewbostonWallet.objects.get(user=discord_user)
+                seller_wallet = get_or_create_tnbc_wallet(discord_user)
                 seller_wallet.balance -= escrow_obj.amount
                 seller_wallet.locked -= escrow_obj.amount
                 seller_wallet.save()
 
-                buyer_wallet = ThenewbostonWallet.objects.get(user=escrow_obj.successor)
+                buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
                 buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
                 buyer_wallet.save()
 
