@@ -4,41 +4,40 @@ from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
 from core.utils.shortcuts import get_or_create_discord_user
 from django.conf import settings
-from discord_slash.utils.manage_commands import create_option
 from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
 from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
 
+
 class agent(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    
     @cog_ext.cog_subcommand(base="agent",
-                  name="release",
-                  description="Cancel escrow!",
-                  options=[
-                      create_option(
-                          name="escrow_id",
-                          description="Enter escrow id you want to cancel.",
-                          option_type=3,
-                          required=True
-                      ),
-                      create_option(
-                          name="user",
-                          description="Enter user to release the funds to.",
-                          option_type=6,
-                          required=True
-                      ),
-                      create_option(
-                          name="remarks",
-                          description="Summary of the dispute.",
-                          option_type=3,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="release",
+                            description="Cancel escrow!",
+                            options=[
+                                create_option(
+                                        name="escrow_id",
+                                        description="Enter escrow id you want to cancel.",
+                                        option_type=3,
+                                        required=True
+                                ),
+                                create_option(
+                                    name="user",
+                                    description="Enter user to release the funds to.",
+                                    option_type=6,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="remarks",
+                                    description="Summary of the dispute.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
     async def agent_release(self, ctx, escrow_id: str, user, remarks: str):
 
         await ctx.defer(hidden=True)
@@ -46,8 +45,8 @@ class agent(commands.Cog):
         if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
             if Escrow.objects.filter(Q(uuid_hex=escrow_id),
-                                    Q(status=Escrow.DISPUTE),
-                                    Q(initiator__discord_id=str(user.id)) | Q(successor__discord_id=str(user.id))).exists():
+                                     Q(status=Escrow.DISPUTE),
+                                     Q(initiator__discord_id=str(user.id)) | Q(successor__discord_id=str(user.id))).exists():
 
                 escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
                 discord_user = get_or_create_discord_user(ctx.author.id)
@@ -78,25 +77,24 @@ class agent(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    
     @cog_ext.cog_subcommand(base="agent",
-                  name="cancel",
-                  description="Cancel escrow.",
-                  options=[
-                      create_option(
-                          name="escrow_id",
-                          description="Enter escrow id you want to cancel.",
-                          option_type=3,
-                          required=True
-                      ),
-                      create_option(
-                          name="remarks",
-                          description="Summary of the escrow.",
-                          option_type=3,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="cancel",
+                            description="Cancel escrow.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to cancel.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="remarks",
+                                    description="Summary of the escrow.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
     async def agent_cancel(self, ctx, escrow_id: str, remarks: str):
 
         await ctx.defer(hidden=True)
@@ -128,7 +126,6 @@ class agent(commands.Cog):
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
-
 
 
 def setup(bot):

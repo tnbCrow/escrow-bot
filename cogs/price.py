@@ -5,11 +5,11 @@ import requests
 import humanize
 from datetime import datetime
 
+
 class price(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    
     @cog_ext.cog_slash(name="rate", description="Last trade rate of TNBC.")
     async def rate(self, ctx):
 
@@ -45,7 +45,6 @@ class price(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    
     @cog_ext.cog_slash(name="stats", description="TNBC Price Statistics.")
     async def stats(self, ctx):
 
@@ -70,7 +69,6 @@ class price(commands.Cog):
         embed.add_field(name="Last Trade Rate", value=f"${last_rate}", inline=False)
         embed.add_field(name="Market Cap", value=f"${humanized_cap}", inline=False)
         await ctx.send(embed=embed)
-
 
 
 def setup(bot):

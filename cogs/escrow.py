@@ -2,10 +2,8 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from cogs.agent import agent
 from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
 from django.conf import settings
-from discord_slash.utils.manage_commands import create_option
 from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
 from django.db.models import Q, F
@@ -17,25 +15,25 @@ import os
 class escrow(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     @cog_ext.cog_subcommand(base="escrow",
-                  name="tnbc",
-                  description="Escrow TNBC with another user.",
-                  options=[
-                      create_option(
-                          name="amount",
-                          description="Enter TNBC amount you want to escrow.",
-                          option_type=4,
-                          required=True
-                      ),
-                      create_option(
-                          name="user",
-                          description="Enter your escrow partner.",
-                          option_type=6,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="tnbc",
+                            description="Escrow TNBC with another user.",
+                            options=[
+                                create_option(
+                                    name="amount",
+                                    description="Enter TNBC amount you want to escrow.",
+                                    option_type=4,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="user",
+                                    description="Enter your escrow partner.",
+                                    option_type=6,
+                                    required=True
+                                )
+                            ]
+                            )
     async def escrow_tnbc(self, ctx, amount: int, user):
 
         await ctx.defer(hidden=True)
@@ -54,8 +52,8 @@ class escrow(commands.Cog):
 
                 if initiator_tnbc_wallet.get_int_available_balance() < amount:
                     embed = discord.Embed(title="Inadequate Funds!",
-                                        description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
-                                        color=0xe81111)
+                                          description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                                          color=0xe81111)
                 else:
                     integer_fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
                     database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
@@ -75,19 +73,18 @@ class escrow(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-
     @cog_ext.cog_subcommand(base="escrow",
-                  name="status",
-                  description="Escrow TNBC with another user.",
-                  options=[
-                      create_option(
-                          name="escrow_id",
-                          description="Enter escrow id you want to check the status of.",
-                          option_type=3,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="status",
+                            description="Escrow TNBC with another user.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
     async def escrow_status(self, ctx, escrow_id: str):
 
         await ctx.defer(hidden=True)
@@ -120,7 +117,6 @@ class escrow(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-
     @cog_ext.cog_subcommand(base="escrow", name="all", description="All your active escrows.")
     async def escrow_all(self, ctx):
 
@@ -146,17 +142,17 @@ class escrow(commands.Cog):
         await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="escrow",
-                  name="release",
-                  description="Release escrow to successor.",
-                  options=[
-                      create_option(
-                          name="escrow_id",
-                          description="Enter escrow id you want to check the status of.",
-                          option_type=3,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="release",
+                            description="Release escrow to successor.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
     async def escrow_release(self, ctx, escrow_id: str):
 
         await ctx.defer(hidden=True)
@@ -195,17 +191,17 @@ class escrow(commands.Cog):
         await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="escrow",
-                  name="cancel",
-                  description="Cancel escrow.",
-                  options=[
-                      create_option(
-                          name="escrow_id",
-                          description="Enter escrow id you want to check the status of.",
-                          option_type=3,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="cancel",
+                            description="Cancel escrow.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
     async def escrow_cancel(self, ctx, escrow_id: str):
 
         await ctx.defer(hidden=True)
@@ -214,8 +210,8 @@ class escrow(commands.Cog):
 
         # Check if the user is initiator or successor
         if Escrow.objects.filter(Q(initiator=discord_user) |
-                                Q(successor=discord_user),
-                                Q(uuid_hex=escrow_id)).exists():
+                                 Q(successor=discord_user),
+                                 Q(uuid_hex=escrow_id)).exists():
 
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
@@ -249,19 +245,18 @@ class escrow(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-
     @cog_ext.cog_subcommand(base="escrow",
-                  name="dispute",
-                  description="Start an dispute.",
-                  options=[
-                      create_option(
-                          name="escrow_id",
-                          description="Enter escrow id you want to check the status of.",
-                          option_type=3,
-                          required=True
-                      )
-                  ]
-                  )
+                            name="dispute",
+                            description="Start an dispute.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
     async def escrow_dispute(self, ctx, escrow_id: str):
 
         await ctx.defer(hidden=True)
@@ -269,8 +264,8 @@ class escrow(commands.Cog):
         discord_user = get_or_create_discord_user(ctx.author.id)
 
         if Escrow.objects.filter(Q(initiator=discord_user) |
-                                Q(successor=discord_user),
-                                Q(uuid_hex=escrow_id)).exists():
+                                 Q(successor=discord_user),
+                                 Q(uuid_hex=escrow_id)).exists():
 
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
@@ -309,7 +304,6 @@ class escrow(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    
     @cog_ext.cog_subcommand(base="escrow", name="history", description="All your recent escrows.")
     async def escrow_history(self, ctx):
 
@@ -333,7 +327,6 @@ class escrow(commands.Cog):
             embed = discord.Embed(title="Oops..", description="You've not complete a single escrow.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
-
 
 
 def setup(bot):

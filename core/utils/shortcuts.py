@@ -3,7 +3,6 @@ from ..models.users import User
 from django.conf import settings
 
 
-
 def get_or_create_tnbc_wallet(user):
 
     obj, created = ThenewbostonWallet.objects.get_or_create(user=user)
@@ -23,4 +22,3 @@ def convert_to_decimal(amount):
     amount = amount / settings.TNBC_MULTIPLICATION_FACTOR
     rounded_amount = round(amount, 4)
     return rounded_amount
-    

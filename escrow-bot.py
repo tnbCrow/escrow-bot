@@ -38,6 +38,7 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
+
 @slash.slash(name="help", description="Crow Bot help.")
 async def help(ctx):
 
@@ -101,8 +102,6 @@ async def chain_scan(ctx: ComponentContext):
     embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
 
     await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
-
-
 
 
 @slash.slash(name="kill", description="Kill the bot!")
