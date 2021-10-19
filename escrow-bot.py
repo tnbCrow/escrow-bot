@@ -74,7 +74,8 @@ async def on_message(message):
     if message.channel.id == int(settings.TRADE_CHANNEL_ID):
         async for oldMessage in message.channel.history():
             if oldMessage.author == message.author and oldMessage.id != message.id:
-                TradeOffer.objects.filter(user=discord_user).delete()
+                duplicate_offers = TradeOffer.objects.filter(user=discord_user)
+                duplicate_offers.delete()
                 await oldMessage.delete()
 
         TradeOffer.objects.create(user=discord_user, message=message.content, discord_username=message.author)
