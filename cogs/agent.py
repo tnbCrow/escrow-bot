@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
 from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
+from core.models.statistics import Statistic
 
 
 class agent(commands.Cog):
@@ -47,8 +48,13 @@ class agent(commands.Cog):
                 escrow_obj.agent = discord_user
                 escrow_obj.remarks = remarks
                 escrow_obj.save()
+
                 ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
                 ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
+
+                statistic, created = Statistic.objects.get_or_create(title="main")
+                statistic.total_fees_collected += escrow_obj.fee
+                statistic.save()
 
                 embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)

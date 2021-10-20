@@ -1,4 +1,5 @@
 import discord
+import os
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
@@ -9,7 +10,7 @@ from escrow.models.escrow import Escrow
 from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
 from core.utils.shortcuts import convert_to_decimal
-import os
+from core.models.statistics import Statistic
 
 
 class escrow(commands.Cog):
@@ -94,7 +95,6 @@ class escrow(commands.Cog):
         if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user), Q(uuid_hex=escrow_id)).exists():
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
-
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
@@ -140,9 +140,9 @@ class escrow(commands.Cog):
                 embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
                 embed.add_field(name='Status', value=f"{escrow.status}")
                 if escrow.initiator == discord_user:
-                    embed.add_field(name='Your Role', value=f"Seller")
+                    embed.add_field(name='Your Role', value="Seller")
                 else:
-                    embed.add_field(name='Your Role', value=f"Buyer")
+                    embed.add_field(name='Your Role', value="Buyer")
 
         else:
             embed = discord.Embed(title="Oops..", description="No active escrows found.", color=0xe81111)
@@ -184,6 +184,10 @@ class escrow(commands.Cog):
                 buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
                 buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
                 buyer_wallet.save()
+
+                statistic, created = Statistic.objects.get_or_create(title="main")
+                statistic.total_fees_collected += escrow_obj.fee
+                statistic.save()
 
                 embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
