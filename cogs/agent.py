@@ -16,19 +16,13 @@ class agent(commands.Cog):
 
     @cog_ext.cog_subcommand(base="agent",
                             name="release",
-                            description="Cancel escrow!",
+                            description="Release the escrow to the buyer!",
                             options=[
                                 create_option(
                                         name="escrow_id",
                                         description="Enter escrow id you want to cancel.",
                                         option_type=3,
                                         required=True
-                                ),
-                                create_option(
-                                    name="user",
-                                    description="Enter user to release the funds to.",
-                                    option_type=6,
-                                    required=True
                                 ),
                                 create_option(
                                     name="remarks",
@@ -38,30 +32,23 @@ class agent(commands.Cog):
                                 )
                             ]
                             )
-    async def agent_release(self, ctx, escrow_id: str, user, remarks: str):
+    async def agent_release(self, ctx, escrow_id: str, remarks: str):
 
         await ctx.defer(hidden=True)
 
         if int(settings.AGENT_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
             if Escrow.objects.filter(Q(uuid_hex=escrow_id),
-                                     Q(status=Escrow.DISPUTE),
-                                     Q(initiator__discord_id=str(user.id)) | Q(successor__discord_id=str(user.id))).exists():
+                                     Q(status=Escrow.DISPUTE)).exists():
 
                 escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
                 discord_user = get_or_create_discord_user(ctx.author.id)
                 escrow_obj.status = Escrow.ADMIN_SETTLED
                 escrow_obj.agent = discord_user
                 escrow_obj.remarks = remarks
-
-                if user.id == str(escrow_obj.initiator.discord_id):
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.fee, locked=F('locked') - escrow_obj.amount)
-                    escrow_obj.settled_towards = Escrow.INITIATOR
-                    escrow_obj.save()
-                else:
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
-                    escrow_obj.save()
+                escrow_obj.save()
+                ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
+                ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
 
                 embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
@@ -71,7 +58,7 @@ class agent(commands.Cog):
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
             else:
-                embed = discord.Embed(title="Error!", description="Disputed escrow not found or the user does not exist for the escrow.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description="Disputed escrow not found.", color=0xe81111)
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
@@ -79,7 +66,7 @@ class agent(commands.Cog):
 
     @cog_ext.cog_subcommand(base="agent",
                             name="cancel",
-                            description="Cancel escrow.",
+                            description="Release the escrow back to seller.",
                             options=[
                                 create_option(
                                     name="escrow_id",
@@ -110,8 +97,8 @@ class agent(commands.Cog):
                     escrow_obj.status = Escrow.ADMIN_CANCELLED
                     escrow_obj.remarks = remarks
                     escrow_obj.agent = discord_user
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
                     escrow_obj.save()
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
 
                     embed = discord.Embed(title="Success", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)

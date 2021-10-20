@@ -94,23 +94,27 @@ class escrow(commands.Cog):
         if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user), Q(uuid_hex=escrow_id)).exists():
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
-            initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
-            successor = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
-            embed.add_field(name='Initiator', value=f"{initiator.mention}")
-            embed.add_field(name='Successor', value=f"{successor.mention}")
+            if discord_user == escrow_obj.successor:
+                initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
+                embed.add_field(name='Your Role', value='Buyer')
+                embed.add_field(name='Seller', value=f"{initiator.mention}")
+            else:
+                successor = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
+                embed.add_field(name='Your Role', value='Seller')
+                embed.add_field(name='Buyer', value=f"{successor.mention}")
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
             if escrow_obj.status == Escrow.ADMIN_SETTLED or escrow_obj.status == Escrow.ADMIN_CANCELLED:
                 embed.add_field(name='Settled Towards', value=f"{escrow_obj.settled_towards}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
             else:
-                embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}")
-                embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
+                embed.add_field(name='Seller Cancelled', value=f"{escrow_obj.initiator_cancelled}")
+                embed.add_field(name='Buyer Cancelled', value=f"{escrow_obj.successor_cancelled}")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
@@ -135,6 +139,10 @@ class escrow(commands.Cog):
                 embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
                 embed.add_field(name='Status', value=f"{escrow.status}")
+                if escrow.initiator == discord_user:
+                    embed.add_field(name='Your Role', value=f"Seller")
+                else:
+                    embed.add_field(name='Your Role', value=f"Buyer")
 
         else:
             embed = discord.Embed(title="Oops..", description="No active escrows found.", color=0xe81111)
@@ -235,8 +243,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
-                embed.add_field(name='Initiator Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
-                embed.add_field(name='Successor Cancelled', value=f"{escrow_obj.successor_cancelled}")
+                embed.add_field(name='Seller Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
+                embed.add_field(name='Buyer Cancelled', value=f"{escrow_obj.successor_cancelled}")
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
 
@@ -282,8 +290,8 @@ class escrow(commands.Cog):
                 dispute_embed = discord.Embed(title="Dispute Alert!", description="", color=0xe81111)
                 dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 dispute_embed.add_field(name='Amount', value=f"{convert_to_decimal(escrow_obj.amount)}")
-                dispute_embed.add_field(name='Initiator', value=f"{initiator}")
-                dispute_embed.add_field(name='Successor', value=f"{successor}")
+                dispute_embed.add_field(name='Seller', value=f"{initiator}")
+                dispute_embed.add_field(name='Buyer', value=f"{successor}")
                 dispute = await dispute.send(f"{agent_role.mention}", embed=dispute_embed)
 
                 await dispute.add_reaction("👀")
@@ -293,8 +301,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
-                embed.add_field(name='Initiator', value=f"{initiator.mention}")
-                embed.add_field(name='Successor', value=f"{successor.mention}")
+                embed.add_field(name='Seller', value=f"{initiator.mention}")
+                embed.add_field(name='Buyer', value=f"{successor.mention}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.", color=0xe81111)
