@@ -33,7 +33,7 @@ class UserTransactionHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     type = models.CharField(max_length=255, choices=type_choices)
     amount = models.BigIntegerField()
-    transaction = models.ForeignKey(Transaction, on_delete=models.DO_NOTHING)
+    transaction = models.ForeignKey(Transaction, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
