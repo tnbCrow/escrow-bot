@@ -44,10 +44,14 @@ class admin(commands.Cog):
                     embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
                     embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
                     embed.add_field(name='Status', value=f"{escrow.status}")
-                    if escrow.initiator == discord_user:
-                        embed.add_field(name='Role', value="Seller")
+                    if discord_user == escrow.successor:
+                        initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
+                        embed.add_field(name='Role', value='Buyer')
+                        embed.add_field(name='Seller', value=f"{initiator.mention}")
                     else:
-                        embed.add_field(name='Role', value="Buyer")
+                        successor = await self.bot.fetch_user(int(escrow.successor.discord_id))
+                        embed.add_field(name='Role', value='Seller')
+                        embed.add_field(name='Buyer', value=f"{successor.mention}")
 
             else:
                 embed = discord.Embed(title="Oops..", description="No active escrows found.", color=0xe81111)
