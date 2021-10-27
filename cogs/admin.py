@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import get_or_create_discord_user
+from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
@@ -60,6 +60,39 @@ class admin(commands.Cog):
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="balance",
+                            description="Check the balance of the user!",
+                            options=[
+                                create_option(
+                                    name="user",
+                                    description="User you want to check the balance of.",
+                                    option_type=6,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def admin_balance(self, ctx, user):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            discord_user = get_or_create_discord_user(user.id)
+            tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
+
+            embed = discord.Embed(color=0xe81111)
+            embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
+            embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
+            embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
+            embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
 
 def setup(bot):
     bot.add_cog(admin(bot))
