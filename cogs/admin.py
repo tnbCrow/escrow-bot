@@ -127,7 +127,7 @@ class admin(commands.Cog):
             tnbc_wallet.balance += amount
             tnbc_wallet.save()
 
-            UserTransactionHistory.objects.create(user=discord_user, type=UserTransactionHistory.DEPOSIT, amount=amount)
+            UserTransactionHistory.objects.create(user=discord_user, type=UserTransactionHistory.REFUND, amount=amount)
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Success', value=f"Refunded {convert_to_decimal(amount)} to the user.")
@@ -135,6 +135,57 @@ class admin(commands.Cog):
             embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
             embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
             embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="takeback",
+                            description="Takeback TNBC from the user!",
+                            options=[
+                                create_option(
+                                    name="user",
+                                    description="User from whom you have to take back TNBC.",
+                                    option_type=6,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="amount",
+                                    description="Enter TNBC amount you want to take back.",
+                                    option_type=4,
+                                    required=True
+                                ),
+                            ]
+                            )
+    async def admin_takeback(self, ctx, user, amount: int):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            discord_user = get_or_create_discord_user(user.id)
+            tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
+
+            amount = amount * settings.TNBC_MULTIPLICATION_FACTOR
+
+            if amount <= tnbc_wallet.get_available_balance():
+
+                tnbc_wallet.balance -= amount
+                tnbc_wallet.save()
+
+                UserTransactionHistory.objects.create(user=discord_user, type=UserTransactionHistory.TAKEBACK, amount=amount)
+
+                embed = discord.Embed(color=0xe81111)
+                embed.add_field(name='Success', value=f"Takeback {convert_to_decimal(amount)} to the user.")
+                embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
+                embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
+                embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
+                embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+
+            else:
+                embed = discord.Embed(title="Error!", description="The user does not have enough TNBC in their wallet to take back.", color=0xe81111)
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)

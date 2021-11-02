@@ -22,10 +22,14 @@ class UserTransactionHistory(models.Model):
 
     DEPOSIT = 'DEPOSIT'
     WITHDRAW = 'WITHDRAW'
+    REFUND = 'REFUND'
+    TAKEBACK = 'TAKEBACK'
 
     type_choices = [
         (DEPOSIT, 'Deposit'),
-        (WITHDRAW, 'Withdraw')
+        (WITHDRAW, 'Withdraw'),
+        (REFUND, 'Refund'),
+        (TAKEBACK, 'Takeback')
     ]
 
     uuid = models.UUIDField(default=uuid4, editable=False, primary_key=True)
