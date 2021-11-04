@@ -1,3 +1,5 @@
+import requests
+
 from ..models.wallets import ThenewbostonWallet
 from ..models.users import User
 from django.conf import settings
@@ -22,3 +24,14 @@ def convert_to_decimal(amount):
     amount = amount / settings.TNBC_MULTIPLICATION_FACTOR
     rounded_amount = round(amount, 4)
     return rounded_amount
+
+def get_wallet_balance():
+
+    try:
+        bank_config = requests.get(f'http://{settings.BANK_IP}/config?format=json').json()
+        wallet_balance = requests.get(f"{bank_config['primary_validator']['protocol']}://{bank_config['primary_validator']['ip_address']}:{bank_config['primary_validator']['port'] or 0}/accounts/{settings.TNBCROW_BOT_ACCOUNT_NUMBER}/balance?format=json").json()['balance']
+        return wallet_balance
+
+    except Exception as e:
+
+        return False

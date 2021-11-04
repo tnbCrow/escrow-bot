@@ -8,7 +8,8 @@ from django.db.models import Q
 
 from escrow.models.escrow import Escrow
 from core.models.users import UserTransactionHistory
-from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal
+from core.models.statistics import Statistic
+from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance
 
 
 class admin(commands.Cog):
@@ -186,6 +187,29 @@ class admin(commands.Cog):
 
             else:
                 embed = discord.Embed(title="Error!", description="The user does not have enough TNBC in their wallet to take back.", color=0xe81111)
+
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="stats",
+                            description="Check the statistics of the bot!")
+    async def admin_stats(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            statistic, created = Statistic.objects.get_or_create(title="main")
+
+            wallet_balance = get_wallet_balance()
+
+            embed = discord.Embed(color=0xe81111)
+            embed.add_field(name='Total Balance', value=convert_to_decimal(statistic.total_balance))
+            embed.add_field(name='Wallet Balance', value=wallet_balance)
+            embed.add_field(name='Fees Collected', value=convert_to_decimal(statistic.total_fees_collected), inline=False)
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
