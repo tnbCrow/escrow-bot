@@ -10,6 +10,7 @@ from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 from core.models.transactions import Transaction
 from core.models.statistics import Statistic
 from core.models.users import UserTransactionHistory
+from escrow.utils import get_or_create_user_profile
 from asgiref.sync import sync_to_async
 import humanize
 
@@ -172,6 +173,29 @@ class user(commands.Cog):
             embed.add_field(name='\u200b', value=f"{txs.type} - {txs.get_int_amount()} TNBC - {natural_day}", inline=False)
 
         await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_slash(name="profile",
+                       description="Check User Profile.",
+                       options=[
+                           create_option(
+                               name="user",
+                               description="User you want to check the profile of.",
+                               option_type=6,
+                               required=True
+                           )
+                       ])
+    async def user_profile(self, ctx, user: discord.Member):
+
+        await ctx.defer()
+
+        discord_user = get_or_create_discord_user(user.id)
+        user_profile = get_or_create_user_profile(discord_user)
+        
+        embed = discord.Embed(title=f"{user.name}'s Crow Bot Profile", description="", color=0xe81111)        
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
+        embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
