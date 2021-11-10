@@ -6,6 +6,7 @@ from core.utils.shortcuts import get_or_create_discord_user
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
+from escrow.utils import get_or_create_user_profile
 from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
 from core.models.statistics import Statistic
@@ -56,6 +57,16 @@ class agent(commands.Cog):
                 statistic.total_fees_collected += escrow_obj.fee
                 statistic.save()
 
+                buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                buyer_profile.total_escrows += 1
+                buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
+                buyer_profile.save()
+
+                seller_profile = get_or_create_user_profile(escrow_obj.initiator)
+                seller_profile.total_escrows += 1
+                seller_profile.total_tnbc_escrowed += escrow_obj.amount
+                seller_profile.save()
+
                 embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
@@ -104,6 +115,7 @@ class agent(commands.Cog):
                     escrow_obj.remarks = remarks
                     escrow_obj.agent = discord_user
                     escrow_obj.save()
+
                     ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
 
                     embed = discord.Embed(title="Success", description="", color=0xe81111)

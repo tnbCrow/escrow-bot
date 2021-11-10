@@ -11,6 +11,7 @@ from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
 from core.utils.shortcuts import convert_to_decimal
 from core.models.statistics import Statistic
+from escrow.utils import get_or_create_user_profile
 
 
 class escrow(commands.Cog):
@@ -189,6 +190,16 @@ class escrow(commands.Cog):
                 statistic.total_fees_collected += escrow_obj.fee
                 statistic.save()
 
+                buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                buyer_profile.total_escrows += 1
+                buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
+                buyer_profile.save()
+
+                seller_profile = get_or_create_user_profile(discord_user)
+                seller_profile.total_escrows += 1
+                seller_profile.total_tnbc_escrowed += escrow_obj.amount
+                seller_profile.save()
+
                 embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
@@ -290,6 +301,10 @@ class escrow(commands.Cog):
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
                 successor = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
                 agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
+
+                user_profile = get_or_create_user_profile(discord_user)
+                user_profile.total_disputes += 1
+                user_profile.save()
 
                 dispute_embed = discord.Embed(title="Dispute Alert!", description="", color=0xe81111)
                 dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)

@@ -6,7 +6,7 @@ from django.conf import settings
 from core.models.users import User
 
 
-class EscrowUser(models.Model):
+class Profile(models.Model):
 
     uuid = models.UUIDField(default=uuid4, editable=False, primary_key=True)
 

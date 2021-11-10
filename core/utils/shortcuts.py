@@ -25,6 +25,7 @@ def convert_to_decimal(amount):
     rounded_amount = round(amount, 4)
     return rounded_amount
 
+
 def get_wallet_balance():
 
     try:
@@ -32,6 +33,6 @@ def get_wallet_balance():
         wallet_balance = requests.get(f"{bank_config['primary_validator']['protocol']}://{bank_config['primary_validator']['ip_address']}:{bank_config['primary_validator']['port'] or 0}/accounts/{settings.TNBCROW_BOT_ACCOUNT_NUMBER}/balance?format=json").json()['balance']
         return wallet_balance
 
-    except Exception as e:
+    except Exception:
 
         return False
