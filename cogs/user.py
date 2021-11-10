@@ -186,7 +186,7 @@ class user(commands.Cog):
                        ])
     async def user_profile(self, ctx, user: discord.Member):
 
-        await ctx.defer()
+        await ctx.defer(hidden=True)
 
         discord_user = get_or_create_discord_user(user.id)
         user_profile = get_or_create_user_profile(discord_user)

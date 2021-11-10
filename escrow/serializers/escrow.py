@@ -8,3 +8,4 @@ class EscrowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escrow
         fields = ('uuid_hex', 'initiator', 'successor', 'amount', 'fee', 'status')
+        depth = 1
