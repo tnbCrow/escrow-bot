@@ -74,7 +74,7 @@ class admin(commands.Cog):
 
         if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
-            escrows = (await sync_to_async(Escrow.objects.all)())[:5]
+            escrows = (await sync_to_async(Escrow.objects.all)()).order_by('-updated_at')[:4]
 
             embed = discord.Embed(color=0xe81111)
 
