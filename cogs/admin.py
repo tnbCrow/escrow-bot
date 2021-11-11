@@ -65,6 +65,37 @@ class admin(commands.Cog):
         await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="admin",
+                            name="escrow_history",
+                            description="Check all ongoing/ completed escrows!",
+                            )
+    async def admin_escrow_history(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            escrows = (await sync_to_async(Escrow.objects.all)())[:5]
+
+            embed = discord.Embed(color=0xe81111)
+
+            for escrow in escrows:
+
+                initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
+                successor = await self.bot.fetch_user(int(escrow.successor.discord_id))
+
+                embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
+                embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                embed.add_field(name='Buyer', value=f"{successor.mention}")
+                embed.add_field(name='Seller', value=f"{initiator.mention}")
+                embed.add_field(name='Status', value=f"{escrow.status}")
+
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
                             name="balance",
                             description="Check the balance of the user!",
                             options=[

@@ -190,8 +190,8 @@ class user(commands.Cog):
 
         discord_user = get_or_create_discord_user(user.id)
         user_profile = get_or_create_user_profile(discord_user)
-        
-        embed = discord.Embed(title=f"{user.name}'s Crow Bot Profile", description="", color=0xe81111)        
+
+        embed = discord.Embed(title=f"{user.name}'s Crow Bot Profile", description="", color=0xe81111)
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
         embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
