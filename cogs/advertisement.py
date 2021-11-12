@@ -1,11 +1,14 @@
+from os import name
 import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, get_or_create_discord_user
 from django.conf import settings
 from asgiref.sync import sync_to_async
+from table2ascii import table2ascii, PresetStyle
 from escrow.models.advertisement import Advertisement
+from core.utils.shortcuts import convert_to_int
 
 
 class advertisement(commands.Cog):
@@ -64,6 +67,34 @@ class advertisement(commands.Cog):
                                   description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
                                   color=0xe81111)
         await ctx.send(embed=embed, hidden=True)
+    
+    @cog_ext.cog_subcommand(base="advertisement",
+                            name="all",
+                            description="List all the active advertisements.",
+                            )
+    async def advertisement_all(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        advertisements = Advertisement.objects.filter(status=Advertisement.OPEN)
+
+        temp = []
+        body_list = []
+
+        for advertisement in advertisements:
+            temp.extend([advertisement.uuid_hex, str(convert_to_int(advertisement.amount)), str(convert_to_decimal(advertisement.price)), advertisement.payment_method])
+            body_list.append(temp)
+            temp = []
+
+        output = table2ascii(
+            header=["ID", "Amount", "Price (USDT)", "Payment Method"],
+            body=body_list,
+            style=PresetStyle.ascii_box
+        )
+
+        embed = discord.Embed(color=0xe81111)
+        embed.add_field(name="Open Advertisements", value=output)
+        await ctx.send(f"```{output}```", hidden=True)
 
 
 def setup(bot):
