@@ -60,9 +60,12 @@ class escrow(commands.Cog):
                     integer_fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
                     database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
                     database_amount = amount * settings.TNBC_MULTIPLICATION_FACTOR
+
                     escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount, initiator=initiator_discord_user, successor=successor_discord_user, status=Escrow.OPEN, fee=database_fee)
+
                     initiator_tnbc_wallet.locked += database_amount
                     initiator_tnbc_wallet.save()
+
                     embed = discord.Embed(title="Success.", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                     embed.add_field(name='Amount', value=f"{amount}")
