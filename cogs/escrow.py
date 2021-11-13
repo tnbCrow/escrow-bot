@@ -19,66 +19,6 @@ class escrow(commands.Cog):
         self.bot = bot
 
     @cog_ext.cog_subcommand(base="escrow",
-                            name="tnbc",
-                            description="Escrow TNBC with another user.",
-                            options=[
-                                create_option(
-                                    name="amount",
-                                    description="Enter TNBC amount you want to escrow.",
-                                    option_type=4,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="user",
-                                    description="Enter your escrow partner.",
-                                    option_type=6,
-                                    required=True
-                                )
-                            ]
-                            )
-    async def escrow_tnbc(self, ctx, amount: int, user):
-
-        await ctx.defer(hidden=True)
-
-        initiator_discord_user = get_or_create_discord_user(ctx.author.id)
-        initiator_tnbc_wallet = get_or_create_tnbc_wallet(initiator_discord_user)
-
-        successor_discord_user = get_or_create_discord_user(user.id)
-
-        if initiator_discord_user != successor_discord_user:
-
-            if amount < settings.MIN_TNBC_ALLOWED:
-                embed = discord.Embed(title="Error!", description=f"You can only escrow more than {settings.MIN_TNBC_ALLOWED} TNBC.", color=0xe81111)
-
-            else:
-
-                if initiator_tnbc_wallet.get_int_available_balance() < amount:
-                    embed = discord.Embed(title="Inadequate Funds!",
-                                          description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
-                                          color=0xe81111)
-                else:
-                    integer_fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
-                    database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
-                    database_amount = amount * settings.TNBC_MULTIPLICATION_FACTOR
-
-                    escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount, initiator=initiator_discord_user, successor=successor_discord_user, status=Escrow.OPEN, fee=database_fee)
-
-                    initiator_tnbc_wallet.locked += database_amount
-                    initiator_tnbc_wallet.save()
-
-                    embed = discord.Embed(title="Success.", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{amount}")
-                    embed.add_field(name='Fee', value=f"{integer_fee}")
-                    embed.add_field(name='Initiator', value=f"{ctx.author.mention}")
-                    embed.add_field(name='Successor', value=f"{user.mention}")
-                    embed.add_field(name='Status', value=f"{escrow_obj.status}")
-        else:
-            embed = discord.Embed(title="Error!", description="You can not escrow yourself tnbc.", color=0xe81111)
-
-        await ctx.send(embed=embed, hidden=True)
-
-    @cog_ext.cog_subcommand(base="escrow",
                             name="status",
                             description="Escrow TNBC with another user.",
                             options=[
