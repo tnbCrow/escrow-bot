@@ -188,23 +188,19 @@ class escrow(commands.Cog):
 
             if escrow_obj.status == Escrow.OPEN:
 
-                if int(escrow_obj.initiator.discord_id) == ctx.author.id:
-                    escrow_obj.initiator_cancelled = True
-                    if escrow_obj.successor_cancelled is True:
-                        escrow_obj.status = Escrow.CANCELLED
-                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+                if int(escrow_obj.successor.discord_id) == ctx.author.id:
+                    escrow_obj.status = Escrow.CANCELLED
+                    escrow_obj.save()
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
                 else:
-                    escrow_obj.successor_cancelled = True
-                    if escrow_obj.initiator_cancelled is True:
-                        escrow_obj.status = Escrow.CANCELLED
-                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
-
-                escrow_obj.save()
+                    embed = discord.Embed(title="Error!", description=f"Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
 
                 embed = discord.Embed(title="Success", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 embed.add_field(name='Seller Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
                 embed.add_field(name='Buyer Cancelled', value=f"{escrow_obj.successor_cancelled}")
@@ -257,6 +253,8 @@ class escrow(commands.Cog):
                 dispute_embed = discord.Embed(title="Dispute Alert!", description="", color=0xe81111)
                 dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 dispute_embed.add_field(name='Amount', value=f"{convert_to_decimal(escrow_obj.amount)}")
+                dispute_embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                dispute_embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                 dispute_embed.add_field(name='Seller', value=f"{initiator}")
                 dispute_embed.add_field(name='Buyer', value=f"{successor}")
                 dispute = await dispute.send(f"{agent_role.mention}", embed=dispute_embed)
@@ -268,6 +266,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
