@@ -112,8 +112,39 @@ class advertisement(commands.Cog):
         else:
             embed = discord.Embed(title="Oops..", description="You got no active advertisements.", color=0xe81111)
 
-        await ctx.send(embed=embed, hidden=True)        
+        await ctx.send(embed=embed, hidden=True)       
 
+    @cog_ext.cog_subcommand(base="advertisement",
+                            name="status",
+                            description="Check the status of particular advertisement.",
+                            options=[
+                                create_option(
+                                    name="advertisement_id",
+                                    description="Enter the advertisement id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def advertisement_status(self, ctx, advertisement_id: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Advertisement.objects.filter(uuid_hex=advertisement_id, owner=discord_user).exists():
+            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
+            
+            embed = discord.Embed(color=0xe81111)
+            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
+            embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+            embed.add_field(name='Payment Method', value=advertisement.payment_method, inline=False)
+
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
 
 def setup(bot):
     bot.add_cog(advertisement(bot))
