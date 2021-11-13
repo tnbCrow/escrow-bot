@@ -85,7 +85,34 @@ class advertisement(commands.Cog):
 
         offer_table = create_offer_table(5)
 
-        await ctx.send(f"```{offer_table}```", hidden=True)
+        await ctx.send(f"Open Advertisements (Escrow Protected)```{offer_table}```", hidden=True)
+    
+    @cog_ext.cog_subcommand(base="advertisement",
+                            name="all",
+                            description="List all your advertisements.",
+                            )
+    async def advertisement_all(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Advertisement.objects.filter(status=Advertisement.OPEN, owner=discord_user).exists():
+
+            advertisements = (await sync_to_async(Advertisement.objects.filter)(status=Advertisement.OPEN, owner=discord_user))[:4]
+
+            embed = discord.Embed(color=0xe81111)
+
+            for advertisement in advertisements:
+                embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
+                embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+                embed.add_field(name='Payment Method', value=advertisement.payment_method, inline=False)
+
+        else:
+            embed = discord.Embed(title="Oops..", description="You got no active advertisements.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)        
 
 
 def setup(bot):
