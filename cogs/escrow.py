@@ -85,6 +85,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
+                embed.add_field(name='Payment Method', value=escrow.payment_method)
                 embed.add_field(name='Status', value=f"{escrow.status}")
                 if escrow.initiator == discord_user:
                     embed.add_field(name='Your Role', value="Seller")
@@ -294,6 +296,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
+                embed.add_field(name='Payment Method', value=escrow.payment_method)
                 embed.add_field(name='Status', value=f"{escrow.status}")
 
         else:
