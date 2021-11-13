@@ -1,14 +1,13 @@
-from os import name
 import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_int
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from table2ascii import table2ascii, PresetStyle
 from escrow.models.advertisement import Advertisement
-from core.utils.shortcuts import convert_to_int
+from escrow.utils import create_offer_table
 
 
 class advertisement(commands.Cog):
@@ -56,6 +55,14 @@ class advertisement(commands.Cog):
             price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
             advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, payment_method=payment_method, status=Advertisement.OPEN)
 
+            offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+            offer_table = create_offer_table(5)
+
+            async for oldMessage in offer_channel.history():
+                await oldMessage.delete()
+
+            await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
+
             embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=amount_of_tnbc)
@@ -67,7 +74,7 @@ class advertisement(commands.Cog):
                                   description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
                                   color=0xe81111)
         await ctx.send(embed=embed, hidden=True)
-    
+
     @cog_ext.cog_subcommand(base="advertisement",
                             name="all",
                             description="List all the active advertisements.",
@@ -76,25 +83,9 @@ class advertisement(commands.Cog):
 
         await ctx.defer(hidden=True)
 
-        advertisements = Advertisement.objects.filter(status=Advertisement.OPEN)
+        offer_table = create_offer_table(5)
 
-        temp = []
-        body_list = []
-
-        for advertisement in advertisements:
-            temp.extend([advertisement.uuid_hex, str(convert_to_int(advertisement.amount)), str(convert_to_decimal(advertisement.price)), advertisement.payment_method])
-            body_list.append(temp)
-            temp = []
-
-        output = table2ascii(
-            header=["ID", "Amount", "Price (USDT)", "Payment Method"],
-            body=body_list,
-            style=PresetStyle.ascii_box
-        )
-
-        embed = discord.Embed(color=0xe81111)
-        embed.add_field(name="Open Advertisements", value=output)
-        await ctx.send(f"```{output}```", hidden=True)
+        await ctx.send(f"```{offer_table}```", hidden=True)
 
 
 def setup(bot):
