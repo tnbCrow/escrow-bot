@@ -43,6 +43,8 @@ class escrow(commands.Cog):
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+            embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+            embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
             if discord_user == escrow_obj.successor:
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
                 embed.add_field(name='Your Role', value='Buyer')
@@ -51,6 +53,7 @@ class escrow(commands.Cog):
                 successor = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
                 embed.add_field(name='Your Role', value='Seller')
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
+
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
             if escrow_obj.status == Escrow.ADMIN_SETTLED or escrow_obj.status == Escrow.ADMIN_CANCELLED:
