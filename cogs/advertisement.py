@@ -75,11 +75,11 @@ class advertisement(commands.Cog):
                                   color=0xe81111)
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="advertisement",
+    @cog_ext.cog_subcommand(base="offers",
                             name="all",
                             description="List all the active advertisements.",
                             )
-    async def advertisement_all(self, ctx):
+    async def offers_all(self, ctx):
 
         await ctx.defer(hidden=True)
 
