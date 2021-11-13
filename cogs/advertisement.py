@@ -1,4 +1,5 @@
 import discord
+import os
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
@@ -6,6 +7,7 @@ from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, 
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from escrow.models.advertisement import Advertisement
+from escrow.models.escrow import Escrow
 from escrow.utils import create_offer_table
 
 
@@ -188,6 +190,95 @@ class advertisement(commands.Cog):
             embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
             embed.add_field(name='Payment Method', value=advertisement.payment_method)
             embed.add_field(name='Status', value=advertisement.status)
+
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="offers",
+                            name="take",
+                            description="Take the particular offer to initiate trade.",
+                            options=[
+                                create_option(
+                                    name="offer_id",
+                                    description="ID of the offer you want to claim.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="amount_of_tnbc",
+                                    description="Amount of TNBC you'd like to buy.",
+                                    option_type=4,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def offer_take(self, ctx, offer_id: str, amount_of_tnbc: int):
+
+        await ctx.defer(hidden=True)
+
+        buyer_discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Advertisement.objects.filter(uuid_hex=offer_id, status=Advertisement.OPEN).exists():
+
+            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=offer_id)
+
+            if buyer_discord_user != advertisement.owner:
+                database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+
+                if advertisement.amount >= database_amount:
+                    advertisement.amount -= database_amount
+                    if advertisement.amount == 0:
+                        advertisement.status = Advertisement.COMPLETED
+                    advertisement.save()
+
+                    offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                    offer_table = create_offer_table(5)
+
+                    async for oldMessage in offer_channel.history():
+                        await oldMessage.delete()
+
+                    await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
+
+                    trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(os.environ["TRADE_CHAT_CATEGORY_ID"]))
+                    agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
+                    seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
+
+                    overwrites = {
+                        ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                        agent_role: discord.PermissionOverwrite(read_messages=True),
+                        ctx.author: discord.PermissionOverwrite(read_messages=True),
+                        seller: discord.PermissionOverwrite(read_messages=True)
+                    }
+
+                    trade_chat_channel = await ctx.guild.create_text_channel(f"{ctx.author.name}-{seller.name}", overwrites=overwrites, category=trade_chat_category)
+
+                    integer_fee = amount_of_tnbc - int(amount_of_tnbc * (100 - settings.CROW_BOT_FEE) / 100)
+                    database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
+
+                    escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
+                                                                            fee=database_fee,
+                                                                            price=advertisement.price,
+                                                                            payment_method=advertisement.payment_method,
+                                                                            initiator=advertisement.owner,
+                                                                            successor=buyer_discord_user,
+                                                                            status=Escrow.OPEN)
+                    embed = discord.Embed(title="Success.", description="", color=0xe81111)
+                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=amount_of_tnbc)
+                    embed.add_field(name='Fee', value=integer_fee)
+                    embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                    embed.add_field(name='Total (USDT)', value=amount_of_tnbc * convert_to_decimal(escrow_obj.price))
+                    embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
+
+                    await trade_chat_channel.send(f"{seller.mention}, {ctx.author.mention} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\nPayment Method: {escrow_obj.payment_method}", embed=embed)
+
+                else:
+                    embed = discord.Embed(title="Error!", description="Advertisement does not have amount available to escrow.", color=0xe81111)
+
+            else:
+                embed = discord.Embed(title="Error!", description="You can not take your own advertisement.", color=0xe81111)
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)

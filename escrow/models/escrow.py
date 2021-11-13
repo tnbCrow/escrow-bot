@@ -37,6 +37,8 @@ class Escrow(models.Model):
 
     amount = models.BigIntegerField()
     fee = models.BigIntegerField()
+    price = models.BigIntegerField()
+    payment_method = models.CharField(max_length=255)
 
     initiator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="initiator")
     successor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="successor")
