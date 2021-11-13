@@ -1,14 +1,18 @@
 import discord
 from discord.ext import commands
+
 from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import get_or_create_discord_user
+from discord_slash.utils.manage_commands import create_option, create_permission
+from discord_slash.model import SlashCommandPermissionType
+
 from django.conf import settings
+from django.db.models import Q, F
 from asgiref.sync import sync_to_async
+
 from escrow.models.escrow import Escrow
 from escrow.utils import get_or_create_user_profile
-from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
+from core.utils.shortcuts import get_or_create_discord_user
 from core.models.statistics import Statistic
 
 
@@ -32,7 +36,14 @@ class agent(commands.Cog):
                                     option_type=3,
                                     required=True
                                 )
-                            ]
+                            ],
+                            base_default_permission=False,
+                            base_permissions={
+                                int(settings.GUILD_ID): [
+                                    create_permission(int(settings.AGENT_ROLE_ID), SlashCommandPermissionType.ROLE, True),
+                                    create_permission(int(settings.GUILD_ID), SlashCommandPermissionType.ROLE, False)
+                                ]
+                            }
                             )
     async def agent_release(self, ctx, escrow_id: str, remarks: str):
 

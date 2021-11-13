@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_permission
+from discord_slash.model import SlashCommandPermissionType
+
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from django.db.models import Q
@@ -26,7 +28,14 @@ class admin(commands.Cog):
                                     option_type=6,
                                     required=True
                                 )
-                            ]
+                            ],
+                            base_default_permission=False,
+                            base_permissions={
+                                int(settings.GUILD_ID): [
+                                    create_permission(int(settings.ADMIN_ROLE_ID), SlashCommandPermissionType.ROLE, True),
+                                    create_permission(int(settings.GUILD_ID), SlashCommandPermissionType.ROLE, False)
+                                ]
+                            }
                             )
     async def admin_escrows(self, ctx, user):
 
