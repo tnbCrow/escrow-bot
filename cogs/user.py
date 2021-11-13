@@ -195,7 +195,8 @@ class user(commands.Cog):
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
         embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
-        await ctx.send(embed=embed)
+
+        await ctx.send(embed=embed, hidden=True)
 
 
 def setup(bot):

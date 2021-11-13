@@ -241,7 +241,7 @@ class advertisement(commands.Cog):
 
                     await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
 
-                    trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(os.environ["TRADE_CHAT_CATEGORY_ID"]))
+                    trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
                     agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
                     seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
 
