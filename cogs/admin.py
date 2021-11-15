@@ -161,6 +161,10 @@ class admin(commands.Cog):
 
             UserTransactionHistory.objects.create(user=discord_user, type=UserTransactionHistory.REFUND, amount=amount)
 
+            statistic, created = Statistic.objects.get_or_create(title="main")
+            statistic.total_balance += amount
+            statistic.save()
+
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Success', value=f"Refunded {convert_to_decimal(amount)} to the user.")
             embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
@@ -208,6 +212,10 @@ class admin(commands.Cog):
                 tnbc_wallet.save()
 
                 UserTransactionHistory.objects.create(user=discord_user, type=UserTransactionHistory.TAKEBACK, amount=amount)
+
+                statistic, created = Statistic.objects.get_or_create(title="main")
+                statistic.total_balance -= amount
+                statistic.save()
 
                 embed = discord.Embed(color=0xe81111)
                 embed.add_field(name='Success', value=f"Takeback {convert_to_decimal(amount)} to the user.")
