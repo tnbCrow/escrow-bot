@@ -246,6 +246,32 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
+    @cog_ext.cog_subcommand(base="payment_method", name="all", description="List all your active payment methods.")
+    async def payment_method_all(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if PaymentMethod.objects.filter(user=discord_user).exists():
+            payment_methods = await sync_to_async(PaymentMethod.objects.filter)(user=discord_user)
+
+            embed = discord.Embed(color=0xe81111)
+
+            for payment_method in payment_methods:
+                embed.add_field(name='ID', value=f"{payment_method.uuid_hex}", inline=False)
+                embed.add_field(name='Payment Method', value=payment_method.name)
+                embed.add_field(name='Details', value=payment_method.detail)
+                embed.add_field(name='Conditions', value=payment_method.condition)
+                embed.set_footer(text="Use /payment_method remove command to delete the payment methods.")
+
+        else:
+            embed = discord.Embed(title="Oops..",
+                                  description="No payment methods found. Use /payment_method add command to add your new payment method.",
+                                  color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
 
 def setup(bot):
     bot.add_cog(user(bot))
