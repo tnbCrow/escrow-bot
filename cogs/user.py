@@ -10,6 +10,7 @@ from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 from core.models.transactions import Transaction
 from core.models.statistics import Statistic
 from core.models.users import UserTransactionHistory
+from escrow.models.payment_method import PaymentMethod
 from escrow.utils import get_or_create_user_profile
 from asgiref.sync import sync_to_async
 import humanize
@@ -195,6 +196,53 @@ class user(commands.Cog):
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
         embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="payment_method",
+                            name="add",
+                            description="Add a new payment method.",
+                            options=[
+                                create_option(
+                                    name="name_of_payment_method",
+                                    description="Eg: Bitcoin, Paypal, Bank Of America.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="details",
+                                    description="Eg: BITCOIN ADDRESS, PAYPAL_EMAIL, BANK_ACCOUNT_DETAILS.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="conditions",
+                                    description="Additional conditions for trade. Eg: Dont send less than 0.01 BTC, send as friend on paypal.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def payment_method_add(self, ctx, name_of_payment_method: str, details: str, conditions: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        embed = discord.Embed(color=0xe81111)
+
+        if PaymentMethod.objects.filter(user=discord_user).count() <= 5:
+
+            PaymentMethod.objects.create(user=discord_user, name=name_of_payment_method, detail=details, condition=conditions)
+
+            embed.add_field(name="Success", value="Payment method added successfully.", inline=False)
+            embed.add_field(name="Payment Method", value=name_of_payment_method, inline=False)
+            embed.add_field(name="Details", value=details, inline=False)
+            embed.add_field(name="Conditions", value=conditions, inline=False)
+            embed.set_footer(text="Use /payment_method all command to list all your active payment methods.")
+
+        else:
+            embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
 
         await ctx.send(embed=embed, hidden=True)
 

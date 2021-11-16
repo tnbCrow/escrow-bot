@@ -66,8 +66,6 @@ class Escrow(models.Model):
         return f"Amount: {self.amount}; Status: {self.status}"
 
 
-# generate a random memo and check if its already taken.
-# If taken, generate another memo again until we find a valid memo
 def generate_hex_uuid(instance):
 
     while True:
@@ -84,5 +82,4 @@ def pre_save_post_receiver(sender, instance, *args, **kwargs):
         instance.uuid_hex = generate_hex_uuid(instance)
 
 
-# save the memo before the User model is saved with the unique memo
 models.signals.pre_save.connect(pre_save_post_receiver, sender=Escrow)
