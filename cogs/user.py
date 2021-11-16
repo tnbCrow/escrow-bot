@@ -272,6 +272,33 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
+    @cog_ext.cog_subcommand(base="payment_method",
+                            name="remove",
+                            description="Remove a particular payment method.",
+                            options=[
+                                create_option(
+                                    name="payment_method_id",
+                                    description="ID of the payment method.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def payment_method(self, ctx, payment_method_id: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if PaymentMethod.objects.filter(user=discord_user, uuid_hex=payment_method_id).exists():
+            PaymentMethod.objects.filter(user=discord_user, uuid_hex=payment_method_id).delete()
+            embed = discord.Embed(title="Success", description="Payment method deleted successfully.", color=0xe81111)
+
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
 
 def setup(bot):
     bot.add_cog(user(bot))
