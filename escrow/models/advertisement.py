@@ -25,7 +25,6 @@ class Advertisement(models.Model):
 
     amount = models.BigIntegerField()
     price = models.BigIntegerField()
-    payment_method = models.CharField(max_length=255)
 
     status = models.CharField(max_length=255, choices=status_choices)
 

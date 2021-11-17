@@ -9,6 +9,7 @@ from asgiref.sync import sync_to_async
 from escrow.models.advertisement import Advertisement
 from escrow.models.escrow import Escrow
 from escrow.utils import create_offer_table
+from escrow.models.payment_method import PaymentMethod
 
 
 class advertisement(commands.Cog):
@@ -30,16 +31,10 @@ class advertisement(commands.Cog):
                                     description="Rate you want to sell your TNBC at.",
                                     option_type=10,
                                     required=True
-                                ),
-                                create_option(
-                                    name="payment_method",
-                                    description="The payment methods you're accepting.",
-                                    option_type=3,
-                                    required=True
                                 )
                             ]
                             )
-    async def advertisement_create(self, ctx, amount_of_tnbc: int, price_per_tnbc: float, payment_method: str):
+    async def advertisement_create(self, ctx, amount_of_tnbc: int, price_per_tnbc: float):
 
         await ctx.defer(hidden=True)
 
@@ -54,7 +49,7 @@ class advertisement(commands.Cog):
             tnbc_wallet.save()
 
             price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
-            advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, payment_method=payment_method, status=Advertisement.OPEN)
+            advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
 
             offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
             offer_table = create_offer_table(5)
@@ -68,7 +63,6 @@ class advertisement(commands.Cog):
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=amount_of_tnbc)
             embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
-            embed.add_field(name='Payment Method', value=payment_method, inline=False)
 
         else:
             embed = discord.Embed(title="Inadequate Funds!",
@@ -108,7 +102,6 @@ class advertisement(commands.Cog):
                 embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
                 embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
-                embed.add_field(name='Payment Method', value=advertisement.payment_method, inline=False)
 
         else:
             embed = discord.Embed(title="Oops..", description="You got no active advertisements.", color=0xe81111)
@@ -140,7 +133,6 @@ class advertisement(commands.Cog):
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
             embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
-            embed.add_field(name='Payment Method', value=advertisement.payment_method, inline=False)
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
@@ -188,7 +180,6 @@ class advertisement(commands.Cog):
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
             embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
-            embed.add_field(name='Payment Method', value=advertisement.payment_method)
             embed.add_field(name='Status', value=advertisement.status)
 
         else:
@@ -260,7 +251,6 @@ class advertisement(commands.Cog):
                     escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
                                                                             fee=database_fee,
                                                                             price=advertisement.price,
-                                                                            payment_method=advertisement.payment_method,
                                                                             initiator=advertisement.owner,
                                                                             successor=buyer_discord_user,
                                                                             status=Escrow.OPEN)
@@ -270,9 +260,16 @@ class advertisement(commands.Cog):
                     embed.add_field(name='Fee', value=integer_fee)
                     embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                     embed.add_field(name='Total (USDT)', value=amount_of_tnbc * convert_to_decimal(escrow_obj.price))
-                    embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
+                    embed.set_footer(text="Use /escrow all command list all active escrows.")
 
-                    await trade_chat_channel.send(f"{seller.mention}, {ctx.author.mention} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\nPayment Method: {escrow_obj.payment_method}", embed=embed)
+                    payment_methods = PaymentMethod.objects.filter(user=advertisement.owner)
+
+                    payment_method_message = ""
+
+                    for payment_method in payment_methods:
+                        payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
+
+                    await trade_chat_channel.send(f"{seller.mention}, {ctx.author.mention} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
 
                 else:
                     embed = discord.Embed(title="Error!", description="Advertisement does not have amount available to escrow.", color=0xe81111)

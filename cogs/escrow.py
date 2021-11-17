@@ -44,7 +44,6 @@ class escrow(commands.Cog):
             embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
             embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
             embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-            embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
             if discord_user == escrow_obj.successor:
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
                 embed.add_field(name='Your Role', value='Buyer')
@@ -83,8 +82,9 @@ class escrow(commands.Cog):
                 embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
-                embed.add_field(name='Payment Method', value=escrow.payment_method)
                 embed.add_field(name='Status', value=f"{escrow.status}")
+                embed.set_footer(text="Use /escrow release to release the TNBC once you've received payment or /escrow cancel to cancel the escrow (never cancel escrow once you've transferred payment).")
+
                 if escrow.initiator == discord_user:
                     embed.add_field(name='Your Role', value="Seller")
                 else:
@@ -150,7 +150,6 @@ class escrow(commands.Cog):
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
             else:
@@ -196,7 +195,6 @@ class escrow(commands.Cog):
                     embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                     embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                     embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                    embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
@@ -249,7 +247,6 @@ class escrow(commands.Cog):
                 dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 dispute_embed.add_field(name='Amount', value=f"{convert_to_decimal(escrow_obj.amount)}")
                 dispute_embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                dispute_embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                 dispute_embed.add_field(name='Seller', value=f"{initiator}")
                 dispute_embed.add_field(name='Buyer', value=f"{successor}")
                 dispute = await dispute.send(f"{agent_role.mention}", embed=dispute_embed)
@@ -262,7 +259,6 @@ class escrow(commands.Cog):
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                embed.add_field(name='Payment Method', value=escrow_obj.payment_method)
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
@@ -292,7 +288,6 @@ class escrow(commands.Cog):
                 embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
-                embed.add_field(name='Payment Method', value=escrow.payment_method)
                 embed.add_field(name='Status', value=f"{escrow.status}")
 
         else:

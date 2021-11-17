@@ -284,7 +284,7 @@ class user(commands.Cog):
                                 )
                             ]
                             )
-    async def payment_method(self, ctx, payment_method_id: str):
+    async def payment_method_remove(self, ctx, payment_method_id: str):
 
         await ctx.defer(hidden=True)
 
