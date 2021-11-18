@@ -44,8 +44,7 @@ class Escrow(models.Model):
 
     status = models.CharField(max_length=255, choices=status_choices)
 
-    initiator_cancelled = models.BooleanField(default=False)
-    successor_cancelled = models.BooleanField(default=False)
+    conversation_channel_id = models.CharField(max_length=255)
 
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True, related_name="agent")
     settled_towards = models.CharField(max_length=255, choices=settled_towards_choices, default="SUCCESSOR")

@@ -78,12 +78,15 @@ class agent(commands.Cog):
                 seller_profile.total_tnbc_escrowed += escrow_obj.amount
                 seller_profile.save()
 
-                embed = discord.Embed(title="Success", description="", color=0xe81111)
+                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                 embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
+
+                conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                await conversation_channel.send(embed=embed)
 
             else:
                 embed = discord.Embed(title="Error!", description="Disputed escrow not found.", color=0xe81111)
@@ -129,11 +132,15 @@ class agent(commands.Cog):
 
                     ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
 
-                    embed = discord.Embed(title="Success", description="", color=0xe81111)
+                    embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                     embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
                     embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                    conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                    await conversation_channel.send(embed=embed)
+
                 else:
                     embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
             else:

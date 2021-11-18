@@ -271,6 +271,7 @@ class advertisement(commands.Cog):
                                                                             price=advertisement.price,
                                                                             initiator=advertisement.owner,
                                                                             successor=buyer_discord_user,
+                                                                            conversation_channel_id=trade_chat_channel.id,
                                                                             status=Escrow.OPEN)
                     embed = discord.Embed(title="Success.", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
