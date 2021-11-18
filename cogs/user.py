@@ -299,6 +299,16 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
+    @cog_ext.cog_slash(name="guide", description="Check User Balance.")
+    async def guide(self, ctx):
+
+        await ctx.defer()
+
+        embed = discord.Embed(color=0xe81111)
+        embed.add_field(name="Seller Guide", value="[Youtube Tutorial](https://youtu.be/3WjW-i9neqI)", inline=False)
+        embed.add_field(name="Buyer Guide", value="[Youtube Tutorial](https://youtu.be/yQyp6pZd2ys)")
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(user(bot))

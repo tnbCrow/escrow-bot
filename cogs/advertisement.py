@@ -16,7 +16,7 @@ class advertisement(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @cog_ext.cog_subcommand(base="advertisement",
+    @cog_ext.cog_subcommand(base="adv",
                             name="create",
                             description="Create a new advertisement.",
                             options=[
@@ -41,40 +41,52 @@ class advertisement(commands.Cog):
         discord_user = get_or_create_discord_user(ctx.author.id)
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
-        if tnbc_wallet.get_int_available_balance() >= amount_of_tnbc:
+        if PaymentMethod.objects.filter(user=discord_user).exists():
 
-            database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+            if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
 
-            tnbc_wallet.locked += database_amount
-            tnbc_wallet.save()
+                if tnbc_wallet.get_int_available_balance() >= amount_of_tnbc:
 
-            price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
-            advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
+                    database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
 
-            offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-            offer_table = create_offer_table(5)
+                    tnbc_wallet.locked += database_amount
+                    tnbc_wallet.save()
 
-            async for oldMessage in offer_channel.history():
-                await oldMessage.delete()
+                    price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
+                    advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
 
-            await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
+                    offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                    offer_table = create_offer_table(5)
 
-            embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
-            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=amount_of_tnbc)
-            embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+                    async for oldMessage in offer_channel.history():
+                        await oldMessage.delete()
 
+                    await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
+
+                    embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
+                    embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=amount_of_tnbc)
+                    embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+
+                else:
+                    embed = discord.Embed(title="Inadequate Funds!",
+                                          description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                                          color=0xe81111)
+            else:
+                embed = discord.Embed(title="Error!",
+                                      description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} TNBC.",
+                                      color=0xe81111)
         else:
-            embed = discord.Embed(title="Inadequate Funds!",
-                                  description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+            embed = discord.Embed(title="No Payment Method Set.",
+                                  description="Please use the command `/payment_method add` to add the payment method you'd like to receive money in.",
                                   color=0xe81111)
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="offers",
+    @cog_ext.cog_subcommand(base="adv",
                             name="all",
                             description="List all the active advertisements.",
                             )
-    async def offers_all(self, ctx):
+    async def advertisement_all(self, ctx):
 
         await ctx.defer(hidden=True)
 
@@ -82,11 +94,11 @@ class advertisement(commands.Cog):
 
         await ctx.send(f"Open Advertisements (Escrow Protected)```{offer_table}```", hidden=True)
 
-    @cog_ext.cog_subcommand(base="advertisement",
-                            name="all",
+    @cog_ext.cog_subcommand(base="adv",
+                            name="my",
                             description="List all your advertisements.",
                             )
-    async def advertisement_all(self, ctx):
+    async def advertisement_my(self, ctx):
 
         await ctx.defer(hidden=True)
 
@@ -108,7 +120,7 @@ class advertisement(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="advertisement",
+    @cog_ext.cog_subcommand(base="adv",
                             name="status",
                             description="Check the status of particular advertisement.",
                             options=[
@@ -139,7 +151,7 @@ class advertisement(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="advertisement",
+    @cog_ext.cog_subcommand(base="adv",
                             name="cancel",
                             description="Cancel the particular advertisement.",
                             options=[
@@ -187,13 +199,13 @@ class advertisement(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="offers",
+    @cog_ext.cog_subcommand(base="adv",
                             name="take",
                             description="Take the particular offer to initiate trade.",
                             options=[
                                 create_option(
-                                    name="offer_id",
-                                    description="ID of the offer you want to claim.",
+                                    name="advertisement_id",
+                                    description="ID of the advertisement you want to claim.",
                                     option_type=3,
                                     required=True
                                 ),
@@ -205,15 +217,15 @@ class advertisement(commands.Cog):
                                 )
                             ]
                             )
-    async def offer_take(self, ctx, offer_id: str, amount_of_tnbc: int):
+    async def advertisement_take(self, ctx, advertisement_id: str, amount_of_tnbc: int):
 
         await ctx.defer(hidden=True)
 
         buyer_discord_user = get_or_create_discord_user(ctx.author.id)
 
-        if Advertisement.objects.filter(uuid_hex=offer_id, status=Advertisement.OPEN).exists():
+        if Advertisement.objects.filter(uuid_hex=advertisement_id, status=Advertisement.OPEN).exists():
 
-            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=offer_id)
+            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
 
             if buyer_discord_user != advertisement.owner:
                 database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
