@@ -45,32 +45,38 @@ class advertisement(commands.Cog):
 
             if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
 
-                if tnbc_wallet.get_int_available_balance() >= amount_of_tnbc:
+                if 0 > price_per_tnbc > 100000:
 
-                    database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+                    if tnbc_wallet.get_int_available_balance() >= amount_of_tnbc:
 
-                    tnbc_wallet.locked += database_amount
-                    tnbc_wallet.save()
+                        database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
 
-                    price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
-                    advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
+                        tnbc_wallet.locked += database_amount
+                        tnbc_wallet.save()
 
-                    offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                    offer_table = create_offer_table(5)
+                        price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
+                        advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
 
-                    async for oldMessage in offer_channel.history():
-                        await oldMessage.delete()
+                        offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                        offer_table = create_offer_table(5)
 
-                    await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
+                        async for oldMessage in offer_channel.history():
+                            await oldMessage.delete()
 
-                    embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=amount_of_tnbc)
-                    embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+                        await offer_channel.send(f"Open Advertisements (Escrow Protected)```{offer_table}```")
 
+                        embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
+                        embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+                        embed.add_field(name='Amount', value=amount_of_tnbc)
+                        embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+
+                    else:
+                        embed = discord.Embed(title="Inadequate Funds!",
+                                              description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                                              color=0xe81111)
                 else:
-                    embed = discord.Embed(title="Inadequate Funds!",
-                                          description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                    embed = discord.Embed(title="Error!",
+                                          description="The price can not be less than 0.0 and more than 100,000.",
                                           color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!",
