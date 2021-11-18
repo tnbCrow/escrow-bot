@@ -11,6 +11,7 @@ from asgiref.sync import sync_to_async
 
 from escrow.models.escrow import Escrow
 from escrow.utils import get_or_create_user_profile
+from core.utils.shortcuts import convert_to_int, convert_to_decimal
 from core.models.wallets import ThenewbostonWallet
 from core.utils.shortcuts import get_or_create_discord_user
 from core.models.statistics import Statistic
@@ -80,13 +81,16 @@ class agent(commands.Cog):
 
                 embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
                 conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
                 await conversation_channel.send(embed=embed)
+
+                recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+                await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
 
             else:
                 embed = discord.Embed(title="Error!", description="Disputed escrow not found.", color=0xe81111)
@@ -134,8 +138,8 @@ class agent(commands.Cog):
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                    embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)}")
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
                     conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))

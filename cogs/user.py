@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from django.conf import settings
 from discord_slash.model import ButtonStyle
@@ -49,9 +49,9 @@ class user(commands.Cog):
 
         embed = discord.Embed(color=0xe81111)
         embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-        embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
-        embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-        embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+        embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
+        embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+        embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -114,9 +114,9 @@ class user(commands.Cog):
 
             if response:
                 if not amount < 1:
-                    if tnbc_wallet.get_int_available_balance() < amount + fee:
+                    if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
                         embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {tnbc_wallet.get_int_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.",
+                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.",
                                               color=0xe81111)
 
                     else:
@@ -171,7 +171,7 @@ class user(commands.Cog):
 
             natural_day = humanize.naturalday(txs.created_at)
 
-            embed.add_field(name='\u200b', value=f"{txs.type} - {txs.get_int_amount()} TNBC - {natural_day}", inline=False)
+            embed.add_field(name='\u200b', value=f"{txs.type} - {convert_to_int(txs.amount)} TNBC - {natural_day}", inline=False)
 
         await ctx.send(embed=embed, hidden=True)
 

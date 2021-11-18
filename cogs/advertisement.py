@@ -47,7 +47,7 @@ class advertisement(commands.Cog):
 
                 if 0 > price_per_tnbc > 100000:
 
-                    if tnbc_wallet.get_int_available_balance() >= amount_of_tnbc:
+                    if convert_to_int(tnbc_wallet.get_available_balance()) >= amount_of_tnbc:
 
                         database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
 
@@ -72,7 +72,7 @@ class advertisement(commands.Cog):
 
                     else:
                         embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {tnbc_wallet.get_int_available_balance()} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance())} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",

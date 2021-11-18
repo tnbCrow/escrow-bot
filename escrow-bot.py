@@ -16,7 +16,7 @@ django.setup()
 
 from django.conf import settings
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
-from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user
 
 # Environment Variables
 TOKEN = os.environ['CROW_DISCORD_TOKEN']
@@ -114,9 +114,9 @@ async def chain_scan(ctx: ComponentContext):
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
     embed = discord.Embed(title="Scan Completed", color=0xe81111)
-    embed.add_field(name='New Balance', value=tnbc_wallet.get_int_balance())
-    embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-    embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+    embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.total_balance))
+    embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+    embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 
     await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
 
