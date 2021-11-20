@@ -37,7 +37,7 @@ class user(commands.Cog):
         # embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
         # embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
 
-        await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Sent? Scan Chain"))])
+        await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Sent? Check new balance."))])
 
     @cog_ext.cog_slash(name="balance", description="Check User Balance.")
     async def user_balance(self, ctx):

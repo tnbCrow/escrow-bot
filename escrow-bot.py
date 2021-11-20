@@ -66,7 +66,7 @@ async def help_advertisement(ctx):
     embed.add_field(name="/adv my", value="List all your active advertisements.", inline=False)
     embed.add_field(name="/adv cancel advertisement_id: ID", value="Cancel an active advertisement.", inline=False)
     embed.add_field(name="/adv status advertisement_id: ID", value="Check the status of the particular advertisement.", inline=False)
-    embed.add_field(name="/adv take advertisement_id: ID amount_of_tnbc: AMOUNT", value="Buy TNBC from the advertisement.", inline=False)
+    embed.add_field(name="/adv buy advertisement_id: ID amount_of_tnbc: AMOUNT", value="Buy TNBC from the advertisement.", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -114,7 +114,7 @@ async def chain_scan(ctx: ComponentContext):
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
     embed = discord.Embed(title="Scan Completed", color=0xe81111)
-    embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.total_balance))
+    embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
     embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
     embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 

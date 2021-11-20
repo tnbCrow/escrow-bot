@@ -16,12 +16,12 @@ def get_or_create_user_profile(user):
 
 def create_offer_table(number_of_data):
 
-    advertisements = Advertisement.objects.filter(status=Advertisement.OPEN).order_by('-price')[:number_of_data]
+    advertisements = Advertisement.objects.filter(status=Advertisement.OPEN).order_by('price')[:number_of_data]
 
     temp = []
     body_list = []
 
-    for advertisement in advertisements:
+    for advertisement in reversed(advertisements):
 
         payment_method_message = ""
 
@@ -35,7 +35,7 @@ def create_offer_table(number_of_data):
         temp = []
 
     formatted_table = table2ascii(
-        header=["ID", "Amount", "Price (USDT)", "Payment Method"],
+        header=["Advertisement ID", "Amount (TNBC)", "Price (USDT)", "Payment Method(s)"],
         body=body_list,
         style=PresetStyle.ascii_box
     )

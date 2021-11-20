@@ -128,7 +128,7 @@ class admin(commands.Cog):
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
             embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
-            embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.total_balance)(tnbc_wallet.locked))
+            embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
             embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 
         else:
