@@ -238,7 +238,7 @@ class advertisement(commands.Cog):
             advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
 
             if buyer_discord_user != advertisement.owner:
-                
+
                 if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
 
                     database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR

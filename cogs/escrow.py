@@ -283,7 +283,7 @@ class escrow(commands.Cog):
 
                 conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
                 if conversation_channel:
-                        await conversation_channel.send(embed=embed)
+                    await conversation_channel.send(embed=embed)
 
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.", color=0xe81111)
