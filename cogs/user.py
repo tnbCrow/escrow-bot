@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from django.conf import settings
 from discord_slash.model import ButtonStyle
@@ -10,6 +10,7 @@ from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 from core.models.transactions import Transaction
 from core.models.statistics import Statistic
 from core.models.users import UserTransactionHistory
+from escrow.models.payment_method import PaymentMethod
 from escrow.utils import get_or_create_user_profile
 from asgiref.sync import sync_to_async
 import humanize
@@ -30,7 +31,7 @@ class user(commands.Cog):
         qr_data = f"{{'address':{settings.TNBCROW_BOT_ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
 
         embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
-        embed.add_field(name='Warning', value="Do not deposit TNBC with Keysign Mobile Wallet/ Keysign Extension or **you'll lose your coins**.", inline=False)
+        embed.add_field(name='Warning', value="Please only use official TNBC desktop wallet to send tnbc or **you'll lose your coins**. [Download Wallet](https://thenewboston.com/download)", inline=False)
         embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
         embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
         # embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
@@ -48,9 +49,10 @@ class user(commands.Cog):
 
         embed = discord.Embed(color=0xe81111)
         embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-        embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
-        embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-        embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+        embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
+        embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+        embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+        embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -113,9 +115,9 @@ class user(commands.Cog):
 
             if response:
                 if not amount < 1:
-                    if tnbc_wallet.get_int_available_balance() < amount + fee:
+                    if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
                         embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {tnbc_wallet.get_int_available_balance() - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.",
+                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.",
                                               color=0xe81111)
 
                     else:
@@ -170,7 +172,7 @@ class user(commands.Cog):
 
             natural_day = humanize.naturalday(txs.created_at)
 
-            embed.add_field(name='\u200b', value=f"{txs.type} - {txs.get_int_amount()} TNBC - {natural_day}", inline=False)
+            embed.add_field(name='\u200b', value=f"{txs.type} - {convert_to_int(txs.amount)} TNBC - {natural_day}", inline=False)
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -195,7 +197,141 @@ class user(commands.Cog):
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
         embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
-        await ctx.send(embed=embed)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="payment_method",
+                            name="add",
+                            description="Add a new payment method.",
+                            options=[
+                                create_option(
+                                    name="name_of_payment_method",
+                                    description="Eg: Bitcoin, Paypal, Bank Of America.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="details",
+                                    description="Eg: BITCOIN ADDRESS, PAYPAL_EMAIL, BANK_ACCOUNT_DETAILS.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="conditions",
+                                    description="Additional conditions for trade. Eg: Dont send less than 0.01 BTC, send as friend on paypal.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def payment_method_add(self, ctx, name_of_payment_method: str, details: str, conditions: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        embed = discord.Embed(color=0xe81111)
+
+        if PaymentMethod.objects.filter(user=discord_user).count() <= 5:
+
+            PaymentMethod.objects.create(user=discord_user, name=name_of_payment_method, detail=details, condition=conditions)
+
+            embed.add_field(name="Success", value="Payment method added successfully.", inline=False)
+            embed.add_field(name="Payment Method", value=name_of_payment_method, inline=False)
+            embed.add_field(name="Details", value=details, inline=False)
+            embed.add_field(name="Conditions", value=conditions, inline=False)
+            embed.set_footer(text="Use /payment_method all command to list all your active payment methods.")
+
+        else:
+            embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="payment_method", name="all", description="List all your active payment methods.")
+    async def payment_method_all(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if PaymentMethod.objects.filter(user=discord_user).exists():
+            payment_methods = await sync_to_async(PaymentMethod.objects.filter)(user=discord_user)
+
+            embed = discord.Embed(color=0xe81111)
+
+            for payment_method in payment_methods:
+                embed.add_field(name='ID', value=f"{payment_method.uuid_hex}", inline=False)
+                embed.add_field(name='Payment Method', value=payment_method.name)
+                embed.add_field(name='Details', value=payment_method.detail)
+                embed.add_field(name='Conditions', value=payment_method.condition)
+                embed.set_footer(text="Use /payment_method remove command to delete the payment methods.")
+
+        else:
+            embed = discord.Embed(title="Oops..",
+                                  description="No payment methods found. Use /payment_method add command to add your new payment method.",
+                                  color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="payment_method",
+                            name="remove",
+                            description="Remove a particular payment method.",
+                            options=[
+                                create_option(
+                                    name="payment_method_id",
+                                    description="ID of the payment method.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def payment_method_remove(self, ctx, payment_method_id: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if PaymentMethod.objects.filter(user=discord_user, uuid_hex=payment_method_id).exists():
+            PaymentMethod.objects.filter(user=discord_user, uuid_hex=payment_method_id).delete()
+            embed = discord.Embed(title="Success", description="Payment method deleted successfully.", color=0xe81111)
+
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="guide",
+                            name="seller",
+                            description="Guide for sellers to trade on tnbcrow discord server.")
+    async def guide_seller(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        embed = discord.Embed(title="Seller Guide | Crow Bot", description="", color=0xe81111)
+        embed.add_field(name="1. Deposit TNBC", value="Use the command `/deposit tnbc` to deposit tnbc into your crow bot account.", inline=False)
+        embed.add_field(name="2. Set your desired payment method", value="Use the command `/payment_method add` command to add payment method you'd like to receive the payment.", inline=False)
+        embed.add_field(name="3. Create an advertisement", value="Create an advertisement using `/adv create` command.", inline=False)
+        embed.add_field(name="4. Wait for the buyer", value="Once buyer buys from the advertisement, private channel is created within this server.", inline=False)
+        embed.add_field(name="5. Discuss the payment details", value="Discuss the payment details in the private channel and wait for buyer to send the payment.", inline=False)
+        embed.add_field(name="6. Release the escrow", value="Once you've received payment, use the command `/escrow release` to release TNBC into buyer's account.", inline=False)
+        embed.add_field(name="Youtube Tutorial", value="[Link](https://youtu.be/yQyp6pZd2ys)", inline=False)
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="guide",
+                            name="buyer",
+                            description="Guide for buyers to trade on tnbcrow discord server.")
+    async def guide_buyer(self, ctx):
+
+        await ctx.defer(hidden=True)
+        embed = discord.Embed(title="Buyer Guide | Crow Bot", description="", color=0xe81111)
+        embed.add_field(name="1. Check the available advertisements", value="Navigate to #sell-orders and check all available sell orders.", inline=False)
+        embed.add_field(name="2. Buy from the advertisement", value="Use the command `/adv buy` to create an escrow. Private channel is created within the discord server.", inline=False)
+        embed.add_field(name="3. Discuss the payment details", value="Discuss the payment details in the private channel.", inline=False)
+        embed.add_field(name="4. Send the payment", value="Send agreed payment amount using the method.", inline=False)
+        embed.add_field(name="5. Wait for the seller to release escrow", value="Once the payment is received, the seller will release escrow. You'll be notified in private channel about the status of the escrow.", inline=False)
+        embed.add_field(name="Youtube Tutorial", value="[Link](https://youtu.be/yQyp6pZd2ys)")
+        embed.add_field(name="Note", value="The sell orders are not open to negotiation. You can place your offer on #buy-offers if you're not happy with the available orders.", inline=False)
+        await ctx.send(embed=embed, hidden=True)
 
 
 def setup(bot):

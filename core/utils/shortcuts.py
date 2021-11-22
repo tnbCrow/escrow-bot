@@ -26,6 +26,12 @@ def convert_to_decimal(amount):
     return rounded_amount
 
 
+def convert_to_int(amount):
+
+    amount = int(amount / settings.TNBC_MULTIPLICATION_FACTOR)
+    return amount
+
+
 def get_wallet_balance():
 
     try:

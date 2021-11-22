@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_permission
+from discord_slash.model import SlashCommandPermissionType
+
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from django.db.models import Q
@@ -9,7 +11,7 @@ from django.db.models import Q
 from escrow.models.escrow import Escrow
 from core.models.users import UserTransactionHistory
 from core.models.statistics import Statistic
-from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance
+from core.utils.shortcuts import convert_to_int, get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance
 
 
 class admin(commands.Cog):
@@ -26,7 +28,14 @@ class admin(commands.Cog):
                                     option_type=6,
                                     required=True
                                 )
-                            ]
+                            ],
+                            base_default_permission=False,
+                            base_permissions={
+                                int(settings.GUILD_ID): [
+                                    create_permission(int(settings.ADMIN_ROLE_ID), SlashCommandPermissionType.ROLE, True),
+                                    create_permission(int(settings.GUILD_ID), SlashCommandPermissionType.ROLE, False)
+                                ]
+                            }
                             )
     async def admin_escrows(self, ctx, user):
 
@@ -44,8 +53,8 @@ class admin(commands.Cog):
                 for escrow in escrows:
 
                     embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
-                    embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)}")
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)}")
                     embed.add_field(name='Status', value=f"{escrow.status}")
                     if discord_user == escrow.successor:
                         initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
@@ -84,8 +93,8 @@ class admin(commands.Cog):
                 successor = await self.bot.fetch_user(int(escrow.successor.discord_id))
 
                 embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)}")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)}")
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
                 embed.add_field(name='Status', value=f"{escrow.status}")
@@ -118,9 +127,9 @@ class admin(commands.Cog):
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-            embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
-            embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-            embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+            embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
+            embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+            embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
@@ -168,9 +177,9 @@ class admin(commands.Cog):
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Success', value=f"Refunded {convert_to_decimal(amount)} to the user.")
             embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-            embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
-            embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-            embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+            embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
+            embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+            embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
@@ -220,9 +229,9 @@ class admin(commands.Cog):
                 embed = discord.Embed(color=0xe81111)
                 embed.add_field(name='Success', value=f"Takeback {convert_to_decimal(amount)} to the user.")
                 embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-                embed.add_field(name='Balance', value=tnbc_wallet.get_int_balance())
-                embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-                embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+                embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
+                embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+                embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
 
             else:
                 embed = discord.Embed(title="Error!", description="The user does not have enough TNBC in their wallet to take back.", color=0xe81111)

@@ -1,14 +1,19 @@
 import discord
 from discord.ext import commands
+
 from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import get_or_create_discord_user
+from discord_slash.utils.manage_commands import create_option, create_permission
+from discord_slash.model import SlashCommandPermissionType
+
 from django.conf import settings
+from django.db.models import Q, F
 from asgiref.sync import sync_to_async
+
 from escrow.models.escrow import Escrow
 from escrow.utils import get_or_create_user_profile
-from django.db.models import Q, F
+from core.utils.shortcuts import convert_to_int, convert_to_decimal
 from core.models.wallets import ThenewbostonWallet
+from core.utils.shortcuts import get_or_create_discord_user
 from core.models.statistics import Statistic
 
 
@@ -32,7 +37,14 @@ class agent(commands.Cog):
                                     option_type=3,
                                     required=True
                                 )
-                            ]
+                            ],
+                            base_default_permission=False,
+                            base_permissions={
+                                int(settings.GUILD_ID): [
+                                    create_permission(int(settings.AGENT_ROLE_ID), SlashCommandPermissionType.ROLE, True),
+                                    create_permission(int(settings.GUILD_ID), SlashCommandPermissionType.ROLE, False)
+                                ]
+                            }
                             )
     async def agent_release(self, ctx, escrow_id: str, remarks: str):
 
@@ -67,12 +79,18 @@ class agent(commands.Cog):
                 seller_profile.total_tnbc_escrowed += escrow_obj.amount
                 seller_profile.save()
 
-                embed = discord.Embed(title="Success", description="", color=0xe81111)
+                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
+
+                conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                await conversation_channel.send(embed=embed)
+
+                recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+                await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
 
             else:
                 embed = discord.Embed(title="Error!", description="Disputed escrow not found.", color=0xe81111)
@@ -118,11 +136,15 @@ class agent(commands.Cog):
 
                     ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
 
-                    embed = discord.Embed(title="Success", description="", color=0xe81111)
+                    embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                    embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)}")
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                    conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                    await conversation_channel.send(embed=embed)
+
                 else:
                     embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
             else:

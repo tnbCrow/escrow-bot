@@ -16,7 +16,7 @@ django.setup()
 
 from django.conf import settings
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
-from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user
 
 # Environment Variables
 TOKEN = os.environ['CROW_DISCORD_TOKEN']
@@ -38,26 +38,51 @@ for filename in os.listdir('./cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
 
-@slash.slash(name="help", description="Crow Bot help.")
-async def help(ctx):
-
+@slash.subcommand(base="help", name="general", description="List of Commands from General Category")
+async def help_general(ctx):
     await ctx.defer(hidden=True)
+    embed = discord.Embed(title="General Commands", color=0xe81111)
+    embed.add_field(name="/balance", value="Check your crow bot balance.", inline=False)
+    embed.add_field(name="/deposit tnbc", value="Deposit TNBC into your crow bot account.", inline=False)
+    embed.add_field(name="/withdraw tnbc amount: AMOUNT", value="Withdraw TNBC into your TNBC wallet.", inline=False)
+    embed.add_field(name="/set_withdrawl_address tnbc address: ADDRESS", value="Set a new TNBC withdrawal address.", inline=False)
+    embed.add_field(name="/transactions tnbc", value="Check TNBC transaction history.", inline=False)
+    embed.add_field(name="/profile user: USER", value="Check user's crow bot profile.", inline=False)
+    embed.add_field(name="/payment_method add", value="Add a new payment method.", inline=False)
+    embed.add_field(name="/payment_method all", value="List all your payment methods.", inline=False)
+    embed.add_field(name="/payment_method remove", value="Delete particular payment method.", inline=False)
+    embed.add_field(name="/rate", value="Check the last OTC trade rate of TNBC.")
+    embed.add_field(name="/stats", value="Check TNBC price statistics.")
+    embed.add_field(name="/guide buyer", value="Buyer guide for using crow bot.")
+    embed.add_field(name="/guide seller", value="Seller guide for using crow bot.")
+    embed.set_thumbnail(url=bot.user.avatar_url)
+    await ctx.send(embed=embed, hidden=True)
 
-    embed = discord.Embed(title="Getting Started", url="https://bot.tnbcrow.com/", description="Command List", color=0xe81111)
-    embed.add_field(name="/balance", value="Check your crow bot balance.")
-    embed.add_field(name="/deposit tnbc", value="Deposit TNBC into your crow bot account.")
-    embed.add_field(name="/withdraw tnbc", value="Withdraw TNBC into your TNBC wallet.")
-    embed.add_field(name="/escrow tnbc amount: AMOUNT user: USER", value="Create an escrow. Seller's fund will be locked once escrow is created.", inline=False)
+
+@slash.subcommand(base="help", name="advertisement", description="List of Commands related to advertisements.")
+async def help_advertisement(ctx):
+    await ctx.defer(hidden=True)
+    embed = discord.Embed(title="Advertisement Related Commands", color=0xe81111)
+    embed.add_field(name="/adv create amount: AMOUNT price: PRICE", value="Create a new advertisement.", inline=False)
+    embed.add_field(name="/adv all", value="List all active advertisements.", inline=False)
+    embed.add_field(name="/adv my", value="List all your active advertisements.", inline=False)
+    embed.add_field(name="/adv cancel advertisement_id: ID", value="Cancel an active advertisement.", inline=False)
+    embed.add_field(name="/adv status advertisement_id: ID", value="Check the status of the particular advertisement.", inline=False)
+    embed.add_field(name="/adv buy advertisement_id: ID amount_of_tnbc: AMOUNT", value="Buy TNBC from the advertisement.", inline=False)
+    embed.set_thumbnail(url=bot.user.avatar_url)
+    await ctx.send(embed=embed, hidden=True)
+
+
+@slash.subcommand(base="help", name="escrow", description="List of Commands related to escrows.")
+async def help_escrow(ctx):
+    embed = discord.Embed(title="Escrow Related Commands", color=0xe81111)
     embed.add_field(name="/escrow status escrow_id: ESCROW_ID", value="Check the status of a particular escrow.")
     embed.add_field(name="/escrow all", value="List all of your ongoing escrows.", inline=False)
     embed.add_field(name="/escrow release escrow_id: ESCROW_ID", value="Release TNBC to the buyer's account.", inline=False)
     embed.add_field(name="/escrow cancel escrow_id: ESCROW_ID", value="Cancel the particular escrow. Both buyer and seller needs to use the command for escrow cancellation.")
     embed.add_field(name="/escrow dispute escrow_id: ESCROW_ID", value="In the case of disagreement while trading, raise dispute and take the case to tnbcrow agent.", inline=False)
     embed.add_field(name="/escrow history escrow_id: ESCROW_ID", value="List all of your completed escrows.", inline=False)
-    embed.add_field(name="/rate", value="Check the last OTC trade rate of TNBC.")
-    embed.add_field(name="/stats", value="Check TNBC price statistics.")
     embed.set_thumbnail(url=bot.user.avatar_url)
-
     await ctx.send(embed=embed, hidden=True)
 
 
@@ -91,11 +116,12 @@ async def chain_scan(ctx: ComponentContext):
     tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
     embed = discord.Embed(title="Scan Completed", color=0xe81111)
-    embed.add_field(name='New Balance', value=tnbc_wallet.get_int_balance())
-    embed.add_field(name='Locked Amount', value=tnbc_wallet.get_int_locked())
-    embed.add_field(name='Available Balance', value=tnbc_wallet.get_int_available_balance())
+    embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
+    embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+    embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+    embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
-    await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
+    await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Check Again"))])
 
 
 @slash.slash(name="kill", description="Kill the bot!")

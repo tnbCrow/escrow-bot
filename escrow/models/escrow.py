@@ -1,7 +1,6 @@
 import uuid
 
 from django.db import models
-from django.conf import settings
 
 from core.models.users import User
 
@@ -37,13 +36,14 @@ class Escrow(models.Model):
 
     amount = models.BigIntegerField()
     fee = models.BigIntegerField()
+    price = models.BigIntegerField()
+
     initiator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="initiator")
     successor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="successor")
 
     status = models.CharField(max_length=255, choices=status_choices)
 
-    initiator_cancelled = models.BooleanField(default=False)
-    successor_cancelled = models.BooleanField(default=False)
+    conversation_channel_id = models.CharField(max_length=255)
 
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True, related_name="agent")
     settled_towards = models.CharField(max_length=255, choices=settled_towards_choices, default="SUCCESSOR")
@@ -53,18 +53,10 @@ class Escrow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def get_int_amount(self):
-        return int(self.amount / settings.TNBC_MULTIPLICATION_FACTOR)
-
-    def get_int_fee(self):
-        return int(self.fee / settings.TNBC_MULTIPLICATION_FACTOR)
-
     def __str__(self):
         return f"Amount: {self.amount}; Status: {self.status}"
 
 
-# generate a random memo and check if its already taken.
-# If taken, generate another memo again until we find a valid memo
 def generate_hex_uuid(instance):
 
     while True:
@@ -81,5 +73,4 @@ def pre_save_post_receiver(sender, instance, *args, **kwargs):
         instance.uuid_hex = generate_hex_uuid(instance)
 
 
-# save the memo before the User model is saved with the unique memo
 models.signals.pre_save.connect(pre_save_post_receiver, sender=Escrow)

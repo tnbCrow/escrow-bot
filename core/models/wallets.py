@@ -2,7 +2,6 @@ import uuid
 import random
 
 from django.db import models
-from django.conf import settings
 
 from .users import User
 
@@ -24,21 +23,10 @@ class ThenewbostonWallet(models.Model):
     def get_available_balance(self):
         return self.balance - self.locked
 
-    def get_int_balance(self):
-        return int(self.balance / settings.TNBC_MULTIPLICATION_FACTOR)
-
-    def get_int_locked(self):
-        return int(self.locked / settings.TNBC_MULTIPLICATION_FACTOR)
-
-    def get_int_available_balance(self):
-        return int((self.balance - self.locked) / settings.TNBC_MULTIPLICATION_FACTOR)
-
     def __str__(self):
         return f"User: {self.user}; Balance: {self.balance}; Available: {self.get_available_balance()}"
 
 
-# generate a random memo and check if its already taken.
-# If taken, generate another memo again until we find a valid memo
 def generate_memo(instance):
 
     while True:
@@ -55,5 +43,4 @@ def pre_save_post_receiver(sender, instance, *args, **kwargs):
         instance.memo = generate_memo(instance)
 
 
-# save the memo before the User model is saved with the unique memo
 models.signals.pre_save.connect(pre_save_post_receiver, sender=ThenewbostonWallet)

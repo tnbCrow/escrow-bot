@@ -9,7 +9,7 @@ from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
 from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
-from core.utils.shortcuts import convert_to_decimal
+from core.utils.shortcuts import convert_to_decimal, convert_to_int
 from core.models.statistics import Statistic
 from escrow.utils import get_or_create_user_profile
 
@@ -17,63 +17,6 @@ from escrow.utils import get_or_create_user_profile
 class escrow(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @cog_ext.cog_subcommand(base="escrow",
-                            name="tnbc",
-                            description="Escrow TNBC with another user.",
-                            options=[
-                                create_option(
-                                    name="amount",
-                                    description="Enter TNBC amount you want to escrow.",
-                                    option_type=4,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="user",
-                                    description="Enter your escrow partner.",
-                                    option_type=6,
-                                    required=True
-                                )
-                            ]
-                            )
-    async def escrow_tnbc(self, ctx, amount: int, user):
-
-        await ctx.defer(hidden=True)
-
-        initiator_discord_user = get_or_create_discord_user(ctx.author.id)
-        initiator_tnbc_wallet = get_or_create_tnbc_wallet(initiator_discord_user)
-
-        successor_discord_user = get_or_create_discord_user(user.id)
-
-        if initiator_discord_user != successor_discord_user:
-
-            if amount < settings.MIN_TNBC_ALLOWED:
-                embed = discord.Embed(title="Error!", description=f"You can only escrow more than {settings.MIN_TNBC_ALLOWED} TNBC.", color=0xe81111)
-
-            else:
-
-                if initiator_tnbc_wallet.get_int_available_balance() < amount:
-                    embed = discord.Embed(title="Inadequate Funds!",
-                                          description=f"You only have {initiator_tnbc_wallet.get_int_available_balance()} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
-                                          color=0xe81111)
-                else:
-                    integer_fee = amount - int(amount * (100 - settings.CROW_BOT_FEE) / 100)
-                    database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
-                    database_amount = amount * settings.TNBC_MULTIPLICATION_FACTOR
-                    escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount, initiator=initiator_discord_user, successor=successor_discord_user, status=Escrow.OPEN, fee=database_fee)
-                    initiator_tnbc_wallet.locked += database_amount
-                    initiator_tnbc_wallet.save()
-                    embed = discord.Embed(title="Success.", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{amount}")
-                    embed.add_field(name='Fee', value=f"{integer_fee}")
-                    embed.add_field(name='Initiator', value=f"{ctx.author.mention}")
-                    embed.add_field(name='Successor', value=f"{user.mention}")
-                    embed.add_field(name='Status', value=f"{escrow_obj.status}")
-        else:
-            embed = discord.Embed(title="Error!", description="You can not escrow yourself tnbc.", color=0xe81111)
-
-        await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="escrow",
                             name="status",
@@ -98,8 +41,10 @@ class escrow(commands.Cog):
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-            embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+            embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+            embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+            embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+            embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
             if discord_user == escrow_obj.successor:
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
                 embed.add_field(name='Your Role', value='Buyer')
@@ -108,14 +53,12 @@ class escrow(commands.Cog):
                 successor = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
                 embed.add_field(name='Your Role', value='Seller')
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
+
             embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
             if escrow_obj.status == Escrow.ADMIN_SETTLED or escrow_obj.status == Escrow.ADMIN_CANCELLED:
                 embed.add_field(name='Settled Towards', value=f"{escrow_obj.settled_towards}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
-            else:
-                embed.add_field(name='Seller Cancelled', value=f"{escrow_obj.initiator_cancelled}")
-                embed.add_field(name='Buyer Cancelled', value=f"{escrow_obj.successor_cancelled}")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
@@ -137,9 +80,13 @@ class escrow(commands.Cog):
             for escrow in escrows:
 
                 embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
+                embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
+                embed.set_footer(text="Use /escrow release to release the TNBC once you've received payment or /escrow cancel to cancel the escrow (never cancel escrow once you've transferred payment).")
+
                 if escrow.initiator == discord_user:
                     embed.add_field(name='Your Role', value="Seller")
                 else:
@@ -200,11 +147,20 @@ class escrow(commands.Cog):
                 seller_profile.total_tnbc_escrowed += escrow_obj.amount
                 seller_profile.save()
 
-                embed = discord.Embed(title="Success", description="", color=0xe81111)
+                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                if conversation_channel:
+                    await conversation_channel.send(embed=embed)
+
+                recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+                await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
 
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot release the escrow of status {escrow_obj.status}.", color=0xe81111)
@@ -240,29 +196,27 @@ class escrow(commands.Cog):
 
             if escrow_obj.status == Escrow.OPEN:
 
-                if int(escrow_obj.initiator.discord_id) == ctx.author.id:
-                    escrow_obj.initiator_cancelled = True
-                    if escrow_obj.successor_cancelled is True:
-                        escrow_obj.status = Escrow.CANCELLED
-                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+                if int(escrow_obj.successor.discord_id) == ctx.author.id:
+                    escrow_obj.status = Escrow.CANCELLED
+                    escrow_obj.save()
+
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+
+                    embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
+                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                    embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                    conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                    if conversation_channel:
+                        await conversation_channel.send(embed=embed)
+
                 else:
-                    escrow_obj.successor_cancelled = True
-                    if escrow_obj.initiator_cancelled is True:
-                        escrow_obj.status = Escrow.CANCELLED
-                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
-
-                escrow_obj.save()
-
-                embed = discord.Embed(title="Success", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
-                embed.add_field(name='Status', value=f"{escrow_obj.status}")
-                embed.add_field(name='Seller Cancelled', value=f"{escrow_obj.initiator_cancelled}", inline=False)
-                embed.add_field(name='Buyer Cancelled', value=f"{escrow_obj.successor_cancelled}")
+                    embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
-
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
@@ -309,6 +263,7 @@ class escrow(commands.Cog):
                 dispute_embed = discord.Embed(title="Dispute Alert!", description="", color=0xe81111)
                 dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 dispute_embed.add_field(name='Amount', value=f"{convert_to_decimal(escrow_obj.amount)}")
+                dispute_embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 dispute_embed.add_field(name='Seller', value=f"{initiator}")
                 dispute_embed.add_field(name='Buyer', value=f"{successor}")
                 dispute = await dispute.send(f"{agent_role.mention}", embed=dispute_embed)
@@ -316,13 +271,20 @@ class escrow(commands.Cog):
                 await dispute.add_reaction("👀")
                 await dispute.add_reaction("✅")
 
-                embed = discord.Embed(title="Success", description="Agent will create a private channel within this server to resolve dispute. **Agent will never DM you!!**", color=0xe81111)
+                embed = discord.Embed(title="Escrow Disputed Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow_obj.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow_obj.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                if conversation_channel:
+                    await conversation_channel.send(embed=embed)
+
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.", color=0xe81111)
 
@@ -346,8 +308,9 @@ class escrow(commands.Cog):
             for escrow in escrows:
 
                 embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{escrow.get_int_amount()}")
-                embed.add_field(name='Fee', value=f"{escrow.get_int_fee()}")
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
 
         else:
