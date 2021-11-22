@@ -4,9 +4,6 @@ from core.utils.shortcuts import convert_to_int, convert_to_decimal
 from escrow.models.payment_method import PaymentMethod
 
 
-from table2ascii import table2ascii, PresetStyle
-
-
 def get_or_create_user_profile(user):
 
     obj, created = Profile.objects.get_or_create(user=user)
@@ -18,8 +15,7 @@ def create_offer_table(number_of_data):
 
     advertisements = Advertisement.objects.filter(status=Advertisement.OPEN).order_by('price')[:number_of_data]
 
-    temp = []
-    body_list = []
+    message = ""
 
     for advertisement in reversed(advertisements):
 
@@ -30,14 +26,6 @@ def create_offer_table(number_of_data):
         for payment_method in payment_methods:
             payment_method_message += f"{payment_method.name}, "
 
-        temp.extend([advertisement.uuid_hex, str(convert_to_int(advertisement.amount)), str(convert_to_decimal(advertisement.price)), payment_method_message])
-        body_list.append(temp)
-        temp = []
+        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {convert_to_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)} USDT; Payment Method(s): {payment_method_message}\n\n"
 
-    formatted_table = table2ascii(
-        header=["Advertisement ID", "Amount", "Price", "Payment Method(s)"],
-        body=body_list,
-        style=PresetStyle.ascii_box
-    )
-
-    return formatted_table
+    return message

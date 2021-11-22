@@ -63,7 +63,7 @@ class advertisement(commands.Cog):
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
 
-                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```")
+                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
 
                         embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
                         embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
@@ -99,7 +99,7 @@ class advertisement(commands.Cog):
 
         offer_table = create_offer_table(5)
 
-        await ctx.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```", hidden=True)
+        await ctx.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```", hidden=True)
 
     @cog_ext.cog_subcommand(base="adv",
                             name="my",
@@ -195,7 +195,7 @@ class advertisement(commands.Cog):
             async for oldMessage in offer_channel.history():
                 await oldMessage.delete()
 
-            await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```")
+            await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
@@ -255,7 +255,7 @@ class advertisement(commands.Cog):
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
 
-                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```")
+                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
 
                         trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
                         agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
