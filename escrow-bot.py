@@ -53,6 +53,8 @@ async def help_general(ctx):
     embed.add_field(name="/payment_method remove", value="Delete particular payment method.", inline=False)
     embed.add_field(name="/rate", value="Check the last OTC trade rate of TNBC.")
     embed.add_field(name="/stats", value="Check TNBC price statistics.")
+    embed.add_field(name="/guide buyer", value="Buyer guide for using crow bot.")
+    embed.add_field(name="/guide seller", value="Seller guide for using crow bot.")
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -117,8 +119,9 @@ async def chain_scan(ctx: ComponentContext):
     embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
     embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
     embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+    embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
-    await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Scan Again?"))])
+    await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Check Again"))])
 
 
 @slash.slash(name="kill", description="Kill the bot!")

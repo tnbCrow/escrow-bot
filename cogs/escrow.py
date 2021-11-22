@@ -156,7 +156,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
                 conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
-                await conversation_channel.send(embed=embed)
+                if conversation_channel:
+                    await conversation_channel.send(embed=embed)
 
                 recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
                 await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
@@ -209,7 +210,8 @@ class escrow(commands.Cog):
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
                     conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
-                    await conversation_channel.send(embed=embed)
+                    if conversation_channel:
+                        await conversation_channel.send(embed=embed)
 
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
@@ -280,7 +282,8 @@ class escrow(commands.Cog):
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
                 conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
-                await conversation_channel.send(embed=embed)
+                if conversation_channel:
+                        await conversation_channel.send(embed=embed)
 
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot dispute the escrow of status {escrow_obj.status}.", color=0xe81111)

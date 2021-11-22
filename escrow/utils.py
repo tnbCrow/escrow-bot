@@ -35,7 +35,7 @@ def create_offer_table(number_of_data):
         temp = []
 
     formatted_table = table2ascii(
-        header=["Advertisement ID", "Amount (TNBC)", "Price (USDT)", "Payment Method(s)"],
+        header=["Advertisement ID", "Amount", "Price", "Payment Method(s)"],
         body=body_list,
         style=PresetStyle.ascii_box
     )

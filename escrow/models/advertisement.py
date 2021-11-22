@@ -40,9 +40,10 @@ def generate_hex_uuid(instance):
     while True:
 
         uuid_hex = f'{uuid.uuid4().hex}'
+        trimmed_hex = uuid_hex[0:16]
 
-        if not Advertisement.objects.filter(uuid_hex=uuid_hex).exists():
-            return uuid_hex
+        if not Advertisement.objects.filter(uuid_hex=trimmed_hex).exists():
+            return trimmed_hex
 
 
 def pre_save_post_receiver(sender, instance, *args, **kwargs):

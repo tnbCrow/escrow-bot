@@ -31,7 +31,7 @@ class user(commands.Cog):
         qr_data = f"{{'address':{settings.TNBCROW_BOT_ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
 
         embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
-        embed.add_field(name='Warning', value="Do not deposit TNBC with Keysign Mobile Wallet/ Keysign Extension or **you'll lose your coins**.", inline=False)
+        embed.add_field(name='Warning', value="Please only use official TNBC desktop wallet to send tnbc or **you'll lose your coins**. [Download Wallet](https://thenewboston.com/download)", inline=False)
         embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
         embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
         # embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
@@ -52,6 +52,7 @@ class user(commands.Cog):
         embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
         embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
         embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+        embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -299,15 +300,38 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_slash(name="guide", description="Check User Balance.")
-    async def guide(self, ctx):
+    @cog_ext.cog_subcommand(base="guide",
+                            name="seller",
+                            description="Guide for sellers to trade on tnbcrow discord server.")
+    async def guide_seller(self, ctx):
 
-        await ctx.defer()
+        await ctx.defer(hidden=True)
 
-        embed = discord.Embed(color=0xe81111)
-        embed.add_field(name="Seller Guide", value="[Youtube Tutorial](https://youtu.be/3WjW-i9neqI)", inline=False)
-        embed.add_field(name="Buyer Guide", value="[Youtube Tutorial](https://youtu.be/yQyp6pZd2ys)")
-        await ctx.send(embed=embed)
+        embed = discord.Embed(title="Seller Guide | Crow Bot", description="", color=0xe81111)
+        embed.add_field(name="1. Deposit TNBC", value="Use the command `/deposit tnbc` to deposit tnbc into your crow bot account.", inline=False)
+        embed.add_field(name="2. Set your desired payment method", value="Use the command `/payment_method add` command to add payment method you'd like to receive the payment.", inline=False)
+        embed.add_field(name="3. Create an advertisement", value="Create an advertisement using `/adv create` command.", inline=False)
+        embed.add_field(name="4. Wait for the buyer", value="Once buyer buys from the advertisement, private channel is created within this server.", inline=False)
+        embed.add_field(name="5. Discuss the payment details", value="Discuss the payment details in the private channel and wait for buyer to send the payment.", inline=False)
+        embed.add_field(name="6. Release the escrow", value="Once you've received payment, use the command `/escrow release` to release TNBC into buyer's account.", inline=False)
+        embed.add_field(name="Youtube Tutorial", value="[Link](https://youtu.be/yQyp6pZd2ys)", inline=False)
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="guide",
+                            name="buyer",
+                            description="Guide for buyers to trade on tnbcrow discord server.")
+    async def guide_buyer(self, ctx):
+
+        await ctx.defer(hidden=True)
+        embed = discord.Embed(title="Buyer Guide | Crow Bot", description="", color=0xe81111)
+        embed.add_field(name="1. Check the available advertisements", value="Navigate to #sell-orders and check all available sell orders.", inline=False)
+        embed.add_field(name="2. Buy from the advertisement", value="Use the command `/adv buy` to create an escrow. Private channel is created within the discord server.", inline=False)
+        embed.add_field(name="3. Discuss the payment details", value="Discuss the payment details in the private channel.", inline=False)
+        embed.add_field(name="4. Send the payment", value="Send agreed payment amount using the method.", inline=False)
+        embed.add_field(name="5. Wait for the seller to release escrow", value="Once the payment is received, the seller will release escrow. You'll be notified in private channel about the status of the escrow.", inline=False)
+        embed.add_field(name="Youtube Tutorial", value="[Link](https://youtu.be/yQyp6pZd2ys)")
+        embed.add_field(name="Note", value="The sell orders are not open to negotiation. You can place your offer on #buy-offers if you're not happy with the available orders.", inline=False)
+        await ctx.send(embed=embed, hidden=True)
 
 
 def setup(bot):

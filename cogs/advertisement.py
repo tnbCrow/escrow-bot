@@ -63,12 +63,13 @@ class advertisement(commands.Cog):
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
 
-                        await offer_channel.send(f"People are selling TNBC. Here are the offers for you to buy TNBC (Escrow Protected)\nUse the command `/adv buy` to buy TNBC from a particular advertisement.```{offer_table}```")
+                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```")
 
                         embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
                         embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
                         embed.add_field(name='Amount', value=amount_of_tnbc)
                         embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+                        embed.set_footer(text="Use /adv all command list all your active advertisements.")
 
                     else:
                         embed = discord.Embed(title="Inadequate Funds!",
@@ -98,7 +99,7 @@ class advertisement(commands.Cog):
 
         offer_table = create_offer_table(5)
 
-        await ctx.send(f"People are selling TNBC. Here are the offers for you to buy TNBC (Escrow Protected)\nUse the command `/adv buy` to buy TNBC from a particular advertisement.```{offer_table}```", hidden=True)
+        await ctx.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```", hidden=True)
 
     @cog_ext.cog_subcommand(base="adv",
                             name="my",
@@ -120,6 +121,7 @@ class advertisement(commands.Cog):
                 embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
                 embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+            embed.set_footer(text="Use `/adv cancel` command cancel particular advertisement.")
 
         else:
             embed = discord.Embed(title="Oops..", description="You got no active advertisements.", color=0xe81111)
@@ -151,6 +153,7 @@ class advertisement(commands.Cog):
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
             embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+            embed.set_footer(text="Use `/adv cancel` command cancel particular advertisement.")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
@@ -192,13 +195,14 @@ class advertisement(commands.Cog):
             async for oldMessage in offer_channel.history():
                 await oldMessage.delete()
 
-            await offer_channel.send(f"People are selling TNBC. Here are the offers for you to buy TNBC (Escrow Protected)\nUse the command `/adv buy` to buy TNBC from a particular advertisement.```{offer_table}```")
+            await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
             embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
             embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
             embed.add_field(name='Status', value=advertisement.status)
+            embed.set_footer(text="Use `/adv create` command create a new advertisement.")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
@@ -234,66 +238,72 @@ class advertisement(commands.Cog):
             advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
 
             if buyer_discord_user != advertisement.owner:
-                database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+                
+                if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
 
-                if advertisement.amount >= database_amount:
-                    advertisement.amount -= database_amount
-                    if advertisement.amount == 0:
-                        advertisement.status = Advertisement.COMPLETED
-                    advertisement.save()
+                    database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
 
-                    offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                    offer_table = create_offer_table(5)
+                    if advertisement.amount >= database_amount:
+                        advertisement.amount -= database_amount
+                        if advertisement.amount == 0:
+                            advertisement.status = Advertisement.COMPLETED
+                        advertisement.save()
 
-                    async for oldMessage in offer_channel.history():
-                        await oldMessage.delete()
+                        offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                        offer_table = create_offer_table(5)
 
-                    await offer_channel.send(f"People are selling TNBC. Here are the offers for you to buy TNBC (Escrow Protected)\nUse the command `/adv buy` to buy TNBC from a particular advertisement.```{offer_table}```")
+                        async for oldMessage in offer_channel.history():
+                            await oldMessage.delete()
 
-                    trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
-                    agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
-                    seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
+                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy TNBC (Escrow Protected).\nUse `/guide buyer` for the buyer guide.```{offer_table}```")
 
-                    overwrites = {
-                        ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                        agent_role: discord.PermissionOverwrite(read_messages=True),
-                        ctx.author: discord.PermissionOverwrite(read_messages=True),
-                        seller: discord.PermissionOverwrite(read_messages=True)
-                    }
+                        trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
+                        agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
+                        seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
 
-                    trade_chat_channel = await ctx.guild.create_text_channel(f"{ctx.author.name}-{seller.name}", overwrites=overwrites, category=trade_chat_category)
+                        overwrites = {
+                            ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                            agent_role: discord.PermissionOverwrite(read_messages=True),
+                            ctx.author: discord.PermissionOverwrite(read_messages=True),
+                            seller: discord.PermissionOverwrite(read_messages=True)
+                        }
 
-                    integer_fee = amount_of_tnbc - int(amount_of_tnbc * (100 - settings.CROW_BOT_FEE) / 100)
-                    database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
+                        trade_chat_channel = await ctx.guild.create_text_channel(f"{ctx.author.name}-{seller.name}", overwrites=overwrites, category=trade_chat_category)
 
-                    escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
-                                                                            fee=database_fee,
-                                                                            price=advertisement.price,
-                                                                            initiator=advertisement.owner,
-                                                                            successor=buyer_discord_user,
-                                                                            conversation_channel_id=trade_chat_channel.id,
-                                                                            status=Escrow.OPEN)
-                    embed = discord.Embed(title="Success.", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=amount_of_tnbc)
-                    embed.add_field(name='Fee', value=integer_fee)
-                    embed.add_field(name='Buyer Receives', value=f"{amount_of_tnbc - integer_fee}")
-                    embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                    embed.add_field(name='Total (USDT)', value=amount_of_tnbc * convert_to_decimal(escrow_obj.price))
-                    embed.set_footer(text="Use /escrow all command list all active escrows.")
+                        integer_fee = amount_of_tnbc - int(amount_of_tnbc * (100 - settings.CROW_BOT_FEE) / 100)
+                        database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
 
-                    payment_methods = PaymentMethod.objects.filter(user=advertisement.owner)
+                        escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
+                                                                                fee=database_fee,
+                                                                                price=advertisement.price,
+                                                                                initiator=advertisement.owner,
+                                                                                successor=buyer_discord_user,
+                                                                                conversation_channel_id=trade_chat_channel.id,
+                                                                                status=Escrow.OPEN)
+                        embed = discord.Embed(title="Success.", description="", color=0xe81111)
+                        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                        embed.add_field(name='Amount', value=amount_of_tnbc)
+                        embed.add_field(name='Fee', value=integer_fee)
+                        embed.add_field(name='Buyer Receives', value=f"{amount_of_tnbc - integer_fee}")
+                        embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                        embed.add_field(name='Total (USDT)', value=amount_of_tnbc * convert_to_decimal(escrow_obj.price))
+                        embed.set_footer(text="Use /escrow all command list all active escrows.")
 
-                    payment_method_message = ""
+                        payment_methods = PaymentMethod.objects.filter(user=advertisement.owner)
 
-                    for payment_method in payment_methods:
-                        payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
+                        payment_method_message = ""
 
-                    await trade_chat_channel.send(f"{seller.mention}, {ctx.author.mention} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
+                        for payment_method in payment_methods:
+                            payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
 
+                        await trade_chat_channel.send(f"{seller.mention}, {ctx.author.mention} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
+
+                    else:
+                        embed = discord.Embed(title="Error!", description=f"Advertisement only has {convert_to_int(advertisement.amount)} TNBC available to buy.", color=0xe81111)
                 else:
-                    embed = discord.Embed(title="Error!", description=f"Advertisement only has {convert_to_int(advertisement.amount)} TNBC available to buy.", color=0xe81111)
-
+                    embed = discord.Embed(title="Error!",
+                                          description=f"You can not buy less than {settings.MIN_TNBC_ALLOWED} TNBC from an advertisement.",
+                                          color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description="You can not buy TNBC from your own advertisement.", color=0xe81111)
 
