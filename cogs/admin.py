@@ -7,6 +7,8 @@ from discord_slash.model import SlashCommandPermissionType
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from django.db.models import Q
+from core.models.transactions import Transaction
+from core.models.wallets import ThenewbostonWallet
 
 from escrow.models.escrow import Escrow
 from core.models.users import UserTransactionHistory
@@ -258,6 +260,92 @@ class admin(commands.Cog):
             embed.add_field(name='Total Balance', value=convert_to_decimal(statistic.total_balance))
             embed.add_field(name='Wallet Balance', value=wallet_balance)
             embed.add_field(name='Fees Collected', value=convert_to_decimal(statistic.total_fees_collected), inline=False)
+
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="transactions_unconfirmed",
+                            description="Check the statistics of the bot!")
+    async def admin_transactions_unconfirmed(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            if Transaction.objects.filter(direction=Transaction.INCOMING, confirmation_status=Transaction.WAITING_CONFIRMATION).exists():
+                unconfirmed_transactions = (await sync_to_async(Transaction.objects.filter)(direction=Transaction.INCOMING, confirmation_status=Transaction.WAITING_CONFIRMATION)).order_by('-created_at')[:4]
+
+                embed = discord.Embed(color=0xe81111)
+                for transaction in unconfirmed_transactions:
+
+                    embed.add_field(name='ID', value=transaction.uuid, inline=False)
+                    embed.add_field(name='Signature', value=transaction.signature, inline=False)
+                    embed.add_field(name='Block', value=transaction.block, inline=False)
+                    embed.add_field(name='Amount', value=convert_to_int(transaction.amount))
+                    embed.add_field(name='MEMO', value=transaction.memo)
+                    if ThenewbostonWallet.objects.filter(memo=transaction.memo):
+                        user_wallet = ThenewbostonWallet.objects.get(memo=transaction.memo)
+                        discord_user = await self.bot.fetch_user(int(user_wallet.user.discord_id))
+                        embed.add_field(name='User', value=discord_user.mention)
+                    else:
+                        embed.add_field(name='User', value="Unidentified")
+            else:
+                embed = discord.Embed(title="404", description="Unconfirmed transactions not found.", color=0xe81111)
+
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="deposit",
+                            description="Add deposit to user's account!",
+                            options=[
+                                create_option(
+                                    name="user",
+                                    description="User you want to add deposit of.",
+                                    option_type=6,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="transaction_id",
+                                    description="UUID of unconfirmed transaction.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                            ])
+    async def admin_deposit(self, ctx, user: discord.Member, transaction_id: str):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            if Transaction.objects.filter(uuid=transaction_id, direction=Transaction.INCOMING, confirmation_status=Transaction.WAITING_CONFIRMATION).exists():
+
+                transaction = Transaction.objects.get(uuid=transaction_id)
+                transaction.confirmation_status = Transaction.CONFIRMED
+                transaction.transaction_status = Transaction.IDENTIFIED
+                transaction.save()
+
+                discord_user = get_or_create_discord_user(user.id)
+                wallet = get_or_create_tnbc_wallet(discord_user)
+                wallet.balance += transaction.amount
+                wallet.save()
+
+                statistics, created = Statistic.objects.get_or_create(title="main")
+                statistics.total_balance += transaction.amount
+                statistics.save()
+
+                UserTransactionHistory.objects.create(user=discord_user, amount=transaction.amount, type=UserTransactionHistory.DEPOSIT, transaction=transaction)
+
+                embed = discord.Embed(color=0xe81111)
+                embed = discord.Embed(title="Success!", description=f"Linked transaction with id `{transaction_id}` with user {user.mention}.", color=0xe81111)
+
+            else:
+                embed = discord.Embed(title="Error!", description="The transaction incoming with waiting confirmation status does not exist.", color=0xe81111)
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)

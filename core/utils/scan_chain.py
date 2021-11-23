@@ -110,10 +110,13 @@ def match_transaction():
     for txs in confirmed_txs:
 
         if ThenewbostonWallet.objects.filter(memo=txs.memo).exists():
+
             wallet = ThenewbostonWallet.objects.get(memo=txs.memo)
             wallet.balance += txs.amount
-            UserTransactionHistory.objects.create(user=wallet.user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT, transaction=txs)
             wallet.save()
+
+            UserTransactionHistory.objects.create(user=wallet.user, amount=txs.amount, type=UserTransactionHistory.DEPOSIT, transaction=txs)
+
             txs.transaction_status = Transaction.IDENTIFIED
             txs.save()
         else:
