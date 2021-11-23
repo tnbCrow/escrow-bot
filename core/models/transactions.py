@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 
+from core.utils.shortcuts import convert_to_int
+
 
 class Transaction(models.Model):
 
@@ -52,4 +54,4 @@ class Transaction(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.direction} | {self.amount} | {self.transaction_status} | {self.confirmation_status}'
+        return f'{self.direction} | {convert_to_int(self.amount)} | {self.transaction_status} | {self.confirmation_status}'

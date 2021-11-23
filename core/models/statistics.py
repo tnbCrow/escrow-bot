@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 
+from core.utils.shortcuts import convert_to_int
+
 
 class Statistic(models.Model):
 
@@ -15,4 +17,4 @@ class Statistic(models.Model):
     total_users = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"Balance: {self.total_balance}; Servers: {self.total_servers}; Users: {self.total_users}"
+        return f"Balance: {convert_to_int(self.total_balance)}; Servers: {self.total_servers}; Users: {self.total_users}"

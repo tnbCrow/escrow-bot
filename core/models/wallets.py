@@ -3,6 +3,8 @@ import random
 
 from django.db import models
 
+from core.utils.shortcuts import convert_to_int
+
 from .users import User
 
 
@@ -24,7 +26,7 @@ class ThenewbostonWallet(models.Model):
         return self.balance - self.locked
 
     def __str__(self):
-        return f"User: {self.user}; Balance: {self.balance}; Available: {self.get_available_balance()}"
+        return f"User: {self.user}; Memo: {self.memo}; Balance: {convert_to_int(self.balance)}; Available: {convert_to_int(self.get_available_balance())}"
 
 
 def generate_memo(instance):

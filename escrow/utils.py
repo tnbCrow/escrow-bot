@@ -24,7 +24,7 @@ def create_offer_table(number_of_data):
         payment_methods = PaymentMethod.objects.filter(user=advertisement.owner)
 
         for payment_method in payment_methods:
-            payment_method_message += f"{payment_method.name}, "
+            payment_method_message += f"{payment_method.name} | "
 
         message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {convert_to_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)} USDT; Payment Method(s): {payment_method_message}\n\n"
 

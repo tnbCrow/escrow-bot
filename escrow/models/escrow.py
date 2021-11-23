@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 
 from core.models.users import User
+from core.utils.shortcuts import convert_to_int
 
 
 class Escrow(models.Model):
@@ -54,7 +55,7 @@ class Escrow(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Amount: {self.amount}; Status: {self.status}"
+        return f"Amount: {convert_to_int(self.amount)}; Status: {self.status}"
 
 
 def generate_hex_uuid(instance):

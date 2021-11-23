@@ -1,6 +1,8 @@
 from uuid import uuid4
 
 from django.db import models
+
+from core.utils.shortcuts import convert_to_int
 from ..models.transactions import Transaction
 
 
@@ -42,4 +44,4 @@ class UserTransactionHistory(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"User: {self.user} - {self.type} - {self.amount}"
+        return f"User: {self.user} - {self.type} - {convert_to_int(self.amount)}"
