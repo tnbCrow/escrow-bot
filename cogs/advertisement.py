@@ -240,17 +240,16 @@ class advertisement(commands.Cog):
 
                 if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
 
-                    guild = ctx.message.guild
-
                     database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
-
-                    trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
 
                     if advertisement.amount >= database_amount:
                         advertisement.amount -= database_amount
                         if advertisement.amount == 0:
                             advertisement.status = Advertisement.COMPLETED
                         advertisement.save()
+
+                        guild = ctx.guild
+                        trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
 
                         offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
                         offer_table = create_offer_table(5)
@@ -261,8 +260,16 @@ class advertisement(commands.Cog):
                         await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
 
                         seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
+                        agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))
 
-                        trade_chat_channel = await ctx.guild.create_text_channel(f"{ctx.author.name}-{seller.name}", category=trade_chat_category)
+                        overwrites = {
+                            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                            agent_role: discord.PermissionOverwrite(read_messages=True),
+                            ctx.author: discord.PermissionOverwrite(read_messages=True),
+                            seller: discord.PermissionOverwrite(read_messages=True)
+                        }
+
+                        trade_chat_channel = await guild.create_text_channel(f"{ctx.author.name}-{seller.name}", overwrites=overwrites, category=trade_chat_category)
 
                         integer_fee = amount_of_tnbc - int(amount_of_tnbc * (100 - settings.CROW_BOT_FEE) / 100)
                         database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
