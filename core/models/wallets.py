@@ -2,8 +2,7 @@ import uuid
 import random
 
 from django.db import models
-
-from core.utils.shortcuts import convert_to_int
+from django.conf import settings
 
 from .users import User
 
@@ -25,8 +24,14 @@ class ThenewbostonWallet(models.Model):
     def get_available_balance(self):
         return self.balance - self.locked
 
+    def get_int_balance(self):
+        return int(self.balance / settings.TNBC_MULTIPLICATION_FACTOR)
+
+    def get_int_available_balance(self):
+        return int((self.balance - self.locked) / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def __str__(self):
-        return f"User: {self.user}; Memo: {self.memo}; Balance: {convert_to_int(self.balance)}; Available: {convert_to_int(self.get_available_balance())}"
+        return f"User: {self.user}; Memo: {self.memo} Balance: {self.get_int_balance()}; Available: {self.get_int_available_balance()}"
 
 
 def generate_memo(instance):

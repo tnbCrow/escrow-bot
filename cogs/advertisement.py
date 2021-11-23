@@ -1,5 +1,4 @@
 import discord
-import os
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
@@ -258,7 +257,7 @@ class advertisement(commands.Cog):
                         await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
 
                         trade_chat_category = discord.utils.get(ctx.guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
-                        agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
+                        agent_role = discord.utils.get(ctx.guild.roles, id=int(settings.AGENT_ROLE_ID))
                         seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
 
                         overwrites = {

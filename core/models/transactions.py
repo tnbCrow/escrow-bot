@@ -1,8 +1,7 @@
 import uuid
 
 from django.db import models
-
-from core.utils.shortcuts import convert_to_int
+from django.conf import settings
 
 
 class Transaction(models.Model):
@@ -53,5 +52,8 @@ class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_int_amount(self):
+        return int(self.amount / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def __str__(self):
-        return f'{self.direction} | {convert_to_int(self.amount)} | {self.transaction_status} | {self.confirmation_status}'
+        return f'{self.direction} | {self.get_int_amount()} | {self.transaction_status} | {self.confirmation_status}'

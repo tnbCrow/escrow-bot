@@ -1,8 +1,7 @@
 from uuid import uuid4
+from django.conf import settings
 
 from django.db import models
-
-from core.utils.shortcuts import convert_to_int
 from ..models.transactions import Transaction
 
 
@@ -43,5 +42,8 @@ class UserTransactionHistory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_int_amount(self):
+        return int(self.amount / settings.TNBC_MULTIPLICATION_FACTOR)
+
     def __str__(self):
-        return f"User: {self.user} - {self.type} - {convert_to_int(self.amount)}"
+        return f"User: {self.user} - {self.type} - {self.get_int_amount()}"
