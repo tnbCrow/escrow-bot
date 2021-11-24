@@ -230,8 +230,6 @@ class advertisement(commands.Cog):
 
         await ctx.defer(hidden=True)
 
-        guild = ctx.guild
-
         buyer_discord_user = get_or_create_discord_user(ctx.author.id)
 
         if Advertisement.objects.filter(uuid_hex=advertisement_id, status=Advertisement.OPEN).exists():
@@ -249,7 +247,8 @@ class advertisement(commands.Cog):
                         if advertisement.amount == 0:
                             advertisement.status = Advertisement.COMPLETED
                         advertisement.save()
-
+                        
+                        guild = self.bot.get_guild(int(settings.GUILD_ID))
                         trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
 
                         offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))

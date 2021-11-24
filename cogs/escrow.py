@@ -254,7 +254,8 @@ class escrow(commands.Cog):
 
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
                 successor = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
-                agent_role = discord.utils.get(ctx.guild.roles, id=int(os.environ["AGENT_ROLE_ID"]))
+                guild = self.bot.get_guild(int(settings.GUILD_ID))
+                agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))
 
                 user_profile = get_or_create_user_profile(discord_user)
                 user_profile.total_disputes += 1
