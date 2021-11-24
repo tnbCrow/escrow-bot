@@ -1,5 +1,4 @@
 import discord
-import os
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
@@ -11,7 +10,7 @@ from django.db.models import Q, F
 from core.models.wallets import ThenewbostonWallet
 from core.utils.shortcuts import convert_to_decimal, convert_to_int
 from core.models.statistics import Statistic
-from escrow.utils import get_or_create_user_profile
+from escrow.utils import get_or_create_user_profile, post_trade_to_api
 
 
 class escrow(commands.Cog):
@@ -160,7 +159,10 @@ class escrow(commands.Cog):
                     await conversation_channel.send(embed=embed)
 
                 recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+
                 await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
+
+                post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
 
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot release the escrow of status {escrow_obj.status}.", color=0xe81111)

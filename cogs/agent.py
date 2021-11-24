@@ -10,7 +10,7 @@ from django.db.models import Q, F
 from asgiref.sync import sync_to_async
 
 from escrow.models.escrow import Escrow
-from escrow.utils import get_or_create_user_profile
+from escrow.utils import get_or_create_user_profile, post_trade_to_api
 from core.utils.shortcuts import convert_to_int, convert_to_decimal
 from core.models.wallets import ThenewbostonWallet
 from core.utils.shortcuts import get_or_create_discord_user
@@ -90,7 +90,10 @@ class agent(commands.Cog):
                 await conversation_channel.send(embed=embed)
 
                 recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+
                 await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
+
+                post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
 
             else:
                 embed = discord.Embed(title="Error!", description="Disputed escrow not found.", color=0xe81111)

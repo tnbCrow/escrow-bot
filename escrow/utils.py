@@ -1,3 +1,6 @@
+import requests
+from django.conf import settings
+
 from .models.profile import Profile
 from .models.advertisement import Advertisement
 from core.utils.shortcuts import convert_to_int, convert_to_decimal
@@ -29,3 +32,20 @@ def create_offer_table(number_of_data):
         message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {convert_to_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)} USDT; Payment Method(s): {payment_method_message}\n\n"
 
     return message
+
+
+def post_trade_to_api(amount, price):
+
+    price_for_api = price / 10000
+
+    data = {
+        'amount': amount,
+        'price': price_for_api,
+        'api_key': settings.MVP_SITE_API_KEY
+    }
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    requests.post('https://tnbcrow.pythonanywhere.com/recent-trades', json=data, headers=headers)

@@ -247,7 +247,7 @@ class advertisement(commands.Cog):
                         if advertisement.amount == 0:
                             advertisement.status = Advertisement.COMPLETED
                         advertisement.save()
-                        
+
                         guild = self.bot.get_guild(int(settings.GUILD_ID))
                         trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
 
@@ -287,7 +287,7 @@ class advertisement(commands.Cog):
                         embed.add_field(name='Fee', value=integer_fee)
                         embed.add_field(name='Buyer Receives', value=f"{amount_of_tnbc - integer_fee}")
                         embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                        embed.add_field(name='Total (USDT)', value=amount_of_tnbc * convert_to_decimal(escrow_obj.price))
+                        embed.add_field(name='Total (USDT)', value=convert_to_decimal(amount_of_tnbc * escrow_obj.price))
                         embed.set_footer(text="Use /escrow all command list all active escrows.")
 
                         payment_methods = PaymentMethod.objects.filter(user=advertisement.owner)
