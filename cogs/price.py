@@ -16,10 +16,10 @@ class price(commands.Cog):
         await ctx.defer()
 
         # Gets the last trade rate through tnbcrow API
-        r = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
+        r = requests.get('https://tnbcrow.pythonanywhere.com/recent-trades').json()
 
         # parse the rate to decimal since the rates are 10^4 of the actual rate
-        last_rate = int(r["results"][0]["last_rate"]) / 10000
+        last_rate = int(r["results"][0]["rate"]) / 10000
 
         embed = discord.Embed(color=0xe81111)
         embed.add_field(name=f"Last Trade Rate: ${last_rate}", value="Use /trades to check recent verified trades.")
@@ -56,8 +56,8 @@ class price(commands.Cog):
         humanized_supply = humanize.intcomma(circulating_supply)
 
         # get the last trade rate using tnbcrow API
-        r2 = requests.get('https://tnbcrow.pythonanywhere.com/statistics').json()
-        last_rate = int(r2["results"][0]["last_rate"]) / 10000
+        r2 = requests.get('https://tnbcrow.pythonanywhere.com/recent-trades').json()
+        last_rate = int(r2["results"][0]["rate"]) / 10000
 
         # calculate the market cap
         market_cap = int(circulating_supply * last_rate)
