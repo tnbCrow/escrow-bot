@@ -40,7 +40,7 @@ def post_trade_to_api(amount, price):
 
     data = {
         'amount': amount,
-        'price': price_for_api,
+        'rate': price_for_api,
         'api_key': settings.MVP_SITE_API_KEY
     }
 
