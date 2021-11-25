@@ -265,7 +265,7 @@ class admin(commands.Cog):
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Total Balance', value=convert_to_int(statistic.total_balance))
-            embed.add_field(name='Balance Of all users', value=convert_to_int(balance_of_all_user))
+            embed.add_field(name='User Balance + Fees Collected', value=convert_to_int(balance_of_all_user + statistic.total_fees_collected))
             embed.add_field(name='Hot Wallet Balance', value=hot_wallet_balance)
             embed.add_field(name='Cold Wallet Balance', value=cold_wallet_balance)
             embed.add_field(name='Total Wallet Balance', value=wallet_balance_combined)
