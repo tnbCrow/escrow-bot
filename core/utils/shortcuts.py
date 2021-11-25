@@ -32,13 +32,13 @@ def convert_to_int(amount):
     return amount
 
 
-def get_wallet_balance():
+def get_wallet_balance(account_number):
 
     try:
         bank_config = requests.get(f'http://{settings.BANK_IP}/config?format=json').json()
-        wallet_balance = requests.get(f"{bank_config['primary_validator']['protocol']}://{bank_config['primary_validator']['ip_address']}:{bank_config['primary_validator']['port'] or 0}/accounts/{settings.TNBCROW_BOT_ACCOUNT_NUMBER}/balance?format=json").json()['balance']
+        wallet_balance = requests.get(f"{bank_config['primary_validator']['protocol']}://{bank_config['primary_validator']['ip_address']}/accounts/{account_number}/balance?format=json").json()['balance']
         return wallet_balance
 
     except Exception:
 
-        return False
+        return 0

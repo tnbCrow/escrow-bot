@@ -1,6 +1,8 @@
 import requests
 from django.conf import settings
 
+from core.models.wallets import ThenewbostonWallet
+
 from .models.profile import Profile
 from .models.advertisement import Advertisement
 from core.utils.shortcuts import convert_to_int, convert_to_decimal
@@ -49,3 +51,15 @@ def post_trade_to_api(amount, price):
     }
 
     requests.post('https://tnbcrow.pythonanywhere.com/recent-trades', json=data, headers=headers)
+
+
+def get_total_balance_of_all_user():
+
+    wallets = ThenewbostonWallet.objects.filter(balance__gt=settings.TNBC_MULTIPLICATION_FACTOR)
+
+    total_balace = 0
+
+    for wallet in wallets:
+        total_balace += wallet.balance
+
+    return total_balace

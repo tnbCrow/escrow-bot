@@ -6,14 +6,17 @@ from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from django.conf import settings
 from discord_slash.model import ButtonStyle
+from asgiref.sync import sync_to_async
+import humanize
+
 from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 from core.models.transactions import Transaction
 from core.models.statistics import Statistic
 from core.models.users import UserTransactionHistory
+from core.utils.shortcuts import get_wallet_balance
+
 from escrow.models.payment_method import PaymentMethod
 from escrow.utils import get_or_create_user_profile
-from asgiref.sync import sync_to_async
-import humanize
 
 
 class user(commands.Cog):
@@ -121,33 +124,39 @@ class user(commands.Cog):
                                               color=0xe81111)
 
                     else:
-                        block_response, fee = withdraw_tnbc(tnbc_wallet.withdrawal_address, amount, tnbc_wallet.memo)
+                        hot_wallet_balance = get_wallet_balance(settings.TNBCROW_BOT_ACCOUNT_NUMBER)
 
-                        if block_response:
-                            if block_response.status_code == 201:
-                                txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                                                 transaction_status=Transaction.IDENTIFIED,
-                                                                 direction=Transaction.OUTGOING,
-                                                                 account_number=tnbc_wallet.withdrawal_address,
-                                                                 amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
-                                                                 fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
-                                                                 signature=block_response.json()['signature'],
-                                                                 block=block_response.json()['id'],
-                                                                 memo=tnbc_wallet.memo)
-                                converted_amount_plus_fee = (amount + fee) * settings.TNBC_MULTIPLICATION_FACTOR
-                                tnbc_wallet.balance -= converted_amount_plus_fee
-                                tnbc_wallet.save()
-                                UserTransactionHistory.objects.create(user=discord_user, amount=converted_amount_plus_fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
-                                statistic, created = Statistic.objects.get_or_create(title="main")
-                                statistic.total_balance -= converted_amount_plus_fee
-                                statistic.save()
-                                embed = discord.Embed(title="Coins Withdrawn.",
-                                                      description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.",
-                                                      color=0xe81111)
+                        if hot_wallet_balance >= amount + fee:
+
+                            block_response, fee = withdraw_tnbc(tnbc_wallet.withdrawal_address, amount, tnbc_wallet.memo)
+
+                            if block_response:
+                                if block_response.status_code == 201:
+                                    txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                                                     transaction_status=Transaction.IDENTIFIED,
+                                                                     direction=Transaction.OUTGOING,
+                                                                     account_number=tnbc_wallet.withdrawal_address,
+                                                                     amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
+                                                                     fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
+                                                                     signature=block_response.json()['signature'],
+                                                                     block=block_response.json()['id'],
+                                                                     memo=tnbc_wallet.memo)
+                                    converted_amount_plus_fee = (amount + fee) * settings.TNBC_MULTIPLICATION_FACTOR
+                                    tnbc_wallet.balance -= converted_amount_plus_fee
+                                    tnbc_wallet.save()
+                                    UserTransactionHistory.objects.create(user=discord_user, amount=converted_amount_plus_fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
+                                    statistic, created = Statistic.objects.get_or_create(title="main")
+                                    statistic.total_balance -= converted_amount_plus_fee
+                                    statistic.save()
+                                    embed = discord.Embed(title="Coins Withdrawn.",
+                                                          description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.",
+                                                          color=0xe81111)
+                                else:
+                                    embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
                             else:
-                                embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
+                                embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.", color=0xe81111)
                         else:
-                            embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.", color=0xe81111)
+                            embed = discord.Embed(title="Error!", description="Not enough TNBC available in the hot wallet, contact @admin.", color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.", color=0xe81111)
             else:

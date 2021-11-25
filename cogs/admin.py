@@ -7,13 +7,15 @@ from discord_slash.model import SlashCommandPermissionType
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from django.db.models import Q
+
 from core.models.transactions import Transaction
 from core.models.wallets import ThenewbostonWallet
-
-from escrow.models.escrow import Escrow
 from core.models.users import UserTransactionHistory
 from core.models.statistics import Statistic
 from core.utils.shortcuts import convert_to_int, get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance
+
+from escrow.models.escrow import Escrow
+from escrow.utils import get_total_balance_of_all_user
 
 
 class admin(commands.Cog):
@@ -254,12 +256,19 @@ class admin(commands.Cog):
 
             statistic, created = Statistic.objects.get_or_create(title="main")
 
-            wallet_balance = get_wallet_balance()
+            hot_wallet_balance = get_wallet_balance(settings.TNBCROW_BOT_ACCOUNT_NUMBER)
+            cold_wallet_balance = get_wallet_balance(settings.COLD_WALLET_ACCOUNT_NUMBER)
+            wallet_balance_combined = hot_wallet_balance + cold_wallet_balance
+
+            balance_of_all_user = get_total_balance_of_all_user()
 
             embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='Total Balance', value=convert_to_decimal(statistic.total_balance))
-            embed.add_field(name='Wallet Balance', value=wallet_balance)
-            embed.add_field(name='Fees Collected', value=convert_to_decimal(statistic.total_fees_collected), inline=False)
+            embed.add_field(name='Total Balance', value=convert_to_int(statistic.total_balance))
+            embed.add_field(name='Balance Of all users', value=convert_to_int(balance_of_all_user))
+            embed.add_field(name='Hot Wallet Balance', value=hot_wallet_balance)
+            embed.add_field(name='Cold Wallet Balance', value=cold_wallet_balance)
+            embed.add_field(name='Total Wallet Balance', value=wallet_balance_combined)
+            embed.add_field(name='Fees Collected', value=convert_to_decimal(statistic.total_fees_collected))
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
