@@ -13,6 +13,7 @@ from core.models.wallets import ThenewbostonWallet
 from core.models.users import UserTransactionHistory
 from core.models.statistics import Statistic
 from core.utils.shortcuts import convert_to_int, get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance
+from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 from escrow.models.escrow import Escrow
 from escrow.utils import get_total_balance_of_all_user
@@ -356,6 +357,66 @@ class admin(commands.Cog):
             else:
                 embed = discord.Embed(title="Error!", description="The transaction incoming with waiting confirmation status does not exist.", color=0xe81111)
 
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="transfer_to_cold_wallet",
+                            description="Transfer TNBC from Hot to Cold wallet!",
+                            options=[
+                                create_option(
+                                    name="amount",
+                                    description="Enter TNBC amount you want to transfer.",
+                                    option_type=4,
+                                    required=True
+                                ),
+                            ]
+                            )
+    async def admin_transfer_to_cold_wallet(self, ctx, amount: int):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+            response, fee = estimate_fee()
+
+            if response:
+                if not amount < 1:
+                    hot_wallet_balance = get_wallet_balance(settings.TNBCROW_BOT_ACCOUNT_NUMBER)
+                    if hot_wallet_balance >= amount + fee:
+
+                        block_response, fee = withdraw_tnbc(settings.COLD_WALLET_ACCOUNT_NUMBER, amount, "INTERNAL")
+
+                        if block_response:
+                            if block_response.status_code == 201:
+                                Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                                           transaction_status=Transaction.IDENTIFIED,
+                                                           direction=Transaction.OUTGOING,
+                                                           account_number=settings.COLD_WALLET_ACCOUNT_NUMBER,
+                                                           amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
+                                                           fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
+                                                           signature=block_response.json()['signature'],
+                                                           block=block_response.json()['id'],
+                                                           memo="INTERNAL")
+
+                                statistic, created = Statistic.objects.get_or_create(title="main")
+                                statistic.total_balance -= fee * settings.TNBC_MULTIPLICATION_FACTOR
+                                statistic.save()
+
+                                embed = discord.Embed(title="Coins Withdrawn.",
+                                                      description=f"Successfully withdrawn {amount} TNBC to the cold wallet.",
+                                                      color=0xe81111)
+                            else:
+                                embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
+                        else:
+                            embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.", color=0xe81111)
+                    else:
+                        embed = discord.Embed(title="Error!", description="Not enough TNBC available in the hot wallet.", color=0xe81111)
+                else:
+                    embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.", color=0xe81111)
+            else:
+                embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
