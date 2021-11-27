@@ -11,8 +11,6 @@ from ..models.statistics import Statistic
 from ..models.users import UserTransactionHistory
 from ..models.wallets import ThenewbostonWallet
 
-TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.TNBCROW_BOT_ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
-
 
 def check_confirmation():
 
@@ -22,29 +20,32 @@ def check_confirmation():
     for txs in waiting_confirmations_txs:
 
         try:
-            r = requests.get(f"http://{settings.BANK_IP}/confirmation_blocks?block={txs.block}").json()
+            main_bank_confirmation = requests.get(f"http://{settings.BANK_IP}/confirmation_blocks?block=&block__signature={txs.signature}&format=json").json()
+            keysign_bank_confirmation = requests.get(f"http://{settings.KEYSIGN_BANK_IP}/confirmation_blocks?block=&block__signature={txs.signature}&format=json").json()
 
         except requests.exceptions.RequestException:
             return False
 
-        if 'count' in r:
-            if int(r['count']) > 0:
-                txs.total_confirmations = int(r['count'])
-                txs.confirmation_status = Transaction.CONFIRMED
-                txs.save()
-                if txs.direction == Transaction.INCOMING:
-                    statistics, created = Statistic.objects.get_or_create(title="main")
-                    statistics.total_balance += txs.amount
-                    statistics.save()
-                else:
-                    statistics, created = Statistic.objects.get_or_create(title="main")
-                    statistics.total_balance -= txs.amount - settings.TNBC_TRANSACTION_FEE
-                    statistics.save()
+        if int(main_bank_confirmation['count']) > 0 or int(keysign_bank_confirmation['count']):
+            txs.total_confirmations = 1
+            txs.confirmation_status = Transaction.CONFIRMED
+            txs.save()
+
+            if txs.direction == Transaction.INCOMING:
+                statistics, created = Statistic.objects.get_or_create(title="main")
+                statistics.total_balance += txs.amount
+                statistics.save()
+            else:
+                statistics, created = Statistic.objects.get_or_create(title="main")
+                statistics.total_balance -= txs.amount - settings.TNBC_TRANSACTION_FEE
+                statistics.save()
 
 
 def scan_chain():
 
     scan_tracker, created = ScanTracker.objects.get_or_create(title="main")
+
+    TNBC_TRANSACTION_SCAN_URL = f"http://{settings.BANK_IP}/bank_transactions?account_number={settings.TNBCROW_BOT_ACCOUNT_NUMBER}&block__sender=&fee=&recipient="
 
     next_url = TNBC_TRANSACTION_SCAN_URL
 

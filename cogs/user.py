@@ -34,11 +34,10 @@ class user(commands.Cog):
         qr_data = f"{{'address':{settings.TNBCROW_BOT_ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
 
         embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
-        embed.add_field(name='Warning', value="Please only use official TNBC desktop wallet to send tnbc or **you'll lose your coins**. [Download Wallet](https://thenewboston.com/download)", inline=False)
         embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
         embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
-        # embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
-        # embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
+        embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
+        embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Sent? Check new balance."))])
 
