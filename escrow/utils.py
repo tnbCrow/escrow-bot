@@ -63,3 +63,18 @@ def get_total_balance_of_all_user():
         total_balace += wallet.balance
 
     return total_balace
+
+
+def get_advertisement_stats():
+
+    total_tnbc = 0
+
+    advertisements = Advertisement.objects.filter(status=Advertisement.OPEN)
+
+    total_advertisements = advertisements.count()
+
+    for adv in advertisements:
+
+        total_tnbc += adv.amount
+
+    return total_advertisements, total_tnbc

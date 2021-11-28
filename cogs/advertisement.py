@@ -7,7 +7,7 @@ from django.conf import settings
 from asgiref.sync import sync_to_async
 from escrow.models.advertisement import Advertisement
 from escrow.models.escrow import Escrow
-from escrow.utils import create_offer_table
+from escrow.utils import create_offer_table, get_advertisement_stats
 from escrow.models.payment_method import PaymentMethod
 
 
@@ -62,7 +62,9 @@ class advertisement(commands.Cog):
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
 
-                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
+                        adv_count, total_tnbc_in_adv = get_advertisement_stats()
+
+                        await offer_channel.send(f"Top five sell advertisements (Escrow Protected).\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```\nTotal: {adv_count} advertisements for {convert_to_int(total_tnbc_in_adv)} TNBC")
 
                         embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
                         embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
@@ -98,7 +100,9 @@ class advertisement(commands.Cog):
 
         offer_table = create_offer_table(5)
 
-        await ctx.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```", hidden=True)
+        adv_count, total_tnbc_in_adv = get_advertisement_stats()
+
+        await ctx.send(f"Top five sell advertisements (Escrow Protected).\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```\nTotal: {adv_count} advertisements for {convert_to_int(total_tnbc_in_adv)} TNBC", hidden=True)
 
     @cog_ext.cog_subcommand(base="adv",
                             name="my",
@@ -194,7 +198,9 @@ class advertisement(commands.Cog):
             async for oldMessage in offer_channel.history():
                 await oldMessage.delete()
 
-            await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
+            adv_count, total_tnbc_in_adv = get_advertisement_stats()
+
+            await offer_channel.send(f"Top five sell advertisements (Escrow Protected).\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```\nTotal: {adv_count} advertisements for {convert_to_int(total_tnbc_in_adv)} TNBC")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
@@ -257,7 +263,9 @@ class advertisement(commands.Cog):
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
 
-                        await offer_channel.send(f"People are selling TNBC and here are the offers for you to buy from (Escrow Protected). Use `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n\n```{offer_table}```")
+                        adv_count, total_tnbc_in_adv = get_advertisement_stats()
+
+                        await offer_channel.send(f"Top five sell advertisements (Escrow Protected).\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```\nTotal: {adv_count} advertisements for {convert_to_int(total_tnbc_in_adv)} TNBC")
 
                         seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
                         agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))
