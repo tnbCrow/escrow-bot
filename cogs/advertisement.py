@@ -57,7 +57,7 @@ class advertisement(commands.Cog):
                         advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
 
                         offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offer_table = create_offer_table(5)
+                        offer_table = create_offer_table(20)
 
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
@@ -98,7 +98,7 @@ class advertisement(commands.Cog):
 
         await ctx.defer(hidden=True)
 
-        offer_table = create_offer_table(5)
+        offer_table = create_offer_table(20)
 
         adv_count, total_tnbc_in_adv = get_advertisement_stats()
 
@@ -193,7 +193,7 @@ class advertisement(commands.Cog):
             advertisement.save()
 
             offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-            offer_table = create_offer_table(5)
+            offer_table = create_offer_table(20)
 
             async for oldMessage in offer_channel.history():
                 await oldMessage.delete()
@@ -258,7 +258,7 @@ class advertisement(commands.Cog):
                         trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
 
                         offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offer_table = create_offer_table(5)
+                        offer_table = create_offer_table(20)
 
                         async for oldMessage in offer_channel.history():
                             await oldMessage.delete()
