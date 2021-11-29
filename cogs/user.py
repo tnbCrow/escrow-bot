@@ -31,7 +31,7 @@ class user(commands.Cog):
         discord_user = get_or_create_discord_user(ctx.author.id)
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
-        qr_data = f"{{'address':{settings.TNBCROW_BOT_ACCOUNT_NUMBER},'memo':'{tnbc_wallet.memo}'}}"
+        qr_data = f"{{\"address\":\"{settings.TNBCROW_BOT_ACCOUNT_NUMBER}\",\"memo\":\"{tnbc_wallet.memo}\"}}"
 
         embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
         embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
