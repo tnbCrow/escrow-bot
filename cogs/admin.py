@@ -339,7 +339,7 @@ class admin(commands.Cog):
 
         if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
-            if Transaction.objects.filter(uuid=transaction_id, direction=Transaction.INCOMING, confirmation_status=Transaction.WAITING_CONFIRMATION).exists():
+            if Transaction.objects.filter(Q(uuid=transaction_id) & Q(direction=Transaction.INCOMING) & Q(confirmation_status=Transaction.WAITING_CONFIRMATION) | Q(transaction_status=Transaction.UNIDENTIFIED)).exists():
 
                 transaction = Transaction.objects.get(uuid=transaction_id)
                 transaction.confirmation_status = Transaction.CONFIRMED
