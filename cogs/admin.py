@@ -285,8 +285,9 @@ class admin(commands.Cog):
 
         if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
-            if Transaction.objects.filter(direction=Transaction.INCOMING, confirmation_status=Transaction.WAITING_CONFIRMATION).exists():
-                unconfirmed_transactions = (await sync_to_async(Transaction.objects.filter)(direction=Transaction.INCOMING, confirmation_status=Transaction.WAITING_CONFIRMATION)).order_by('-created_at')[:4]
+            if Transaction.objects.filter(Q(direction=Transaction.INCOMING) & Q(confirmation_status=Transaction.WAITING_CONFIRMATION) | Q(transaction_status=Transaction.UNIDENTIFIED)).exists():
+
+                unconfirmed_transactions = (await sync_to_async(Transaction.objects.filter)(Q(direction=Transaction.INCOMING) & Q(confirmation_status=Transaction.WAITING_CONFIRMATION) | Q(transaction_status=Transaction.UNIDENTIFIED))).order_by('-created_at')[:4]
 
                 embed = discord.Embed(color=0xe81111)
                 for transaction in unconfirmed_transactions:
@@ -295,8 +296,13 @@ class admin(commands.Cog):
                     embed.add_field(name='Signature', value=transaction.signature, inline=False)
                     embed.add_field(name='Block', value=transaction.block, inline=False)
                     embed.add_field(name='Amount', value=convert_to_int(transaction.amount))
-                    embed.add_field(name='MEMO', value=transaction.memo)
-                    if ThenewbostonWallet.objects.filter(memo=transaction.memo):
+
+                    if transaction.memo:
+                        embed.add_field(name='MEMO', value=transaction.memo)
+                    else:
+                        embed.add_field(name='MEMO', value="Null")
+
+                    if ThenewbostonWallet.objects.filter(memo=transaction.memo).exists():
                         user_wallet = ThenewbostonWallet.objects.get(memo=transaction.memo)
                         discord_user = await self.bot.fetch_user(int(user_wallet.user.discord_id))
                         embed.add_field(name='User', value=discord_user.mention)
