@@ -141,12 +141,16 @@ class user(commands.Cog):
                                                                      block=block_response.json()['id'],
                                                                      memo=tnbc_wallet.memo)
                                     converted_amount_plus_fee = (amount + fee) * settings.TNBC_MULTIPLICATION_FACTOR
+
                                     tnbc_wallet.balance -= converted_amount_plus_fee
                                     tnbc_wallet.save()
+
                                     UserTransactionHistory.objects.create(user=discord_user, amount=converted_amount_plus_fee, type=UserTransactionHistory.WITHDRAW, transaction=txs)
+
                                     statistic, created = Statistic.objects.get_or_create(title="main")
                                     statistic.total_balance -= converted_amount_plus_fee
                                     statistic.save()
+
                                     embed = discord.Embed(title="Coins Withdrawn.",
                                                           description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.",
                                                           color=0xe81111)

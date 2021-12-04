@@ -32,9 +32,13 @@ def check_confirmation():
             txs.save()
 
             if txs.direction == Transaction.INCOMING:
-                statistics, created = Statistic.objects.get_or_create(title="main")
-                statistics.total_balance += txs.amount
-                statistics.save()
+
+                lower_case_memo = txs.memo.lower()
+
+                if lower_case_memo != "internal":
+                    statistics, created = Statistic.objects.get_or_create(title="main")
+                    statistics.total_balance += txs.amount
+                    statistics.save()
             else:
                 statistics, created = Statistic.objects.get_or_create(title="main")
                 statistics.total_balance -= txs.amount - settings.TNBC_TRANSACTION_FEE
