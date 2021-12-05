@@ -15,8 +15,13 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 
 from django.conf import settings
+from django.db.models import Q, F
+from asgiref.sync import sync_to_async
+
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
-from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal
+from core.models.wallets import ThenewbostonWallet
+from escrow.models.escrow import Escrow
 
 # Environment Variables
 TOKEN = os.environ['CROW_DISCORD_TOKEN']
@@ -99,29 +104,86 @@ async def on_message(message):
                 await oldMessage.delete()
 
 
-@slash.component_callback()
-async def chain_scan(ctx: ComponentContext):
+@bot.event
+async def on_component(ctx: ComponentContext):
 
-    await ctx.defer(hidden=True)
+    button = ctx.custom_id.split('_')
 
-    scan_chain()
+    button_type = button[0]
 
-    if os.environ['CHECK_TNBC_CONFIRMATION'] == 'True':
+    if button_type == "chainscan":
 
-        check_confirmation()
+        await ctx.defer(hidden=True)
 
-    match_transaction()
+        scan_chain()
 
-    discord_user = get_or_create_discord_user(ctx.author.id)
-    tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
+        if os.environ['CHECK_TNBC_CONFIRMATION'] == 'True':
 
-    embed = discord.Embed(title="Scan Completed", color=0xe81111)
-    embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
-    embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
-    embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
-    embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
+            check_confirmation()
 
-    await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chain_scan", style=ButtonStyle.green, label="Check Again"))])
+        match_transaction()
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+        tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
+
+        embed = discord.Embed(title="Scan Completed", color=0xe81111)
+        embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
+        embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
+        embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+        embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
+
+        await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chainscan", style=ButtonStyle.green, label="Check Again"))])
+
+    elif button_type == "escrowcancelforbid":
+
+        await ctx.defer(hidden=True)
+        message = "If you've already sent the payment to the seller, please ask them to release the escrow.\n\nIn the case of disputes, please use the command `/admin dispute escrow_id: ID` to raise dispute and an agent will help to resolve the dispute."
+        await ctx.send(message, hidden=True)
+
+    elif button_type == "escrowcancel":
+
+        escrow_id = button[1]
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Escrow.objects.filter(Q(initiator=discord_user) |
+                                 Q(successor=discord_user),
+                                 Q(uuid_hex=escrow_id)).exists():
+
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
+
+            if escrow_obj.status == Escrow.OPEN:
+
+                if int(escrow_obj.successor.discord_id) == ctx.author.id:
+
+                    escrow_obj.status = Escrow.CANCELLED
+                    escrow_obj.save()
+
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+
+                    embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
+                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                    embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                    conversation_channel = bot.get_channel(int(escrow_obj.conversation_channel_id))
+                    if conversation_channel:
+                        await conversation_channel.send(embed=embed)
+
+                    await ctx.send(embed=embed, hidden=True)
+                else:
+                    embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
+                    await ctx.send(embed=embed, hidden=True)
+            else:
+                embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
+                await ctx.send(embed=embed, hidden=True)
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+            await ctx.send(embed=embed, hidden=True)
+    else:
+        await ctx.send("Where did you find this button??", hidden=True)
 
 
 @slash.slash(name="kill", description="Kill the bot!")

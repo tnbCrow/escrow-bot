@@ -2,12 +2,13 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_components import create_button, create_actionrow
+from discord_slash.model import ButtonStyle
 from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
-from django.db.models import Q, F
-from core.models.wallets import ThenewbostonWallet
+from django.db.models import Q
 from core.utils.shortcuts import convert_to_decimal, convert_to_int
 from core.models.statistics import Statistic
 from escrow.utils import get_or_create_user_profile, post_trade_to_api
@@ -189,7 +190,6 @@ class escrow(commands.Cog):
 
         discord_user = get_or_create_discord_user(ctx.author.id)
 
-        # Check if the user is initiator or successor
         if Escrow.objects.filter(Q(initiator=discord_user) |
                                  Q(successor=discord_user),
                                  Q(uuid_hex=escrow_id)).exists():
@@ -199,30 +199,33 @@ class escrow(commands.Cog):
             if escrow_obj.status == Escrow.OPEN:
 
                 if int(escrow_obj.successor.discord_id) == ctx.author.id:
-                    escrow_obj.status = Escrow.CANCELLED
-                    escrow_obj.save()
 
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+                    warning_message = "**Warning**\nNever cancel the escrow if you've sent the payment already. Do you confirm that you've not sent any payment to the seller?"
 
-                    embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                    embed.add_field(name='Status', value=f"{escrow_obj.status}")
-
-                    conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
-                    if conversation_channel:
-                        await conversation_channel.send(embed=embed)
+                    await ctx.send(warning_message,
+                                   hidden=True,
+                                   components=[
+                                       create_actionrow(
+                                           create_button(
+                                               custom_id=f"escrowcancel_{escrow_id}",
+                                               style=ButtonStyle.red,
+                                               label="I have not paid on this trade, Cancel Trade."),
+                                           create_button(
+                                               custom_id="escrowcancelforbid",
+                                               style=ButtonStyle.green,
+                                               label="I've made the payment already, take me back.")
+                                       )
+                                   ])
 
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
+                    await ctx.send(embed=embed, hidden=True)
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot cancel the escrow of status {escrow_obj.status}.", color=0xe81111)
+                await ctx.send(embed=embed, hidden=True)
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
-
-        await ctx.send(embed=embed, hidden=True)
+            await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="escrow",
                             name="dispute",
