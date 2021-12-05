@@ -4,14 +4,13 @@ from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from discord_slash.model import ButtonStyle
-from core.utils.shortcuts import get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import get_or_create_discord_user
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from escrow.models.escrow import Escrow
 from django.db.models import Q
 from core.utils.shortcuts import convert_to_decimal, convert_to_int
-from core.models.statistics import Statistic
-from escrow.utils import get_or_create_user_profile, post_trade_to_api
+from escrow.utils import get_or_create_user_profile
 
 
 class escrow(commands.Cog):
@@ -121,56 +120,29 @@ class escrow(commands.Cog):
 
             if escrow_obj.status == Escrow.OPEN:
 
-                escrow_obj.status = Escrow.COMPLETED
-                escrow_obj.save()
+                warning_message = "**Warning**\nNever release the escrow before verifying that you've received the payment. Do you confirm that you've received payment from the buyer?"
 
-                seller_wallet = get_or_create_tnbc_wallet(discord_user)
-                seller_wallet.balance -= escrow_obj.amount
-                seller_wallet.locked -= escrow_obj.amount
-                seller_wallet.save()
-
-                buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
-                buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
-                buyer_wallet.save()
-
-                statistic, created = Statistic.objects.get_or_create(title="main")
-                statistic.total_fees_collected += escrow_obj.fee
-                statistic.save()
-
-                buyer_profile = get_or_create_user_profile(escrow_obj.successor)
-                buyer_profile.total_escrows += 1
-                buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
-                buyer_profile.save()
-
-                seller_profile = get_or_create_user_profile(discord_user)
-                seller_profile.total_escrows += 1
-                seller_profile.total_tnbc_escrowed += escrow_obj.amount
-                seller_profile.save()
-
-                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
-                embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
-                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
-                embed.add_field(name='Status', value=f"{escrow_obj.status}")
-
-                conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
-                if conversation_channel:
-                    await conversation_channel.send(embed=embed)
-
-                recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
-
-                await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
-
-                post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
+                await ctx.send(warning_message,
+                               hidden=True,
+                               components=[
+                                   create_actionrow(
+                                       create_button(
+                                           custom_id=f"escrowrelease_{escrow_id}",
+                                           style=ButtonStyle.red,
+                                           label="I have received payment, Release Escrow."),
+                                       create_button(
+                                           custom_id="escrowreleaseforbid",
+                                           style=ButtonStyle.green,
+                                           label="I have not received the payment, take me back.")
+                                   )
+                               ])
 
             else:
                 embed = discord.Embed(title="Error!", description=f"You cannot release the escrow of status {escrow_obj.status}.", color=0xe81111)
+                await ctx.send(embed=embed, hidden=True)
         else:
             embed = discord.Embed(title="Error!", description="You do not have permission to perform the action.", color=0xe81111)
-
-        await ctx.send(embed=embed, hidden=True)
+            await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="escrow",
                             name="cancel",

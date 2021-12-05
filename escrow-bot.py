@@ -21,6 +21,8 @@ from asgiref.sync import sync_to_async
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
 from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal
 from core.models.wallets import ThenewbostonWallet
+from core.models.statistics import Statistic
+from escrow.utils import get_or_create_user_profile, post_trade_to_api
 from escrow.models.escrow import Escrow
 
 # Environment Variables
@@ -181,6 +183,77 @@ async def on_component(ctx: ComponentContext):
                 await ctx.send(embed=embed, hidden=True)
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+            await ctx.send(embed=embed, hidden=True)
+
+    elif button_type == "escrowreleaseforbid":
+
+        await ctx.defer(hidden=True)
+        message = "Ask the buyer to send the payment before releasing the escrow.\n\nIn the case of disputes, please use the command `/admin dispute escrow_id: ID` to raise dispute and an agent will help to resolve the dispute."
+        await ctx.send(message, hidden=True)
+
+    elif button_type == "escrowrelease":
+
+        await ctx.defer(hidden=True)
+
+        escrow_id = button[1]
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Escrow.objects.filter(uuid_hex=escrow_id, initiator=discord_user).exists():
+
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
+
+            if escrow_obj.status == Escrow.OPEN:
+
+                escrow_obj.status = Escrow.COMPLETED
+                escrow_obj.save()
+
+                seller_wallet = get_or_create_tnbc_wallet(discord_user)
+                seller_wallet.balance -= escrow_obj.amount
+                seller_wallet.locked -= escrow_obj.amount
+                seller_wallet.save()
+
+                buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
+                buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
+                buyer_wallet.save()
+
+                statistic, created = Statistic.objects.get_or_create(title="main")
+                statistic.total_fees_collected += escrow_obj.fee
+                statistic.save()
+
+                buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                buyer_profile.total_escrows += 1
+                buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
+                buyer_profile.save()
+
+                seller_profile = get_or_create_user_profile(discord_user)
+                seller_profile.total_escrows += 1
+                seller_profile.total_tnbc_escrowed += escrow_obj.amount
+                seller_profile.save()
+
+                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
+                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                conversation_channel = bot.get_channel(int(escrow_obj.conversation_channel_id))
+                if conversation_channel:
+                    await conversation_channel.send(embed=embed)
+
+                recent_trade_channel = bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+
+                await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
+
+                post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
+                await ctx.send(embed=embed, hidden=True)
+
+            else:
+                embed = discord.Embed(title="Error!", description=f"You cannot release the escrow of status {escrow_obj.status}.", color=0xe81111)
+                await ctx.send(embed=embed, hidden=True)
+        else:
+            embed = discord.Embed(title="Error!", description="You do not have permission to perform the action.", color=0xe81111)
             await ctx.send(embed=embed, hidden=True)
     else:
         await ctx.send("Where did you find this button??", hidden=True)
