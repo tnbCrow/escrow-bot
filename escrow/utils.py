@@ -33,7 +33,7 @@ def create_offer_table(number_of_data):
 
         comma_seperated_amount = "{:,}".format(convert_to_int(advertisement.amount))
 
-        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {comma_seperated_amount} TNBC; Price: {convert_to_decimal(advertisement.price)} USDT; Payment Method(s): {payment_method_message}\n\n"
+        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {comma_seperated_amount} TNBC; Price: {convert_to_decimal(advertisement.price)}; Payment Method(s): {payment_method_message}\n\n"
 
     return message
 

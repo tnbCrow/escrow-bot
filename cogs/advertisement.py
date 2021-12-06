@@ -54,7 +54,11 @@ class advertisement(commands.Cog):
                         tnbc_wallet.save()
 
                         price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
-                        advertisement = await sync_to_async(Advertisement.objects.create)(owner=discord_user, amount=database_amount, price=price_in_integer, status=Advertisement.OPEN)
+
+                        advertisement, created = Advertisement.objects.get_or_create(owner=discord_user, price=price_in_integer, defaults={'amount': 0})
+                        advertisement.amount += database_amount
+                        advertisement.status = Advertisement.OPEN
+                        advertisement.save()
 
                         offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
                         offer_table = create_offer_table(20)
@@ -186,6 +190,7 @@ class advertisement(commands.Cog):
             tnbc_wallet.save()
 
             advertisement.status = Advertisement.CANCELLED
+            advertisement.amount = 0
             advertisement.save()
 
             offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))

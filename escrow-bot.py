@@ -22,8 +22,9 @@ from core.utils.scan_chain import match_transaction, check_confirmation, scan_ch
 from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal
 from core.models.wallets import ThenewbostonWallet
 from core.models.statistics import Statistic
-from escrow.utils import get_or_create_user_profile, post_trade_to_api
+from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
 from escrow.models.escrow import Escrow
+from escrow.models.advertisement import Advertisement
 
 # Environment Variables
 TOKEN = os.environ['CROW_DISCORD_TOKEN']
@@ -144,6 +145,8 @@ async def on_component(ctx: ComponentContext):
 
     elif button_type == "escrowcancel":
 
+        await ctx.defer(hidden=True)
+
         escrow_id = button[1]
 
         discord_user = get_or_create_discord_user(ctx.author.id)
@@ -161,8 +164,6 @@ async def on_component(ctx: ComponentContext):
                     escrow_obj.status = Escrow.CANCELLED
                     escrow_obj.save()
 
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
-
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                     embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
@@ -174,6 +175,18 @@ async def on_component(ctx: ComponentContext):
                     if conversation_channel:
                         await conversation_channel.send(embed=embed)
 
+                    sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, defaults={'amount': 0})
+                    sell_advertisement.amount += escrow_obj.amount
+                    sell_advertisement.status = Advertisement.OPEN
+                    sell_advertisement.save()
+
+                    offer_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                    offer_table = create_offer_table(20)
+
+                    async for oldMessage in offer_channel.history():
+                        await oldMessage.delete()
+
+                    await offer_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
                     await ctx.send(embed=embed, hidden=True)
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
