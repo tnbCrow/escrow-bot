@@ -17,6 +17,7 @@ from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 from escrow.models.escrow import Escrow
 from escrow.utils import get_total_balance_of_all_user
+from escrow.models.advertisement import Advertisement
 
 
 class admin(commands.Cog):
@@ -425,6 +426,39 @@ class admin(commands.Cog):
                 embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="adv_status",
+                            description="Check the status of particular advertisement.",
+                            options=[
+                                create_option(
+                                    name="advertisement_id",
+                                    description="Enter the advertisement id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def admin_adv_status(self, ctx, advertisement_id: str):
+
+        await ctx.defer(hidden=True)
+
+        if Advertisement.objects.filter(uuid_hex=advertisement_id).exists():
+
+            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
+
+            adv_owner = await self.bot.fetch_user(int(advertisement.owner.discord_id))
+
+            embed = discord.Embed(color=0xe81111)
+            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
+            embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+            embed.add_field(name="Owner", value=adv_owner.mention, inline=False)
+
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 
