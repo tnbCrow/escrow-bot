@@ -15,12 +15,11 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 django.setup()
 
 from django.conf import settings
-from django.db.models import Q, F
+from django.db.models import Q
 from asgiref.sync import sync_to_async
 
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
 from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal
-from core.models.wallets import ThenewbostonWallet
 from core.models.statistics import Statistic
 from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
 from escrow.models.escrow import Escrow
@@ -60,7 +59,6 @@ async def help_general(ctx):
     embed.add_field(name="/payment_method all", value="List all your payment methods.", inline=False)
     embed.add_field(name="/payment_method remove", value="Delete particular payment method.", inline=False)
     embed.add_field(name="/rate", value="Check the last OTC trade rate of TNBC.")
-    embed.add_field(name="/stats", value="Check TNBC price statistics.")
     embed.add_field(name="/guide buyer", value="Buyer guide for using crow bot.")
     embed.add_field(name="/guide seller", value="Seller guide for using crow bot.")
     embed.set_thumbnail(url=bot.user.avatar_url)
