@@ -72,7 +72,7 @@ class escrow(commands.Cog):
         discord_user = get_or_create_discord_user(ctx.author.id)
 
         if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE)).exists():
-            escrows = await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE))
+            escrows = (await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE))).order_by('-updated_at')[:5]
 
             embed = discord.Embed(color=0xe81111)
 
@@ -84,13 +84,14 @@ class escrow(commands.Cog):
                 embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
-                embed.set_footer(text="Use /escrow release to release the TNBC once you've received payment or /escrow cancel to cancel the escrow (never cancel escrow once you've transferred payment).")
+                embed.set_footer(text="Use /escrow release to release the TNBC once you've received payment or /escrow cancel to cancel the escrow.")
 
-                if escrow.initiator == discord_user:
-                    embed.add_field(name='Your Role', value="Seller")
+                if discord_user == escrow.successor:
+                    initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
+                    embed.add_field(name='Seller', value=f"{initiator.mention}")
                 else:
-                    embed.add_field(name='Your Role', value="Buyer")
-
+                    successor = await self.bot.fetch_user(int(escrow.successor.discord_id))
+                    embed.add_field(name='Buyer', value=f"{successor.mention}")
         else:
             embed = discord.Embed(title="Oops..", description="No active escrows found.", color=0xe81111)
 
@@ -279,7 +280,7 @@ class escrow(commands.Cog):
         discord_user = get_or_create_discord_user(ctx.author.id)
 
         if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user)).exists():
-            escrows = (await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user)))[:8]
+            escrows = (await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user))).order_by('-updated_at')[:8]
 
             embed = discord.Embed(color=0xe81111)
 

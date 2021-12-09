@@ -51,8 +51,8 @@ class admin(commands.Cog):
 
             discord_user = get_or_create_discord_user(user.id)
 
-            if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE)).exists():
-                escrows = await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user), Q(status=Escrow.OPEN) | Q(status=Escrow.DISPUTE))
+            if Escrow.objects.filter(Q(initiator=discord_user) | Q(successor=discord_user)).exists():
+                escrows = (await sync_to_async(Escrow.objects.filter)(Q(initiator=discord_user) | Q(successor=discord_user))).order_by('-updated_at')[:4]
 
                 embed = discord.Embed(color=0xe81111)
 
