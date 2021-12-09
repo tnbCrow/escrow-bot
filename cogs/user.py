@@ -200,7 +200,7 @@ class user(commands.Cog):
                        ])
     async def user_profile(self, ctx, user: discord.Member):
 
-        await ctx.defer(hidden=True)
+        await ctx.defer()
 
         discord_user = get_or_create_discord_user(user.id)
         user_profile = get_or_create_user_profile(discord_user)
@@ -210,7 +210,7 @@ class user(commands.Cog):
         embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
         embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
 
-        await ctx.send(embed=embed, hidden=True)
+        await ctx.send(embed=embed)
 
     @cog_ext.cog_subcommand(base="payment_method",
                             name="add",
@@ -341,7 +341,7 @@ class user(commands.Cog):
         embed.add_field(name="3. Discuss the payment details", value="Discuss the payment details in the private channel.", inline=False)
         embed.add_field(name="4. Send the payment", value="Send agreed payment amount using the method.", inline=False)
         embed.add_field(name="5. Wait for the seller to release escrow", value="Once the payment is received, the seller will release escrow. You'll be notified in private channel about the status of the escrow.", inline=False)
-        embed.add_field(name="Youtube Tutorial", value="[Link](https://youtu.be/yQyp6pZd2ys)")
+        embed.add_field(name="Youtube Tutorial", value="[Link]( https://youtu.be/q7Qd3Q9n1gA)")
         embed.add_field(name="Note", value="The sell orders are not open to negotiation. You can place your offer on #buy-offers if you're not happy with the available orders.", inline=False)
         await ctx.send(embed=embed, hidden=True)
 
