@@ -146,42 +146,11 @@ class advertisement(commands.Cog):
                 embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
                 embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+                embed.add_field(name='Side', value=advertisement.side)
             embed.set_footer(text="Use `/adv cancel` command cancel particular advertisement.")
 
         else:
             embed = discord.Embed(title="Oops..", description="You got no active advertisements.", color=0xe81111)
-
-        await ctx.send(embed=embed, hidden=True)
-
-    @cog_ext.cog_subcommand(base="adv",
-                            name="status",
-                            description="Check the status of particular advertisement.",
-                            options=[
-                                create_option(
-                                    name="advertisement_id",
-                                    description="Enter the advertisement id you want to check the status of.",
-                                    option_type=3,
-                                    required=True
-                                )
-                            ]
-                            )
-    async def advertisement_status(self, ctx, advertisement_id: str):
-
-        await ctx.defer(hidden=True)
-
-        discord_user = get_or_create_discord_user(ctx.author.id)
-
-        if Advertisement.objects.filter(uuid_hex=advertisement_id, owner=discord_user, status=Advertisement.OPEN).exists():
-            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
-
-            embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
-            embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
-            embed.set_footer(text="Use `/adv cancel` command cancel particular advertisement.")
-
-        else:
-            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -207,27 +176,31 @@ class advertisement(commands.Cog):
         if Advertisement.objects.filter(uuid_hex=advertisement_id, owner=discord_user, status=Advertisement.OPEN).exists():
 
             advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
+            advertisement.delete()
 
-            tnbc_wallet.locked -= advertisement.amount
-            tnbc_wallet.save()
+            if advertisement.side == Advertisement.BUY:
 
-            advertisement.status = Advertisement.CANCELLED
-            advertisement.amount = 0
-            advertisement.save()
+                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.BUY, 20)
 
-            sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-            offer_table = create_offer_table(Advertisement.SELL, 20)
+                async for oldMessage in buy_offer_channel.history():
+                    await oldMessage.delete()
 
-            async for oldMessage in sell_order_channel.history():
-                await oldMessage.delete()
+                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
-            await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+            else:
+                tnbc_wallet.locked -= advertisement.amount
+                tnbc_wallet.save()
+
+                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                async for oldMessage in sell_order_channel.history():
+                    await oldMessage.delete()
+
+                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
-            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
-            embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
-            embed.add_field(name='Status', value=advertisement.status)
             embed.set_footer(text="Use `/adv create` command create a new advertisement.")
 
         else:
