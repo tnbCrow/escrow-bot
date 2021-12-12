@@ -62,27 +62,41 @@ class agent(commands.Cog):
                 escrow_obj.remarks = remarks
                 escrow_obj.save()
 
-                ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
-                ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
+                if escrow_obj.side == Escrow.BUY:
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.amount - escrow_obj.fee, locked=F('locked') - escrow_obj.amount - escrow_obj.fee)
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount)
+
+                    buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                    buyer_profile.total_escrows += 1
+                    buyer_profile.total_tnbc_escrowed += escrow_obj.amount
+                    buyer_profile.save()
+
+                    seller_profile = get_or_create_user_profile(discord_user)
+                    seller_profile.total_escrows += 1
+                    seller_profile.total_tnbc_escrowed += escrow_obj.amount + escrow_obj.fee
+                    seller_profile.save()
+
+                else:
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(balance=F('balance') - escrow_obj.amount, locked=F('locked') - escrow_obj.amount)
+                    ThenewbostonWallet.objects.filter(user=escrow_obj.successor).update(balance=F('balance') + escrow_obj.amount - escrow_obj.fee)
+
+                    buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                    buyer_profile.total_escrows += 1
+                    buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
+                    buyer_profile.save()
+
+                    seller_profile = get_or_create_user_profile(discord_user)
+                    seller_profile.total_escrows += 1
+                    seller_profile.total_tnbc_escrowed += escrow_obj.amount
+                    seller_profile.save()
 
                 statistic, created = Statistic.objects.get_or_create(title="main")
                 statistic.total_fees_collected += escrow_obj.fee
                 statistic.save()
 
-                buyer_profile = get_or_create_user_profile(escrow_obj.successor)
-                buyer_profile.total_escrows += 1
-                buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
-                buyer_profile.save()
-
-                seller_profile = get_or_create_user_profile(escrow_obj.initiator)
-                seller_profile.total_escrows += 1
-                seller_profile.total_tnbc_escrowed += escrow_obj.amount
-                seller_profile.save()
-
                 embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
@@ -139,7 +153,11 @@ class agent(commands.Cog):
                     escrow_obj.agent = discord_user
                     escrow_obj.save()
 
-                    ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+                    if escrow_obj.side == Escrow.BUY:
+                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount - escrow_obj.fee)
+
+                    else:
+                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)

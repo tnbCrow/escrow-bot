@@ -73,6 +73,7 @@ async def help_advertisement(ctx):
     embed.add_field(name="/adv my", value="List all your active advertisements.", inline=False)
     embed.add_field(name="/adv cancel advertisement_id: ID", value="Cancel an active advertisement.", inline=False)
     embed.add_field(name="/adv buy advertisement_id: ID amount_of_tnbc: AMOUNT", value="Buy TNBC from the advertisement.", inline=False)
+    embed.add_field(name="/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT", value="Sell TNBC to the advertisement.", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -85,7 +86,7 @@ async def help_escrow(ctx):
     embed.add_field(name="/escrow release escrow_id: ESCROW_ID", value="Release TNBC to the buyer's account.", inline=False)
     embed.add_field(name="/escrow cancel escrow_id: ESCROW_ID", value="Cancel the particular escrow. Both buyer and seller needs to use the command for escrow cancellation.")
     embed.add_field(name="/escrow dispute escrow_id: ESCROW_ID", value="In the case of disagreement while trading, raise dispute and take the case to tnbcrow agent.", inline=False)
-    embed.add_field(name="/escrow history escrow_id: ESCROW_ID", value="List all of your completed escrows.", inline=False)
+    embed.add_field(name="/escrow history", value="List all of your completed escrows.", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -160,6 +161,38 @@ async def on_component(ctx: ComponentContext):
                     escrow_obj.status = Escrow.CANCELLED
                     escrow_obj.save()
 
+                    if escrow_obj.side == Escrow.BUY:
+                        buy_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.successor, price=escrow_obj.price, side=Advertisement.BUY, defaults={'amount': 0})
+                        buy_advertisement.amount += escrow_obj.amount
+                        buy_advertisement.status = Advertisement.OPEN
+                        buy_advertisement.save()
+
+                        buy_offer_channel = bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                        offer_table = create_offer_table(Advertisement.BUY, 20)
+
+                        seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
+                        seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
+                        seller_wallet.save()
+
+                        async for oldMessage in buy_offer_channel.history():
+                            await oldMessage.delete()
+
+                        await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
+                    else:
+                        sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
+                        sell_advertisement.amount += escrow_obj.amount
+                        sell_advertisement.status = Advertisement.OPEN
+                        sell_advertisement.save()
+
+                        sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                        offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                        async for oldMessage in sell_order_channel.history():
+                            await oldMessage.delete()
+
+                        await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                     embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
@@ -171,18 +204,6 @@ async def on_component(ctx: ComponentContext):
                     if conversation_channel:
                         await conversation_channel.send(embed=embed)
 
-                    sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, defaults={'amount': 0})
-                    sell_advertisement.amount += escrow_obj.amount
-                    sell_advertisement.status = Advertisement.OPEN
-                    sell_advertisement.save()
-
-                    sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                    offer_table = create_offer_table(Advertisement.SELL, 20)
-
-                    async for oldMessage in sell_order_channel.history():
-                        await oldMessage.delete()
-
-                    await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
                     await ctx.send(embed=embed, hidden=True)
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
@@ -213,37 +234,63 @@ async def on_component(ctx: ComponentContext):
 
             if escrow_obj.status == Escrow.OPEN:
 
+                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
+                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+
+                if escrow_obj.side == Escrow.BUY:
+                    seller_wallet = get_or_create_tnbc_wallet(discord_user)
+                    seller_wallet.balance -= escrow_obj.amount + escrow_obj.fee
+                    seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
+                    seller_wallet.save()
+
+                    buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
+                    buyer_wallet.balance += escrow_obj.amount
+                    buyer_wallet.save()
+
+                    buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                    buyer_profile.total_escrows += 1
+                    buyer_profile.total_tnbc_escrowed += escrow_obj.amount
+                    buyer_profile.save()
+
+                    seller_profile = get_or_create_user_profile(discord_user)
+                    seller_profile.total_escrows += 1
+                    seller_profile.total_tnbc_escrowed += escrow_obj.amount + escrow_obj.fee
+                    seller_profile.save()
+
+                    embed.add_field(name='Seller Paid', value=f"{convert_to_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+
+                else:
+                    seller_wallet = get_or_create_tnbc_wallet(discord_user)
+                    seller_wallet.balance -= escrow_obj.amount
+                    seller_wallet.locked -= escrow_obj.amount
+                    seller_wallet.save()
+
+                    buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
+                    buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
+                    buyer_wallet.save()
+
+                    buyer_profile = get_or_create_user_profile(escrow_obj.successor)
+                    buyer_profile.total_escrows += 1
+                    buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
+                    buyer_profile.save()
+
+                    seller_profile = get_or_create_user_profile(discord_user)
+                    seller_profile.total_escrows += 1
+                    seller_profile.total_tnbc_escrowed += escrow_obj.amount
+                    seller_profile.save()
+
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+
                 escrow_obj.status = Escrow.COMPLETED
                 escrow_obj.save()
-
-                seller_wallet = get_or_create_tnbc_wallet(discord_user)
-                seller_wallet.balance -= escrow_obj.amount
-                seller_wallet.locked -= escrow_obj.amount
-                seller_wallet.save()
-
-                buyer_wallet = get_or_create_tnbc_wallet(escrow_obj.successor)
-                buyer_wallet.balance += escrow_obj.amount - escrow_obj.fee
-                buyer_wallet.save()
 
                 statistic, created = Statistic.objects.get_or_create(title="main")
                 statistic.total_fees_collected += escrow_obj.fee
                 statistic.save()
 
-                buyer_profile = get_or_create_user_profile(escrow_obj.successor)
-                buyer_profile.total_escrows += 1
-                buyer_profile.total_tnbc_escrowed += escrow_obj.amount - escrow_obj.fee
-                buyer_profile.save()
-
-                seller_profile = get_or_create_user_profile(discord_user)
-                seller_profile.total_escrows += 1
-                seller_profile.total_tnbc_escrowed += escrow_obj.amount
-                seller_profile.save()
-
-                embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
-                embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
 

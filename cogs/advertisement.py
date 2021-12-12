@@ -58,14 +58,14 @@ class advertisement(commands.Cog):
 
         if PaymentMethod.objects.filter(user=discord_user).exists():
 
-            if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
+            if settings.MIN_TNBC_ALLOWED <= amount_of_tnbc <= 500000:
 
-                if 0 < price_per_tnbc < 100000:
+                if 0 < price_per_tnbc <= 100:
 
                     database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
                     price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
 
-                    if order_type == "SELL":
+                    if order_type == Advertisement.SELL:
 
                         if convert_to_int(tnbc_wallet.get_available_balance()) >= amount_of_tnbc:
 
@@ -114,11 +114,11 @@ class advertisement(commands.Cog):
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
-                                          description="The price can not be less than 0.0 and more than 100,000.",
+                                          description="The price can not be less than 0.0 and more than 100.",
                                           color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!",
-                                      description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} TNBC.",
+                                      description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} TNBC and more than 500,000 TNBC.",
                                       color=0xe81111)
         else:
             embed = discord.Embed(title="No Payment Method Set.",
@@ -138,7 +138,7 @@ class advertisement(commands.Cog):
 
         if Advertisement.objects.filter(status=Advertisement.OPEN, owner=discord_user).exists():
 
-            advertisements = (await sync_to_async(Advertisement.objects.filter)(status=Advertisement.OPEN, owner=discord_user))[:4]
+            advertisements = (await sync_to_async(Advertisement.objects.filter)(status=Advertisement.OPEN, owner=discord_user)).order_by('-updated_at')[:4]
 
             embed = discord.Embed(color=0xe81111)
 
@@ -232,7 +232,7 @@ class advertisement(commands.Cog):
 
         buyer_discord_user = get_or_create_discord_user(ctx.author.id)
 
-        if Advertisement.objects.filter(uuid_hex=advertisement_id, status=Advertisement.OPEN).exists():
+        if Advertisement.objects.filter(uuid_hex=advertisement_id, status=Advertisement.OPEN, side=Advertisement.SELL).exists():
 
             advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
 
@@ -279,6 +279,7 @@ class advertisement(commands.Cog):
                                                                                 price=advertisement.price,
                                                                                 initiator=advertisement.owner,
                                                                                 successor=buyer_discord_user,
+                                                                                side=Escrow.SELL,
                                                                                 conversation_channel_id=trade_chat_channel.id,
                                                                                 status=Escrow.OPEN)
                         embed = discord.Embed(title="Success.", description="", color=0xe81111)
@@ -309,7 +310,122 @@ class advertisement(commands.Cog):
                 embed = discord.Embed(title="Error!", description="You can not buy TNBC from your own advertisement.", color=0xe81111)
 
         else:
-            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+            embed = discord.Embed(title="404!", description=f"Sell advertisement with id {advertisement_id} does not exist.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="adv",
+                            name="sell",
+                            description="Buy TNBC to the advertisement.",
+                            options=[
+                                create_option(
+                                    name="advertisement_id",
+                                    description="ID of the advertisement you want to sell.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="amount_of_tnbc",
+                                    description="Amount of TNBC you'd like to sell.",
+                                    option_type=4,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def advertisement_sell(self, ctx, advertisement_id: str, amount_of_tnbc: int):
+
+        await ctx.defer(hidden=True)
+
+        seller_discord_user = get_or_create_discord_user(ctx.author.id)
+        seller_tnbc_wallet = get_or_create_tnbc_wallet(seller_discord_user)
+
+        if Advertisement.objects.filter(uuid_hex=advertisement_id, status=Advertisement.OPEN, side=Advertisement.BUY).exists():
+
+            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
+
+            if seller_discord_user != advertisement.owner:
+
+                if amount_of_tnbc >= settings.MIN_TNBC_ALLOWED:
+
+                    database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+                    integer_fee = amount_of_tnbc - int(amount_of_tnbc * (100 - settings.CROW_BOT_FEE) / 100)
+                    database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
+
+                    fee_plus_amount = database_amount + database_fee
+
+                    if seller_tnbc_wallet.get_available_balance() >= fee_plus_amount:
+
+                        if advertisement.amount >= database_amount:
+                            advertisement.amount -= database_amount
+                            if advertisement.amount == 0:
+                                advertisement.status = Advertisement.COMPLETED
+                            advertisement.save()
+
+                            guild = self.bot.get_guild(int(settings.GUILD_ID))
+                            trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
+
+                            buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                            offer_table = create_offer_table(Advertisement.BUY, 20)
+
+                            async for oldMessage in buy_offer_channel.history():
+                                await oldMessage.delete()
+
+                            await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
+                            buyer = await self.bot.fetch_user(int(advertisement.owner.discord_id))
+                            agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))
+
+                            overwrites = {
+                                guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                                agent_role: discord.PermissionOverwrite(read_messages=True),
+                                ctx.author: discord.PermissionOverwrite(read_messages=True),
+                                buyer: discord.PermissionOverwrite(read_messages=True)
+                            }
+
+                            trade_chat_channel = await guild.create_text_channel(f"{ctx.author.name}-{buyer.name}", overwrites=overwrites, category=trade_chat_category)
+
+                            escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
+                                                                                    fee=database_fee,
+                                                                                    price=advertisement.price,
+                                                                                    initiator=seller_discord_user,
+                                                                                    successor=advertisement.owner,
+                                                                                    side=Escrow.BUY,
+                                                                                    conversation_channel_id=trade_chat_channel.id,
+                                                                                    status=Escrow.OPEN)
+                            seller_tnbc_wallet.locked += fee_plus_amount
+                            seller_tnbc_wallet.save()
+
+                            embed = discord.Embed(title="Success.", description="", color=0xe81111)
+                            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                            embed.add_field(name='Amount', value=amount_of_tnbc)
+                            embed.add_field(name='Seller Pays', value=amount_of_tnbc + integer_fee)
+                            embed.add_field(name='Buyer Receives', value=f"{amount_of_tnbc}")
+                            embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                            embed.add_field(name='Total (USDT)', value=convert_to_decimal(amount_of_tnbc * escrow_obj.price))
+                            embed.set_footer(text="Use /escrow all command list all active escrows.")
+
+                            payment_methods = PaymentMethod.objects.filter(user=advertisement.owner)
+
+                            payment_method_message = ""
+
+                            for payment_method in payment_methods:
+                                payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
+
+                            await trade_chat_channel.send(f"{buyer.mention}, {ctx.author.mention} is selling {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
+
+                        else:
+                            embed = discord.Embed(title="Error!", description=f"Advertisement only has {convert_to_int(advertisement.amount)} TNBC available to sell.", color=0xe81111)
+                    else:
+                        embed = discord.Embed(title="Error!", description=f"You only have {convert_to_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {convert_to_int(fee_plus_amount)} TNBC (including fees).", color=0xe81111)
+                else:
+                    embed = discord.Embed(title="Error!",
+                                          description=f"You can not sell less than {settings.MIN_TNBC_ALLOWED} TNBC to an advertisement.",
+                                          color=0xe81111)
+            else:
+                embed = discord.Embed(title="Error!", description="You can not sell TNBC to your own advertisement.", color=0xe81111)
+
+        else:
+            embed = discord.Embed(title="404!", description=f"Buy advertisement with id {advertisement_id} does not exist.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 

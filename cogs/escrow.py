@@ -80,8 +80,14 @@ class escrow(commands.Cog):
 
                 embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
-                embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
+
+                if escrow.side == Escrow.BUY:
+                    embed.add_field(name='Seller Pays', value=f"{convert_to_int(escrow.amount + escrow.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount)} TNBC")
+                else:
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
+
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
                 embed.set_footer(text="Use /escrow release to release the TNBC once you've received payment or /escrow cancel to cancel the escrow.")
@@ -253,8 +259,14 @@ class escrow(commands.Cog):
                 embed = discord.Embed(title="Escrow Disputed Successfully", description="", color=0xe81111)
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+
+                if escrow.side == Escrow.BUY:
+                    embed.add_field(name='Seller Pays', value=f"{convert_to_int(escrow.amount + escrow.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount)} TNBC")
+                else:
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
+
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
                 embed.add_field(name='Buyer', value=f"{successor.mention}")

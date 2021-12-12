@@ -18,6 +18,9 @@ class Escrow(models.Model):
     INITIATOR = 'INITIATOR'
     SUCCESSOR = 'SUCCESSOR'
 
+    BUY = 'BUY'
+    SELL = 'SELL'
+
     settled_towards_choices = [
         (INITIATOR, 'Initiator'),
         (SUCCESSOR, 'Successor')
@@ -32,6 +35,11 @@ class Escrow(models.Model):
         (ADMIN_CANCELLED, 'Admin Cancelled')
     ]
 
+    side_choices = [
+        (BUY, 'Buy'),
+        (SELL, 'Sell')
+    ]
+
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     uuid_hex = models.CharField(max_length=255, unique=True)
 
@@ -43,6 +51,7 @@ class Escrow(models.Model):
     successor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="successor")
 
     status = models.CharField(max_length=255, choices=status_choices)
+    side = models.CharField(max_length=255, choices=side_choices)
 
     conversation_channel_id = models.CharField(max_length=255)
 
