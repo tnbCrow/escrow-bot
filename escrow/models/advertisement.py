@@ -12,10 +12,18 @@ class Advertisement(models.Model):
     COMPLETED = 'COMPLETED'
     CANCELLED = 'CANCELLED'
 
+    BUY = 'BUY'
+    SELL = 'SELL'
+
     status_choices = [
         (OPEN, 'Open'),
         (COMPLETED, 'Completed'),
         (CANCELLED, 'Cancelled')
+    ]
+
+    side_choices = [
+        (BUY, 'Buy'),
+        (SELL, 'Sell')
     ]
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
@@ -27,6 +35,7 @@ class Advertisement(models.Model):
     price = models.BigIntegerField()
 
     status = models.CharField(max_length=255, choices=status_choices)
+    side = models.CharField(max_length=255, choices=side_choices)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -178,13 +178,13 @@ async def on_component(ctx: ComponentContext):
                     sell_advertisement.status = Advertisement.OPEN
                     sell_advertisement.save()
 
-                    offer_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                    offer_table = create_offer_table(20)
+                    sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                    offer_table = create_offer_table(Advertisement.SELL, 20)
 
-                    async for oldMessage in offer_channel.history():
+                    async for oldMessage in sell_order_channel.history():
                         await oldMessage.delete()
 
-                    await offer_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                    await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
                     await ctx.send(embed=embed, hidden=True)
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)

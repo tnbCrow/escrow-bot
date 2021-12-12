@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_choice
 from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_int
 from django.conf import settings
 from asgiref.sync import sync_to_async
@@ -20,6 +20,22 @@ class advertisement(commands.Cog):
                             description="Create a new advertisement.",
                             options=[
                                 create_option(
+                                    name="order_type",
+                                    description="Type of order you want to create.",
+                                    option_type=3,
+                                    required=True,
+                                    choices=[
+                                        create_choice(
+                                            name="Buying",
+                                            value="BUY"
+                                        ),
+                                        create_choice(
+                                            name="Selling",
+                                            value="SELL"
+                                        )
+                                    ]
+                                ),
+                                create_option(
                                     name="amount_of_tnbc",
                                     description="Enter TNBC you want to put in for advertisement.",
                                     option_type=4,
@@ -33,7 +49,7 @@ class advertisement(commands.Cog):
                                 )
                             ]
                             )
-    async def advertisement_create(self, ctx, amount_of_tnbc: int, price_per_tnbc: float):
+    async def advertisement_create(self, ctx, order_type: str, amount_of_tnbc: int, price_per_tnbc: float):
 
         await ctx.defer(hidden=True)
 
@@ -46,37 +62,55 @@ class advertisement(commands.Cog):
 
                 if 0 < price_per_tnbc < 100000:
 
-                    if convert_to_int(tnbc_wallet.get_available_balance()) >= amount_of_tnbc:
+                    database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+                    price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
 
-                        database_amount = amount_of_tnbc * settings.TNBC_MULTIPLICATION_FACTOR
+                    if order_type == "SELL":
 
-                        tnbc_wallet.locked += database_amount
-                        tnbc_wallet.save()
+                        if convert_to_int(tnbc_wallet.get_available_balance()) >= amount_of_tnbc:
 
-                        price_in_integer = int(price_per_tnbc * settings.TNBC_MULTIPLICATION_FACTOR)
+                            tnbc_wallet.locked += database_amount
+                            tnbc_wallet.save()
 
-                        advertisement, created = Advertisement.objects.get_or_create(owner=discord_user, price=price_in_integer, defaults={'amount': 0})
+                            advertisement, created = Advertisement.objects.get_or_create(owner=discord_user, price=price_in_integer, side=Advertisement.SELL, defaults={'amount': 0})
+                            advertisement.amount += database_amount
+                            advertisement.status = Advertisement.OPEN
+                            advertisement.save()
+
+                            sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                            offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                            async for oldMessage in sell_order_channel.history():
+                                await oldMessage.delete()
+
+                            await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
+                            embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
+                            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+                            embed.add_field(name='Amount', value=amount_of_tnbc)
+                            embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+                            embed.set_footer(text="Use /adv all command list all your active advertisements.")
+
+                        else:
+                            embed = discord.Embed(title="Inadequate Funds!",
+                                                  description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance())} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                                                  color=0xe81111)
+                    else:
+
+                        advertisement, created = Advertisement.objects.get_or_create(owner=discord_user, price=price_in_integer, side=Advertisement.BUY, defaults={'amount': 0})
                         advertisement.amount += database_amount
                         advertisement.status = Advertisement.OPEN
                         advertisement.save()
 
-                        offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offer_table = create_offer_table(20)
+                        buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                        offer_table = create_offer_table(Advertisement.BUY, 20)
 
-                        async for oldMessage in offer_channel.history():
+                        async for oldMessage in buy_offer_channel.history():
                             await oldMessage.delete()
+                        await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
-                        await offer_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
-
-                        embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
-                        embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-                        embed.add_field(name='Amount', value=amount_of_tnbc)
-                        embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
-                        embed.set_footer(text="Use /adv all command list all your active advertisements.")
-
-                    else:
-                        embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance())} TNBC out of {amount_of_tnbc} TNBC available. \n Use `/deposit tnbc` to deposit TNBC!!",
+                        embed = discord.Embed(title="Yaay!",
+                                              description="Buy order triggered.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
@@ -100,7 +134,7 @@ class advertisement(commands.Cog):
 
         await ctx.defer(hidden=True)
 
-        offer_table = create_offer_table(20)
+        offer_table = create_offer_table(Advertisement.SELL, 20)
 
         await ctx.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```", hidden=True)
 
@@ -193,13 +227,13 @@ class advertisement(commands.Cog):
             advertisement.amount = 0
             advertisement.save()
 
-            offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-            offer_table = create_offer_table(20)
+            sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+            offer_table = create_offer_table(Advertisement.SELL, 20)
 
-            async for oldMessage in offer_channel.history():
+            async for oldMessage in sell_order_channel.history():
                 await oldMessage.delete()
 
-            await offer_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+            await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
@@ -256,13 +290,13 @@ class advertisement(commands.Cog):
                         guild = self.bot.get_guild(int(settings.GUILD_ID))
                         trade_chat_category = discord.utils.get(guild.categories, id=int(settings.TRADE_CHAT_CATEGORY_ID))
 
-                        offer_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offer_table = create_offer_table(20)
+                        sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                        offer_table = create_offer_table(Advertisement.SELL, 20)
 
-                        async for oldMessage in offer_channel.history():
+                        async for oldMessage in sell_order_channel.history():
                             await oldMessage.delete()
 
-                        await offer_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                        await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
                         seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
                         agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))

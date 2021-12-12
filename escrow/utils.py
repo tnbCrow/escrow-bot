@@ -16,9 +16,12 @@ def get_or_create_user_profile(user):
     return obj
 
 
-def create_offer_table(number_of_data):
+def create_offer_table(side, number_of_data):
 
-    advertisements = Advertisement.objects.filter(status=Advertisement.OPEN).order_by('price')[:number_of_data]
+    if side == Advertisement.BUY:
+        advertisements = Advertisement.objects.filter(status=Advertisement.OPEN, side=Advertisement.BUY).order_by('-price')[:number_of_data]
+    else:
+        advertisements = Advertisement.objects.filter(status=Advertisement.OPEN, side=Advertisement.SELL).order_by('price')[:number_of_data]
 
     message = ""
 
