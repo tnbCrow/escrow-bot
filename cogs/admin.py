@@ -16,7 +16,7 @@ from core.utils.shortcuts import convert_to_int, get_or_create_discord_user, get
 from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 from escrow.models.escrow import Escrow
-from escrow.utils import get_total_balance_of_all_user
+from escrow.utils import get_total_balance_of_all_user, post_trade_to_api
 from escrow.models.advertisement import Advertisement
 
 
@@ -459,6 +459,48 @@ class admin(commands.Cog):
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="add_verified_trade",
+                            description="Add verified trade.",
+                            options=[
+                                create_option(
+                                    name="amount",
+                                    description="Amount of TNBC that was traded.",
+                                    option_type=4,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="price",
+                                    description="The rate at which it was traded for.",
+                                    option_type=10,
+                                    required=True
+                                ),
+                                create_option(
+                                    name="payment_method",
+                                    description="The payment method that was used to carry out trade.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def admin_add_verified_trade(self, ctx, amount: int, price: float, payment_method: str):
+
+        await ctx.defer(hidden=True)
+
+        recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+
+        success = post_trade_to_api(amount, price * 10000)
+
+        if success:
+            comma_seperated_amount = "{:,}".format(amount)
+            await recent_trade_channel.send(f"Verified Trade: {comma_seperated_amount} TNBC at {price} each. Payment Method: {payment_method}")
+            await ctx.guild.me.edit(nick=f"Price: {price} USDC")
+            embed = discord.Embed(title="Success!", description="Posted trade successfully.", color=0xe81111)
+        else:
+            embed = discord.Embed(title="Error!", description="Could not post the trade to API.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 

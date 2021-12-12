@@ -91,7 +91,8 @@ class agent(commands.Cog):
 
                 recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-                await recent_trade_channel.send(f"Recent Trade: {convert_to_int(escrow_obj.amount)} TNBC at ${convert_to_decimal(escrow_obj.price)} each")
+                comma_seperated_amount = "{:,}".format(convert_to_int(escrow_obj.amount))
+                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_amount} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
                 await ctx.guild.me.edit(nick=f"Price: {convert_to_decimal(escrow_obj.price)}")

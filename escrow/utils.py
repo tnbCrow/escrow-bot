@@ -52,7 +52,11 @@ def post_trade_to_api(amount, price):
         'Content-Type': 'application/json'
     }
 
-    requests.post('https://tnbcrow.pythonanywhere.com/recent-trades', json=data, headers=headers)
+    r = requests.post('https://tnbcrow.pythonanywhere.com/recent-trades', json=data, headers=headers)
+
+    if r.status_code == 200:
+        return True
+    return False
 
 
 def get_total_balance_of_all_user():
