@@ -70,7 +70,6 @@ async def help_advertisement(ctx):
     await ctx.defer(hidden=True)
     embed = discord.Embed(title="Advertisement Related Commands", color=0xe81111)
     embed.add_field(name="/adv create amount: AMOUNT price: PRICE", value="Create a new advertisement.", inline=False)
-    embed.add_field(name="/adv all", value="List all active advertisements.", inline=False)
     embed.add_field(name="/adv my", value="List all your active advertisements.", inline=False)
     embed.add_field(name="/adv cancel advertisement_id: ID", value="Cancel an active advertisement.", inline=False)
     embed.add_field(name="/adv status advertisement_id: ID", value="Check the status of the particular advertisement.", inline=False)

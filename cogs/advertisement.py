@@ -89,7 +89,7 @@ class advertisement(commands.Cog):
                             embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
                             embed.add_field(name='Amount', value=amount_of_tnbc)
                             embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
-                            embed.set_footer(text="Use /adv all command list all your active advertisements.")
+                            embed.set_footer(text="Use /adv my command list all your active advertisements.")
 
                         else:
                             embed = discord.Embed(title="Inadequate Funds!",
@@ -125,18 +125,6 @@ class advertisement(commands.Cog):
                                   description="Please use the command `/payment_method add` to add the payment method you'd like to receive money in.",
                                   color=0xe81111)
         await ctx.send(embed=embed, hidden=True)
-
-    @cog_ext.cog_subcommand(base="adv",
-                            name="all",
-                            description="List all the active advertisements.",
-                            )
-    async def advertisement_all(self, ctx):
-
-        await ctx.defer(hidden=True)
-
-        offer_table = create_offer_table(Advertisement.SELL, 20)
-
-        await ctx.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```", hidden=True)
 
     @cog_ext.cog_subcommand(base="adv",
                             name="my",
