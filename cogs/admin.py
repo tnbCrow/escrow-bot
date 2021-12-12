@@ -16,7 +16,7 @@ from core.utils.shortcuts import convert_to_int, get_or_create_discord_user, get
 from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 from escrow.models.escrow import Escrow
-from escrow.utils import get_total_balance_of_all_user, post_trade_to_api
+from escrow.utils import get_total_balance_of_all_user, post_trade_to_api, create_offer_table
 from escrow.models.advertisement import Advertisement
 
 
@@ -445,20 +445,24 @@ class admin(commands.Cog):
 
         await ctx.defer(hidden=True)
 
-        if Advertisement.objects.filter(uuid_hex=advertisement_id).exists():
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
-            advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
+            if Advertisement.objects.filter(uuid_hex=advertisement_id).exists():
 
-            adv_owner = await self.bot.fetch_user(int(advertisement.owner.discord_id))
+                advertisement = await sync_to_async(Advertisement.objects.get)(uuid_hex=advertisement_id)
 
-            embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
-            embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
-            embed.add_field(name="Owner", value=adv_owner.mention, inline=False)
+                adv_owner = await self.bot.fetch_user(int(advertisement.owner.discord_id))
 
+                embed = discord.Embed(color=0xe81111)
+                embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
+                embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+                embed.add_field(name="Owner", value=adv_owner.mention, inline=False)
+
+            else:
+                embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
         else:
-            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -490,17 +494,55 @@ class admin(commands.Cog):
 
         await ctx.defer(hidden=True)
 
-        recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
-        success = post_trade_to_api(amount, price * 10000)
+            recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-        if success:
-            comma_seperated_amount = "{:,}".format(amount)
-            await recent_trade_channel.send(f"Verified Trade: {comma_seperated_amount} TNBC at {price} each. Payment Method: {payment_method}")
-            await ctx.guild.me.edit(nick=f"Price: {price} USDC")
-            embed = discord.Embed(title="Success!", description="Posted trade successfully.", color=0xe81111)
+            success = post_trade_to_api(amount, price * 10000)
+
+            if success:
+                comma_seperated_amount = "{:,}".format(amount)
+                await recent_trade_channel.send(f"Verified Trade: {comma_seperated_amount} TNBC at {price} each. Payment Method: {payment_method}")
+                await ctx.guild.me.edit(nick=f"Price: {price} USDC")
+                embed = discord.Embed(title="Success!", description="Posted trade successfully.", color=0xe81111)
+            else:
+                embed = discord.Embed(title="Error!", description="Could not post the trade to API.", color=0xe81111)
         else:
-            embed = discord.Embed(title="Error!", description="Could not post the trade to API.", color=0xe81111)
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="admin",
+                            name="remove_buy_adv",
+                            description="The buy advertisement that you want to remove.",
+                            options=[
+                                create_option(
+                                    name="advertisement_id",
+                                    description="Enter the advertisement id you want to check the status of.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def admin_remove_buy_adv(self, ctx, advertisement_id: str):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+
+            if Advertisement.objects.filter(uuid_hex=advertisement_id, side=Advertisement.BUY).exists():
+                Advertisement.objects.filter(uuid_hex=advertisement_id).delete()
+                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.BUY, 20)
+
+                async for oldMessage in buy_offer_channel.history():
+                    await oldMessage.delete()
+                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                embed = discord.Embed(title="Success!", description="Advertisement removed successfully.", color=0xe81111)
+            else:
+                embed = discord.Embed(title="Error!", description="The buy advertisement your're tryig to delete does not exist.", color=0xe81111)
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 

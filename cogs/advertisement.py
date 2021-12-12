@@ -110,7 +110,7 @@ class advertisement(commands.Cog):
                         await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
                         embed = discord.Embed(title="Yaay!",
-                                              description="Buy order triggered.",
+                                              description="Buy order created successfully. Use the command `/adv cancel` to remove the advertisement.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
