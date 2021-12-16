@@ -260,12 +260,12 @@ class escrow(commands.Cog):
                 embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
 
-                if escrow.side == Escrow.BUY:
-                    embed.add_field(name='Seller Pays', value=f"{convert_to_int(escrow.amount + escrow.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount)} TNBC")
+                if escrow_obj.side == Escrow.BUY:
+                    embed.add_field(name='Seller Pays', value=f"{convert_to_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
                 else:
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
 
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Seller', value=f"{initiator.mention}")

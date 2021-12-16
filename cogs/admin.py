@@ -546,6 +546,27 @@ class admin(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
+    @cog_ext.cog_subcommand(base="admin",
+                            name="commands",
+                            description="List of all admin commands.")
+    async def admin_commands(self, ctx):
+
+        await ctx.defer(hidden=True)
+
+        if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
+            embed = discord.Embed(color=0xe81111)
+            embed.add_field(name='/admin balance user: USER', value=f"Check the balance statistics of particular user.", inline=False)
+            embed.add_field(name='/admin escrows user: USER', value=f"Check escrows of particular user.", inline=False)
+            embed.add_field(name='/admin escrow_history', value=f"Check the escrow history of the bot.", inline=False)
+            embed.add_field(name='/admin stats', value=f"Check the statistics of bot.", inline=False)
+            embed.add_field(name='/admin transactions_unconfirmed', value=f"Check all unconfirmed transactions.", inline=False)
+            embed.add_field(name='/admin deposit user: USER', value=f"Check unconfirmed transaction to user.", inline=False)
+            embed.add_field(name='/admin adv_status advertisement_id: ID', value=f"Check all advertisement details.", inline=False)
+            embed.add_field(name='/admin add_verified_trade amount: AMOUNT price: PRICE payment_method: METHOD', value=f"Add a verifed trade.", inline=False)
+            embed.add_field(name='/admin remove_buy_adv advertisement_id: ID', value=f"Delete a buy advertisement.", inline=False)
+        else:
+            embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
+        await ctx.send(embed=embed, hidden=True)
 
 def setup(bot):
     bot.add_cog(admin(bot))
