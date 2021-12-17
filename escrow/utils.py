@@ -57,7 +57,7 @@ def post_trade_to_api(amount, price):
 
     r = requests.post('https://tnbcrow.pythonanywhere.com/recent-trades', json=data, headers=headers)
 
-    if r.status_code == 200:
+    if r.status_code == 201:
         return True
     return False
 
