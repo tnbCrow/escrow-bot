@@ -498,7 +498,7 @@ class admin(commands.Cog):
 
             recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-            success = post_trade_to_api(amount, price * 10000)
+            success = post_trade_to_api(amount, price * settings.TNBC_MULTIPLICATION_FACTOR)
 
             if success:
                 comma_seperated_amount = "{:,}".format(amount)
@@ -555,18 +555,19 @@ class admin(commands.Cog):
 
         if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
             embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='/admin balance user: USER', value=f"Check the balance statistics of particular user.", inline=False)
-            embed.add_field(name='/admin escrows user: USER', value=f"Check escrows of particular user.", inline=False)
-            embed.add_field(name='/admin escrow_history', value=f"Check the escrow history of the bot.", inline=False)
-            embed.add_field(name='/admin stats', value=f"Check the statistics of bot.", inline=False)
-            embed.add_field(name='/admin transactions_unconfirmed', value=f"Check all unconfirmed transactions.", inline=False)
-            embed.add_field(name='/admin deposit user: USER', value=f"Check unconfirmed transaction to user.", inline=False)
-            embed.add_field(name='/admin adv_status advertisement_id: ID', value=f"Check all advertisement details.", inline=False)
-            embed.add_field(name='/admin add_verified_trade amount: AMOUNT price: PRICE payment_method: METHOD', value=f"Add a verifed trade.", inline=False)
-            embed.add_field(name='/admin remove_buy_adv advertisement_id: ID', value=f"Delete a buy advertisement.", inline=False)
+            embed.add_field(name='/admin balance user: USER', value="Check the balance statistics of particular user.", inline=False)
+            embed.add_field(name='/admin escrows user: USER', value="Check escrows of particular user.", inline=False)
+            embed.add_field(name='/admin escrow_history', value="Check the escrow history of the bot.", inline=False)
+            embed.add_field(name='/admin stats', value="Check the statistics of bot.", inline=False)
+            embed.add_field(name='/admin transactions_unconfirmed', value="Check all unconfirmed transactions.", inline=False)
+            embed.add_field(name='/admin deposit user: USER', value="Check unconfirmed transaction to user.", inline=False)
+            embed.add_field(name='/admin adv_status advertisement_id: ID', value="Check all advertisement details.", inline=False)
+            embed.add_field(name='/admin add_verified_trade amount: AMOUNT price: PRICE payment_method: METHOD', value="Add a verifed trade.", inline=False)
+            embed.add_field(name='/admin remove_buy_adv advertisement_id: ID', value="Delete a buy advertisement.", inline=False)
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
         await ctx.send(embed=embed, hidden=True)
+
 
 def setup(bot):
     bot.add_cog(admin(bot))
