@@ -498,7 +498,7 @@ class admin(commands.Cog):
 
             recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-            success = post_trade_to_api(amount, price * settings.TNBC_MULTIPLICATION_FACTOR)
+            success, message = post_trade_to_api(amount, price * settings.TNBC_MULTIPLICATION_FACTOR)
 
             if success:
                 comma_seperated_amount = "{:,}".format(amount)
@@ -506,7 +506,7 @@ class admin(commands.Cog):
                 await ctx.guild.me.edit(nick=f"Price: {price} USDC")
                 embed = discord.Embed(title="Success!", description="Posted trade successfully.", color=0xe81111)
             else:
-                embed = discord.Embed(title="Error!", description="Could not post the trade to API.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description=f"Could not post the trade to API. {message}", color=0xe81111)
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
