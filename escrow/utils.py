@@ -43,7 +43,7 @@ def create_offer_table(side, number_of_data):
 
 def post_trade_to_api(amount, price):
 
-    price_for_api = price / 10000
+    price_for_api = int(price / 10000)
 
     data = {
         'amount': amount,
