@@ -7,4 +7,4 @@ class AdvertisementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Advertisement
-        fields = ('uuid_hex', 'amount', 'price')
+        fields = ('uuid_hex', 'amount', 'price', 'side')
