@@ -14,9 +14,10 @@ from core.models.transactions import Transaction
 from core.models.statistics import Statistic
 from core.models.users import UserTransactionHistory
 from core.utils.shortcuts import get_wallet_balance
+from escrow.models.advertisement import Advertisement
 
 from escrow.models.payment_method import PaymentMethod
-from escrow.utils import get_or_create_user_profile
+from escrow.utils import get_or_create_user_profile, create_offer_table
 
 
 class user(commands.Cog):
@@ -254,6 +255,25 @@ class user(commands.Cog):
             embed.add_field(name="Conditions", value=conditions, inline=False)
             embed.set_footer(text="Use /payment_method all command to list all your active payment methods.")
 
+            if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
+
+                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.BUY, 20)
+
+                async for oldMessage in buy_offer_channel.history():
+                    await oldMessage.delete()
+                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
+            if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
+
+                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                async for oldMessage in sell_order_channel.history():
+                    await oldMessage.delete()
+
+                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
         else:
             embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
 
@@ -306,6 +326,24 @@ class user(commands.Cog):
         if PaymentMethod.objects.filter(user=discord_user, uuid_hex=payment_method_id).exists():
             PaymentMethod.objects.filter(user=discord_user, uuid_hex=payment_method_id).delete()
             embed = discord.Embed(title="Success", description="Payment method deleted successfully.", color=0xe81111)
+
+            if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
+
+                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.BUY, 20)
+
+                async for oldMessage in buy_offer_channel.history():
+                    await oldMessage.delete()
+                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+
+            if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
+
+                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                async for oldMessage in sell_order_channel.history():
+                    await oldMessage.delete()
+                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
