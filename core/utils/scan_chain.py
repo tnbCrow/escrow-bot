@@ -20,29 +20,29 @@ def check_confirmation():
     for txs in waiting_confirmations_txs:
 
         try:
-            main_bank_confirmation = requests.get(f"http://{settings.BANK_IP}/confirmation_blocks?block=&block__signature={txs.signature}&format=json").json()
-            keysign_bank_confirmation = requests.get(f"http://{settings.KEYSIGN_BANK_IP}/confirmation_blocks?block=&block__signature={txs.signature}&format=json").json()
+            r = requests.get(f"http://{settings.BANK_IP}/confirmation_blocks?block={txs.block}").json()
 
         except requests.exceptions.RequestException:
             return False
 
-        if int(main_bank_confirmation['count']) > 0 or int(keysign_bank_confirmation['count']):
-            txs.total_confirmations = 1
-            txs.confirmation_status = Transaction.CONFIRMED
-            txs.save()
+        if 'count' in r:
+            if int(r['count']) > 0:
+                txs.total_confirmations = 1
+                txs.confirmation_status = Transaction.CONFIRMED
+                txs.save()
 
-            if txs.direction == Transaction.INCOMING:
+                if txs.direction == Transaction.INCOMING:
 
-                lower_case_memo = txs.memo.lower()
+                    lower_case_memo = txs.memo.lower()
 
-                if lower_case_memo != "internal":
+                    if lower_case_memo != "internal":
+                        statistics, created = Statistic.objects.get_or_create(title="main")
+                        statistics.total_balance += txs.amount
+                        statistics.save()
+                else:
                     statistics, created = Statistic.objects.get_or_create(title="main")
-                    statistics.total_balance += txs.amount
+                    statistics.total_balance -= txs.amount - settings.TNBC_TRANSACTION_FEE
                     statistics.save()
-            else:
-                statistics, created = Statistic.objects.get_or_create(title="main")
-                statistics.total_balance -= txs.amount - settings.TNBC_TRANSACTION_FEE
-                statistics.save()
 
 
 def scan_chain():

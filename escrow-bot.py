@@ -130,6 +130,7 @@ async def on_component(ctx: ComponentContext):
         embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
         embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
         embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+        embed.add_field(name='Deposit did not come through?', value="Leave a message on #help")
         embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chainscan", style=ButtonStyle.green, label="Check Again"))])
