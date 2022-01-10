@@ -10,10 +10,12 @@ from django.db.models import Q, F
 from asgiref.sync import sync_to_async
 
 from escrow.models.escrow import Escrow
-from escrow.utils import get_or_create_user_profile, post_trade_to_api
+from escrow.models.advertisement import Advertisement
+from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
+
 from core.utils.shortcuts import convert_to_int, convert_to_decimal
 from core.models.wallets import ThenewbostonWallet
-from core.utils.shortcuts import get_or_create_discord_user
+from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet
 from core.models.statistics import Statistic
 
 
@@ -154,10 +156,36 @@ class agent(commands.Cog):
                     escrow_obj.save()
 
                     if escrow_obj.side == Escrow.BUY:
-                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount - escrow_obj.fee)
+                        buy_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.successor, price=escrow_obj.price, side=Advertisement.BUY, defaults={'amount': 0})
+                        buy_advertisement.amount += escrow_obj.amount
+                        buy_advertisement.status = Advertisement.OPEN
+                        buy_advertisement.save()
+
+                        buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                        offer_table = create_offer_table(Advertisement.BUY, 20)
+
+                        seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
+                        seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
+                        seller_wallet.save()
+
+                        async for oldMessage in buy_offer_channel.history():
+                            await oldMessage.delete()
+
+                        await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
                     else:
-                        ThenewbostonWallet.objects.filter(user=escrow_obj.initiator).update(locked=F('locked') - escrow_obj.amount)
+                        sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
+                        sell_advertisement.amount += escrow_obj.amount
+                        sell_advertisement.status = Advertisement.OPEN
+                        sell_advertisement.save()
+
+                        sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                        offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                        async for oldMessage in sell_order_channel.history():
+                            await oldMessage.delete()
+
+                        await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
