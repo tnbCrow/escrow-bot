@@ -42,3 +42,15 @@ def get_wallet_balance(account_number):
     except Exception:
 
         return 0
+
+
+def check_withdrawal_address_valid(address):
+
+    if len(address) == 64 and (address not in settings.PROHIBITED_ACCOUNT_NUMBERS):
+        return True
+
+    return False
+
+
+def comma_seperate_amount(amount):
+    return "{:,}".format(amount)

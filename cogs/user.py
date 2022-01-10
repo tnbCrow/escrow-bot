@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, check_withdrawal_address_valid, comma_seperate_amount
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from django.conf import settings
 from discord_slash.model import ButtonStyle
@@ -51,71 +51,41 @@ class user(commands.Cog):
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
         embed = discord.Embed(color=0xe81111)
-        embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-        embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
-        embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
-        embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+        embed.add_field(name='Balance (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.balance)))
+        embed.add_field(name='Locked (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.locked)))
+        embed.add_field(name='Available (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.get_available_balance())), inline=False)
         embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
-
-        await ctx.send(embed=embed, hidden=True)
-
-    @cog_ext.cog_subcommand(base="set_withdrawal_address",
-                            name="tnbc",
-                            description="Set new withdrawal address.",
-                            options=[
-                                create_option(
-                                    name="address",
-                                    description="Enter your withdrawal address.",
-                                    option_type=3,
-                                    required=True
-                                )
-                            ]
-                            )
-    async def user_setwithdrawaladdress(self, ctx, address: str):
-
-        await ctx.defer(hidden=True)
-
-        discord_user = get_or_create_discord_user(ctx.author.id)
-        tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
-
-        if len(address) == 64:
-            if address not in settings.PROHIBITED_ACCOUNT_NUMBERS:
-                tnbc_wallet.withdrawal_address = address
-                tnbc_wallet.save()
-                embed = discord.Embed(color=0xe81111)
-                embed.add_field(name='Success', value=f"Successfully set `{address}` as your withdrawal address.")
-            else:
-                embed = discord.Embed(color=0xe81111)
-                embed.add_field(name='Error!', value="You can not set this account number as your withdrawal address.")
-        else:
-            embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='Error!', value="Please enter a valid TNBC account number.")
 
         await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="withdraw",
                             name="tnbc",
-                            description="Withdraw TNBC into your account.",
+                            description="Withdraw TNBC into your external wallet.",
                             options=[
                                 create_option(
+                                    name="tnbc_address",
+                                    description="TNBC address to send TNBC to.",
+                                    option_type=3,
+                                    required=True
+                                ),
+                                create_option(
                                     name="amount",
-                                    description="Enter the amount to withdraw.",
+                                    description="No of TNBC to withdraw.",
                                     option_type=4,
                                     required=True
                                 )
                             ]
                             )
-    async def user_withdraw(self, ctx, amount: int):
+    async def user_withdraw(self, ctx, tnbc_address: str, amount: int):
 
         await ctx.defer(hidden=True)
 
         discord_user = get_or_create_discord_user(ctx.author.id)
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
-        if tnbc_wallet.withdrawal_address:
+        response, fee = estimate_fee()
 
-            response, fee = estimate_fee()
-
+        if check_withdrawal_address_valid(tnbc_address):
             if response:
                 if not amount < 1:
                     if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
@@ -128,14 +98,14 @@ class user(commands.Cog):
 
                         if hot_wallet_balance >= amount + fee:
 
-                            block_response, fee = withdraw_tnbc(tnbc_wallet.withdrawal_address, amount, tnbc_wallet.memo)
+                            block_response, fee = withdraw_tnbc(tnbc_address, amount, tnbc_wallet.memo)
 
                             if block_response:
                                 if block_response.status_code == 201:
                                     txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
                                                                      transaction_status=Transaction.IDENTIFIED,
                                                                      direction=Transaction.OUTGOING,
-                                                                     account_number=tnbc_wallet.withdrawal_address,
+                                                                     account_number=tnbc_address,
                                                                      amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
                                                                      fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
                                                                      signature=block_response.json()['signature'],
@@ -153,7 +123,7 @@ class user(commands.Cog):
                                     statistic.save()
 
                                     embed = discord.Embed(title="Coins Withdrawn.",
-                                                          description=f"Successfully withdrawn {amount} TNBC to {tnbc_wallet.withdrawal_address} \n Use `/balance` to check your new balance.",
+                                                          description=f"Successfully withdrawn {amount} TNBC to {tnbc_address} \n Use `/balance` to check your new balance.",
                                                           color=0xe81111)
                                 else:
                                     embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
@@ -166,7 +136,7 @@ class user(commands.Cog):
             else:
                 embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
         else:
-            embed = discord.Embed(title="No withdrawal address set!", description="Use `/set_withdrawal_address tnbc` to set withdrawal address.", color=0xe81111)
+            embed = discord.Embed(title="Error!", description="Invalid TNBC withdrawal address.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 
