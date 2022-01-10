@@ -51,16 +51,13 @@ async def help_general(ctx):
     embed = discord.Embed(title="General Commands", color=0xe81111)
     embed.add_field(name="/balance", value="Check your crow bot balance.", inline=False)
     embed.add_field(name="/deposit tnbc", value="Deposit TNBC into your crow bot account.", inline=False)
-    embed.add_field(name="/withdraw tnbc amount: AMOUNT", value="Withdraw TNBC into your TNBC wallet.", inline=False)
-    embed.add_field(name="/set_withdrawl_address tnbc address: ADDRESS", value="Set a new TNBC withdrawal address.", inline=False)
+    embed.add_field(name="/withdraw tnbc tnbc_address: ADDRESS amount: AMOUNT", value="Withdraw TNBC into your TNBC wallet.", inline=False)
     embed.add_field(name="/transactions tnbc", value="Check TNBC transaction history.", inline=False)
-    embed.add_field(name="/profile user: USER", value="Check user's crow bot profile.", inline=False)
     embed.add_field(name="/payment_method add", value="Add a new payment method.", inline=False)
     embed.add_field(name="/payment_method all", value="List all your payment methods.", inline=False)
     embed.add_field(name="/payment_method remove", value="Delete particular payment method.", inline=False)
-    embed.add_field(name="/rate", value="Check the last OTC trade rate of TNBC.")
-    embed.add_field(name="/guide buyer", value="Buyer guide for using crow bot.")
-    embed.add_field(name="/guide seller", value="Seller guide for using crow bot.")
+    embed.add_field(name="/guide buyer", value="Buyer's guide for using crow bot.")
+    embed.add_field(name="/guide seller", value="Seller's guide for using crow bot.")
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -81,12 +78,10 @@ async def help_advertisement(ctx):
 @slash.subcommand(base="help", name="escrow", description="List of Commands related to escrows.")
 async def help_escrow(ctx):
     embed = discord.Embed(title="Escrow Related Commands", color=0xe81111)
-    embed.add_field(name="/escrow status escrow_id: ESCROW_ID", value="Check the status of a particular escrow.")
     embed.add_field(name="/escrow all", value="List all of your ongoing escrows.", inline=False)
     embed.add_field(name="/escrow release escrow_id: ESCROW_ID", value="Release TNBC to the buyer's account.", inline=False)
     embed.add_field(name="/escrow cancel escrow_id: ESCROW_ID", value="Cancel the particular escrow. Both buyer and seller needs to use the command for escrow cancellation.")
     embed.add_field(name="/escrow dispute escrow_id: ESCROW_ID", value="In the case of disagreement while trading, raise dispute and take the case to tnbcrow agent.", inline=False)
-    embed.add_field(name="/escrow history", value="List all of your completed escrows.", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -315,6 +310,23 @@ async def on_component(ctx: ComponentContext):
         else:
             embed = discord.Embed(title="Error!", description="You do not have permission to perform the action.", color=0xe81111)
             await ctx.send(embed=embed, hidden=True)
+
+    elif button_type == "deposittnbc":
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+        tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
+
+        qr_data = f"{{\"address\":\"{settings.TNBCROW_BOT_ACCOUNT_NUMBER}\",\"memo\":\"{tnbc_wallet.memo}\"}}"
+
+        embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
+        embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
+        embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
+        embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
+        embed.set_footer(text="Or, scan the QR code using Keysign Mobile App.")
+
+        await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chainscan", style=ButtonStyle.green, label="Sent? Check new balance."))])
+
     else:
         await ctx.send("Where did you find this button??", hidden=True)
 

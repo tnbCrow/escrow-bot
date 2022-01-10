@@ -56,7 +56,7 @@ class user(commands.Cog):
         embed.add_field(name='Available (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.get_available_balance())), inline=False)
         embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
-        await ctx.send(embed=embed, hidden=True)
+        await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="deposittnbc", style=ButtonStyle.green, label="👛Deposit"))])
 
     @cog_ext.cog_subcommand(base="withdraw",
                             name="tnbc",
