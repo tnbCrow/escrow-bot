@@ -21,6 +21,7 @@ from asgiref.sync import sync_to_async
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
 from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal
 from core.models.statistics import Statistic
+from core.utils.logger import log_send
 from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
 from escrow.models.escrow import Escrow
 from escrow.models.advertisement import Advertisement
@@ -174,6 +175,7 @@ async def on_component(ctx: ComponentContext):
                             await oldMessage.delete()
 
                         await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                        await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.\Escrow ID: {escrow_obj.uuid_hex}.\nBuy Adv Id: {buy_advertisement.uuid_hex}")
 
                     else:
                         sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
@@ -188,6 +190,7 @@ async def on_component(ctx: ComponentContext):
                             await oldMessage.delete()
 
                         await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                        await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.\Escrow ID: {escrow_obj.uuid_hex}.\Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
@@ -298,6 +301,7 @@ async def on_component(ctx: ComponentContext):
 
                 comma_seperated_amount = "{:,}".format(convert_to_int(escrow_obj.amount))
                 await recent_trade_channel.send(f"Recent Trade: {comma_seperated_amount} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
+                await log_send(bot=bot, message=f"{ctx.author.mention} released the escrow.\Escrow ID: {escrow_obj.uuid_hex}")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
 
