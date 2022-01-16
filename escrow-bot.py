@@ -174,8 +174,8 @@ async def on_component(ctx: ComponentContext):
                         async for oldMessage in buy_offer_channel.history():
                             await oldMessage.delete()
 
-                        await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
-                        await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.\Escrow ID: {escrow_obj.uuid_hex}.\nBuy Adv Id: {buy_advertisement.uuid_hex}")
+                        await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                        await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.Escrow ID: {escrow_obj.uuid_hex}.\nBuy Adv Id: {buy_advertisement.uuid_hex}")
 
                     else:
                         sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
@@ -189,8 +189,8 @@ async def on_component(ctx: ComponentContext):
                         async for oldMessage in sell_order_channel.history():
                             await oldMessage.delete()
 
-                        await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
-                        await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.\Escrow ID: {escrow_obj.uuid_hex}.\Sell Adv Id: {sell_advertisement.uuid_hex}")
+                        await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                        await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
@@ -301,7 +301,7 @@ async def on_component(ctx: ComponentContext):
 
                 comma_seperated_amount = "{:,}".format(convert_to_int(escrow_obj.amount))
                 await recent_trade_channel.send(f"Recent Trade: {comma_seperated_amount} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
-                await log_send(bot=bot, message=f"{ctx.author.mention} released the escrow.\Escrow ID: {escrow_obj.uuid_hex}")
+                await log_send(bot=bot, message=f"{ctx.author.mention} released the escrow. Escrow ID: {escrow_obj.uuid_hex}")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
 

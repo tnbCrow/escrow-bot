@@ -232,7 +232,7 @@ class user(commands.Cog):
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
-                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
@@ -242,7 +242,7 @@ class user(commands.Cog):
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
 
-                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
         else:
             embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
@@ -304,7 +304,7 @@ class user(commands.Cog):
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
-                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
@@ -313,7 +313,7 @@ class user(commands.Cog):
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
-                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
@@ -351,7 +351,7 @@ class user(commands.Cog):
         embed = discord.Embed(title="Buyer Guide | Crow Bot", description="", color=0xe81111)
         embed.add_field(name="Buying from sell advertisements", value="------------------------", inline=False)
         embed.add_field(name="1. Check the available sell advertisements", value="Navigate to #sell-orders and check all available sell orders.", inline=False)
-        embed.add_field(name="2. Buy from the advertisement", value="Use the command `/adv buy` to create an escrow. Private channel is created within the discord server.", inline=False)
+        embed.add_field(name="2. Buy from the advertisement", value="Use the command `/adv buy` to buy tnbc from the advertisement. Private channel is created within the discord server.", inline=False)
         embed.add_field(name="3. Discuss the payment details", value="Discuss the payment details in the private channel.", inline=False)
         embed.add_field(name="4. Send the payment", value="Send agreed payment amount using the method.", inline=False)
         embed.add_field(name="5. Wait for the seller to release escrow", value="Once the payment is received, the seller will release escrow. You'll be notified in private channel about the status of the escrow.", inline=False)

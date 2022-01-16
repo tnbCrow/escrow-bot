@@ -537,7 +537,8 @@ class admin(commands.Cog):
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
-                await buy_offer_channel.send(f"**Buy Advertisements.**\nUse `/guide buyer` command for the buyer's guide and `/guide seller` for seller's guide to trade on tnbCrow discord server.\n```{offer_table}```")
+                await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+
                 embed = discord.Embed(title="Success!", description="Advertisement removed successfully.", color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description="The buy advertisement your're tryig to delete does not exist.", color=0xe81111)
