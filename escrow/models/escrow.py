@@ -8,6 +8,7 @@ from core.models.users import User
 
 class Escrow(models.Model):
 
+    NEW = 'NEW'
     OPEN = 'OPEN'
     COMPLETED = 'COMPLETED'
     CANCELLED = 'CANCELLED'
@@ -27,6 +28,7 @@ class Escrow(models.Model):
     ]
 
     status_choices = [
+        (NEW, 'New'),
         (OPEN, 'Open'),
         (COMPLETED, 'Completed'),
         (CANCELLED, 'Cancelled'),
