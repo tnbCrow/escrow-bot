@@ -4,13 +4,17 @@ from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from discord_slash.model import ButtonStyle
-from core.utils.shortcuts import get_or_create_discord_user
 from django.conf import settings
-from asgiref.sync import sync_to_async
-from escrow.models.escrow import Escrow
 from django.db.models import Q
-from core.utils.shortcuts import convert_to_decimal, convert_to_int
-from escrow.utils import get_or_create_user_profile
+from asgiref.sync import sync_to_async
+
+from core.utils.shortcuts import get_or_create_discord_user
+from core.utils.logger import log_send
+from core.utils.shortcuts import convert_to_decimal, convert_to_int, get_or_create_tnbc_wallet
+
+from escrow.models.escrow import Escrow
+from escrow.models.advertisement import Advertisement
+from escrow.utils import get_or_create_user_profile, create_offer_table
 
 
 class escrow(commands.Cog):
@@ -175,7 +179,40 @@ class escrow(commands.Cog):
 
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
-            if escrow_obj.status == Escrow.OPEN:
+            if escrow_obj.status == Escrow.NEW:
+
+                escrow_obj.status = Escrow.CANCELLED
+                escrow_obj.save()
+
+                sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
+                sell_advertisement.amount += escrow_obj.amount
+                sell_advertisement.status = Advertisement.OPEN
+                sell_advertisement.save()
+
+                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                offer_table = create_offer_table(Advertisement.SELL, 20)
+
+                async for oldMessage in sell_order_channel.history():
+                    await oldMessage.delete()
+
+                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await log_send(bot=self.bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
+
+                embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
+                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                if conversation_channel:
+                    await conversation_channel.send(embed=embed)
+
+                embed = discord.Embed(title="Success!", description="Escrow cancelled successfully.", color=0xe81111)
+                await ctx.send(embed=embed, hidden=True)
+
+            elif escrow_obj.status == Escrow.OPEN:
 
                 if int(escrow_obj.successor.discord_id) == ctx.author.id:
 
@@ -195,7 +232,6 @@ class escrow(commands.Cog):
                                                label="I've made the payment already, take me back.")
                                        )
                                    ])
-
                 else:
                     embed = discord.Embed(title="Error!", description="Only the buyer can cancel the escrow. Use the command /escrow dispute if they're not responding.", color=0xe81111)
                     await ctx.send(embed=embed, hidden=True)
@@ -205,6 +241,68 @@ class escrow(commands.Cog):
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
             await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="escrow",
+                            name="fund",
+                            description="Fund an escrow.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to fund.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def escrow_fund(self, ctx, escrow_id: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Escrow.objects.filter(Q(initiator=discord_user),
+                                 Q(uuid_hex=escrow_id)).exists():
+
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
+
+            if escrow_obj.side == Escrow.SELL:
+
+                if escrow_obj.status == Escrow.NEW:
+
+                    seller_tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
+
+                    if seller_tnbc_wallet.get_available_balance() >= escrow_obj.amount:
+
+                        seller_tnbc_wallet.locked += escrow_obj.amount
+                        seller_tnbc_wallet.save()
+
+                        escrow_obj.status = Escrow.OPEN
+                        escrow_obj.save()
+
+                        embed = discord.Embed(title="Escrow Funded Successfully", description="", color=0xe81111)
+                        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                        embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                        embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                        embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
+                        embed.add_field(name='Status', value=f"{escrow_obj.status}")
+
+                        conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+                        if conversation_channel:
+                            buyer = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
+                            await conversation_channel.send(embed=embed)
+                            await conversation_channel.send(f"{buyer.mention}, escrow is funded successfully. You can now transfer payment to {ctx.author.mention}.")
+                    else:
+                        embed = discord.Embed(title="Error!",
+                                              description=f"You only have {convert_to_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {convert_to_int(escrow_obj.amount)} TNBC.\nPlease use `/deposit tnbc` command to deposit TNBC your account.",
+                                              color=0xe81111)
+                else:
+                    embed = discord.Embed(title="Error!", description=f"You cannot fund the escrow of status {escrow_obj.status}.", color=0xe81111)
+            else:
+                embed = discord.Embed(title="Error!", description="This escrow is funded when selling TNBC to the buy advertisement.", color=0xe81111)
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="escrow",
                             name="dispute",

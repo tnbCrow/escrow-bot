@@ -179,6 +179,10 @@ class agent(commands.Cog):
                         sell_advertisement.status = Advertisement.OPEN
                         sell_advertisement.save()
 
+                        seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
+                        seller_wallet.locked -= escrow_obj.amount
+                        seller_wallet.save()
+
                         sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
                         offer_table = create_offer_table(Advertisement.SELL, 20)
 
