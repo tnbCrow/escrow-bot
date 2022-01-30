@@ -5,7 +5,7 @@ from core.models.wallets import ThenewbostonWallet
 
 from .models.profile import Profile
 from .models.advertisement import Advertisement
-from core.utils.shortcuts import convert_to_int, convert_to_decimal
+from core.utils.shortcuts import convert_to_decimal, comma_seperated_int
 from escrow.models.payment_method import PaymentMethod
 
 
@@ -34,9 +34,7 @@ def create_offer_table(side, number_of_data):
         for payment_method in payment_methods:
             payment_method_message += f"{payment_method.name} | "
 
-        comma_seperated_amount = "{:,}".format(convert_to_int(advertisement.amount))
-
-        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {comma_seperated_amount} TNBC; Price: {convert_to_decimal(advertisement.price)};\nPayment Method(s): {payment_method_message}\n\n"
+        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {comma_seperated_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)};\nPayment Method(s): {payment_method_message}\n\n"
 
     return message
 

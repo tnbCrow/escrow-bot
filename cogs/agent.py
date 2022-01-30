@@ -13,7 +13,7 @@ from escrow.models.escrow import Escrow
 from escrow.models.advertisement import Advertisement
 from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
 
-from core.utils.shortcuts import convert_to_int, convert_to_decimal
+from core.utils.shortcuts import convert_to_int, convert_to_decimal, comma_seperated_int
 from core.models.wallets import ThenewbostonWallet
 from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet
 from core.models.statistics import Statistic
@@ -97,8 +97,8 @@ class agent(commands.Cog):
                 statistic.save()
 
                 embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
+                embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)}")
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
                 embed.add_field(name='Remarks', value=f"{escrow_obj.remarks}", inline=False)
 
@@ -107,8 +107,7 @@ class agent(commands.Cog):
 
                 recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-                comma_seperated_amount = "{:,}".format(convert_to_int(escrow_obj.amount))
-                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_amount} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
+                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_int(escrow_obj.amount)} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
                 await ctx.guild.me.edit(nick=f"Price: {convert_to_decimal(escrow_obj.price)}")
@@ -192,9 +191,9 @@ class agent(commands.Cog):
                         await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)}")
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)}")
+                    embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)}")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)}")
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
                     conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))

@@ -12,7 +12,7 @@ from core.models.transactions import Transaction
 from core.models.wallets import ThenewbostonWallet
 from core.models.users import UserTransactionHistory
 from core.models.statistics import Statistic
-from core.utils.shortcuts import convert_to_int, get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance
+from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_wallet, convert_to_decimal, get_wallet_balance, comma_seperated_int
 from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 from escrow.models.escrow import Escrow
@@ -58,9 +58,9 @@ class admin(commands.Cog):
 
                 for escrow in escrows:
 
-                    embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)}")
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)}")
+                    embed.add_field(name='Escrow ID', value=f"{escrow.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)}")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)}")
                     embed.add_field(name='Status', value=f"{escrow.status}")
                     if discord_user == escrow.successor:
                         initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
@@ -98,9 +98,9 @@ class admin(commands.Cog):
                 initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
                 successor = await self.bot.fetch_user(int(escrow.successor.discord_id))
 
-                embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)}")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)}")
+                embed.add_field(name='Escrow ID', value=f"{escrow.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)}")
+                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)}")
                 embed.add_field(name='Buyer', value=f"{successor.mention}")
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
                 embed.add_field(name='Status', value=f"{escrow.status}")
@@ -133,9 +133,9 @@ class admin(commands.Cog):
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-            embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
-            embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
-            embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+            embed.add_field(name='Balance', value=comma_seperated_int(tnbc_wallet.balance))
+            embed.add_field(name='Locked Amount', value=comma_seperated_int(tnbc_wallet.locked))
+            embed.add_field(name='Available Balance', value=comma_seperated_int(tnbc_wallet.get_available_balance()))
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
@@ -183,9 +183,9 @@ class admin(commands.Cog):
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Success', value=f"Refunded {convert_to_decimal(amount)} to the user.")
             embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-            embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
-            embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
-            embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+            embed.add_field(name='Balance', value=comma_seperated_int(tnbc_wallet.balance))
+            embed.add_field(name='Locked Amount', value=comma_seperated_int(tnbc_wallet.locked))
+            embed.add_field(name='Available Balance', value=comma_seperated_int(tnbc_wallet.get_available_balance()))
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
@@ -235,9 +235,9 @@ class admin(commands.Cog):
                 embed = discord.Embed(color=0xe81111)
                 embed.add_field(name='Success', value=f"Takeback {convert_to_decimal(amount)} to the user.")
                 embed.add_field(name='Withdrawal Address', value=tnbc_wallet.withdrawal_address, inline=False)
-                embed.add_field(name='Balance', value=convert_to_int(tnbc_wallet.balance))
-                embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
-                embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+                embed.add_field(name='Balance', value=comma_seperated_int(tnbc_wallet.balance))
+                embed.add_field(name='Locked Amount', value=comma_seperated_int(tnbc_wallet.locked))
+                embed.add_field(name='Available Balance', value=comma_seperated_int(tnbc_wallet.get_available_balance()))
 
             else:
                 embed = discord.Embed(title="Error!", description="The user does not have enough TNBC in their wallet to take back.", color=0xe81111)
@@ -265,8 +265,8 @@ class admin(commands.Cog):
             balance_of_all_user = get_total_balance_of_all_user()
 
             embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='Total Balance', value=convert_to_int(statistic.total_balance))
-            embed.add_field(name='User Balance + Fees Collected', value=convert_to_int(balance_of_all_user + statistic.total_fees_collected))
+            embed.add_field(name='Total Balance', value=comma_seperated_int(statistic.total_balance))
+            embed.add_field(name='User Balance + Fees Collected', value=comma_seperated_int(balance_of_all_user + statistic.total_fees_collected))
             embed.add_field(name='Hot Wallet Balance', value=hot_wallet_balance)
             embed.add_field(name='Cold Wallet Balance', value=cold_wallet_balance)
             embed.add_field(name='Total Wallet Balance', value=wallet_balance_combined)
@@ -293,10 +293,10 @@ class admin(commands.Cog):
                 embed = discord.Embed(color=0xe81111)
                 for transaction in unconfirmed_transactions:
 
-                    embed.add_field(name='ID', value=transaction.uuid, inline=False)
+                    embed.add_field(name='Transaction ID', value=transaction.uuid, inline=False)
                     embed.add_field(name='Signature', value=transaction.signature, inline=False)
                     embed.add_field(name='Block', value=transaction.block, inline=False)
-                    embed.add_field(name='Amount', value=convert_to_int(transaction.amount))
+                    embed.add_field(name='Amount', value=comma_seperated_int(transaction.amount))
 
                     if transaction.memo:
                         embed.add_field(name='MEMO', value=transaction.memo)
@@ -454,8 +454,8 @@ class admin(commands.Cog):
                 adv_owner = await self.bot.fetch_user(int(advertisement.owner.discord_id))
 
                 embed = discord.Embed(color=0xe81111)
-                embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
+                embed.add_field(name='Advertisement ID', value=f"{advertisement.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=comma_seperated_int(advertisement.amount))
                 embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
                 embed.add_field(name="Owner", value=adv_owner.mention, inline=False)
 

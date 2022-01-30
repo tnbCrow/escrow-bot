@@ -10,7 +10,7 @@ from asgiref.sync import sync_to_async
 
 from core.utils.shortcuts import get_or_create_discord_user
 from core.utils.logger import log_send
-from core.utils.shortcuts import convert_to_decimal, convert_to_int, get_or_create_tnbc_wallet
+from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, comma_seperated_int
 
 from escrow.models.escrow import Escrow
 from escrow.models.advertisement import Advertisement
@@ -43,10 +43,10 @@ class escrow(commands.Cog):
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 
             embed = discord.Embed(color=0xe81111)
-            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-            embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
-            embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+            embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+            embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+            embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
+            embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
             embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
             if discord_user == escrow_obj.successor:
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
@@ -82,15 +82,15 @@ class escrow(commands.Cog):
 
             for escrow in escrows:
 
-                embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)} TNBC")
+                embed.add_field(name='Escrow ID', value=f"{escrow.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)} TNBC")
 
                 if escrow.side == Escrow.BUY:
-                    embed.add_field(name='Seller Pays', value=f"{convert_to_int(escrow.amount + escrow.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount)} TNBC")
+                    embed.add_field(name='Seller Pays', value=f"{comma_seperated_int(escrow.amount + escrow.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow.amount)} TNBC")
                 else:
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow.amount - escrow.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow.amount - escrow.fee)} TNBC")
 
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
@@ -199,9 +199,9 @@ class escrow(commands.Cog):
                 await log_send(bot=self.bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                 embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
@@ -280,9 +280,9 @@ class escrow(commands.Cog):
                         escrow_obj.save()
 
                         embed = discord.Embed(title="Escrow Funded Successfully", description="", color=0xe81111)
-                        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                        embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                        embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                        embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                        embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                        embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
                         embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                         embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
@@ -293,7 +293,7 @@ class escrow(commands.Cog):
                             await conversation_channel.send(f"{buyer.mention}, escrow is funded successfully. You can now transfer payment to {ctx.author.mention}.")
                     else:
                         embed = discord.Embed(title="Error!",
-                                              description=f"You only have {convert_to_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {convert_to_int(escrow_obj.amount)} TNBC.\nPlease use `/deposit tnbc` command to deposit TNBC your account.",
+                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {comma_seperated_int(escrow_obj.amount)} TNBC.\n\nPlease deposit extra {comma_seperated_int(escrow_obj.amount - seller_tnbc_wallet.get_available_balance())} TNBC using `/deposit tnbc` command.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!", description=f"You cannot fund the escrow of status {escrow_obj.status}.", color=0xe81111)
@@ -344,7 +344,7 @@ class escrow(commands.Cog):
                 user_profile.save()
 
                 dispute_embed = discord.Embed(title="Dispute Alert!", description="", color=0xe81111)
-                dispute_embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                dispute_embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                 dispute_embed.add_field(name='Amount', value=f"{convert_to_decimal(escrow_obj.amount)}")
                 dispute_embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 dispute_embed.add_field(name='Seller', value=f"{initiator}")
@@ -355,15 +355,15 @@ class escrow(commands.Cog):
                 await dispute.add_reaction("✅")
 
                 embed = discord.Embed(title="Escrow Disputed Successfully", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
 
                 if escrow_obj.side == Escrow.BUY:
-                    embed.add_field(name='Seller Pays', value=f"{convert_to_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Seller Pays', value=f"{comma_seperated_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
                 else:
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
 
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
@@ -396,9 +396,9 @@ class escrow(commands.Cog):
 
             for escrow in escrows:
 
-                embed.add_field(name='ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{convert_to_int(escrow.fee)} TNBC")
+                embed.add_field(name='Escrow ID', value=f"{escrow.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)} TNBC")
+                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)} TNBC")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
 

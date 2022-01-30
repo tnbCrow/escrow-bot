@@ -32,6 +32,12 @@ def convert_to_int(amount):
     return amount
 
 
+def comma_seperated_int(amount):
+
+    amount = int(amount / settings.TNBC_MULTIPLICATION_FACTOR)
+    return "{:,}".format(amount)
+
+
 def get_wallet_balance(account_number):
 
     try:

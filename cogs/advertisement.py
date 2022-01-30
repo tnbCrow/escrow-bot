@@ -5,7 +5,7 @@ from discord_slash.utils.manage_commands import create_option, create_choice
 from django.conf import settings
 from asgiref.sync import sync_to_async
 
-from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_int
+from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, get_or_create_discord_user, comma_seperated_int, comma_seperate_amount
 from core.utils.logger import log_send
 
 from escrow.models.advertisement import Advertisement
@@ -84,8 +84,8 @@ class advertisement(commands.Cog):
                         await log_send(bot=self.bot, message=f"{ctx.author.mention} created SELL Advertisement.\nAmount: {amount_of_tnbc} TNBC.\nID: {advertisement.uuid_hex}\nPrice: {price_per_tnbc}")
 
                         embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
-                        embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-                        embed.add_field(name='Amount', value=amount_of_tnbc)
+                        embed.add_field(name='Advertisement ID', value=f"{advertisement.uuid_hex}", inline=False)
+                        embed.add_field(name='Amount', value=comma_seperate_amount(amount_of_tnbc))
                         embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
                         embed.set_footer(text="Use /adv my command list all your active advertisements.")
 
@@ -137,8 +137,8 @@ class advertisement(commands.Cog):
             embed = discord.Embed(color=0xe81111)
 
             for advertisement in advertisements:
-                embed.add_field(name='ID', value=f"{advertisement.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=convert_to_int(advertisement.amount))
+                embed.add_field(name='Advertisement ID', value=f"{advertisement.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=comma_seperated_int(advertisement.amount))
                 embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
                 embed.add_field(name='Side', value=advertisement.side)
             embed.set_footer(text="Use `/adv cancel` command cancel particular advertisement.")
@@ -180,7 +180,7 @@ class advertisement(commands.Cog):
                     await oldMessage.delete()
 
                 await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
-                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted BUY advertisement.\nAmount: {convert_to_int(advertisement.amount)} TNBC\nPrice: {convert_to_decimal(advertisement.price)}.")
+                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted BUY advertisement.\nAmount: {comma_seperated_int(advertisement.amount)} TNBC\nPrice: {convert_to_decimal(advertisement.price)}.")
 
             else:
 
@@ -191,7 +191,7 @@ class advertisement(commands.Cog):
                     await oldMessage.delete()
 
                 await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
-                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted SELL advertisement.\nAmount: {convert_to_int(advertisement.amount)} TNBC\nPrice: {convert_to_decimal(advertisement.price)}.")
+                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted SELL advertisement.\nAmount: {comma_seperated_int(advertisement.amount)} TNBC\nPrice: {convert_to_decimal(advertisement.price)}.")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
             embed.set_footer(text="Use `/adv create` command create a new advertisement.")
@@ -277,10 +277,10 @@ class advertisement(commands.Cog):
                                                                                 conversation_channel_id=trade_chat_channel.id,
                                                                                 status=Escrow.NEW)
                         embed = discord.Embed(title="Success.", description="", color=0xe81111)
-                        embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                        embed.add_field(name='Amount', value=amount_of_tnbc)
-                        embed.add_field(name='Fee', value=integer_fee)
-                        embed.add_field(name='Buyer Receives', value=f"{amount_of_tnbc - integer_fee}")
+                        embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                        embed.add_field(name='Amount', value=comma_seperate_amount(amount_of_tnbc))
+                        embed.add_field(name='Fee', value=comma_seperate_amount(integer_fee))
+                        embed.add_field(name='Buyer Receives', value=f"{comma_seperate_amount(amount_of_tnbc - integer_fee)}")
                         embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                         embed.add_field(name='Total (USDT)', value=convert_to_decimal(amount_of_tnbc * escrow_obj.price))
                         embed.add_field(name='Status', value=escrow_obj.status)
@@ -294,10 +294,10 @@ class advertisement(commands.Cog):
                             payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
 
                         await trade_chat_channel.send(f"{seller.name}, {ctx.author.name} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
-                        await trade_chat_channel.send(f"{seller.mention} Please use the command `/escrow fund escrow_id: ESCROW_ID` to fund the escrow.")
-                        await trade_chat_channel.send(f"{ctx.author.mention} NEVER SEND ANY PAYMENT before the status of escrow is OPEN.")
+                        await trade_chat_channel.send(f"{seller.mention} Please use the command `/escrow fund escrow_id: {escrow_obj.uuid_hex}` to fund the escrow.")
+                        await trade_chat_channel.send(f"{ctx.author.mention} **NEVER SEND ANY PAYMENT** before the status of escrow is **OPEN**.")
                     else:
-                        embed = discord.Embed(title="Error!", description=f"Advertisement only has {convert_to_int(advertisement.amount)} TNBC available to buy.", color=0xe81111)
+                        embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} TNBC available to buy.", color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
                                           description=f"You can not buy less than {settings.MIN_TNBC_ALLOWED} TNBC from an advertisement.",
@@ -393,10 +393,10 @@ class advertisement(commands.Cog):
                             seller_tnbc_wallet.save()
 
                             embed = discord.Embed(title="Success.", description="", color=0xe81111)
-                            embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                            embed.add_field(name='Amount', value=amount_of_tnbc)
-                            embed.add_field(name='Seller Pays', value=amount_of_tnbc + integer_fee)
-                            embed.add_field(name='Buyer Receives', value=f"{amount_of_tnbc}")
+                            embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                            embed.add_field(name='Amount', value=comma_seperate_amount(amount_of_tnbc))
+                            embed.add_field(name='Seller Pays', value=comma_seperate_amount(amount_of_tnbc + integer_fee))
+                            embed.add_field(name='Buyer Receives', value=f"{comma_seperate_amount(amount_of_tnbc)}")
                             embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                             embed.add_field(name='Total (USDT)', value=convert_to_decimal(amount_of_tnbc * escrow_obj.price))
                             embed.set_footer(text="Use /escrow all command list all active escrows.")
@@ -413,10 +413,10 @@ class advertisement(commands.Cog):
                             await trade_chat_channel.send(f"{ctx.author.mention}, Please use the command `/escrow release escrow_id: ESCROW_ID` to release TNBC into buyer's account **ONLY WHEN YOUR HAVE RECEIVED THE PAYMENT**.")
 
                         else:
-                            embed = discord.Embed(title="Error!", description=f"Advertisement only has {convert_to_int(advertisement.amount)} TNBC available to sell.", color=0xe81111)
+                            embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} TNBC available to sell.", color=0xe81111)
                     else:
                         embed = discord.Embed(title="Error!",
-                                              description=f"You only have {convert_to_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {convert_to_int(fee_plus_amount)} TNBC (including fees).",
+                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {comma_seperated_int(fee_plus_amount)} TNBC (including fees).\nPlease deposit the extra {comma_seperated_int(fee_plus_amount - seller_tnbc_wallet.get_available_balance())} TNBC using `/deposit tnbc` command.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
-from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, check_withdrawal_address_valid, comma_seperate_amount
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, check_withdrawal_address_valid, comma_seperated_int
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from django.conf import settings
 from discord_slash.model import ButtonStyle
@@ -51,9 +51,9 @@ class user(commands.Cog):
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
         embed = discord.Embed(color=0xe81111)
-        embed.add_field(name='Balance (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.balance)))
-        embed.add_field(name='Locked (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.locked)))
-        embed.add_field(name='Available (TNBC)', value=comma_seperate_amount(convert_to_int(tnbc_wallet.get_available_balance())), inline=False)
+        embed.add_field(name='Balance (TNBC)', value=comma_seperated_int(tnbc_wallet.balance))
+        embed.add_field(name='Locked (TNBC)', value=comma_seperated_int(tnbc_wallet.locked))
+        embed.add_field(name='Available (TNBC)', value=comma_seperated_int(tnbc_wallet.get_available_balance()), inline=False)
         embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="deposittnbc", style=ButtonStyle.green, label="👛Deposit"))])
@@ -90,7 +90,7 @@ class user(commands.Cog):
                 if not amount < 1:
                     if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
                         embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable TNBC (network fees included) available. \n Use `/deposit tnbc` to deposit TNBC.",
+                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable TNBC (network fees included) available.",
                                               color=0xe81111)
 
                     else:
@@ -155,7 +155,7 @@ class user(commands.Cog):
 
             natural_day = humanize.naturalday(txs.created_at)
 
-            embed.add_field(name='\u200b', value=f"{txs.type} - {convert_to_int(txs.amount)} TNBC - {natural_day}", inline=False)
+            embed.add_field(name='\u200b', value=f"{txs.type} - {comma_seperated_int(txs.amount)} TNBC - {natural_day}", inline=False)
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -262,7 +262,7 @@ class user(commands.Cog):
             embed = discord.Embed(color=0xe81111)
 
             for payment_method in payment_methods:
-                embed.add_field(name='ID', value=f"{payment_method.uuid_hex}", inline=False)
+                embed.add_field(name='Payment Method ID', value=f"{payment_method.uuid_hex}", inline=False)
                 embed.add_field(name='Payment Method', value=payment_method.name)
                 embed.add_field(name='Details', value=payment_method.detail)
                 embed.add_field(name='Conditions', value=payment_method.condition)

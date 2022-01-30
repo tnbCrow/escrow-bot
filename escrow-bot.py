@@ -19,7 +19,7 @@ from django.db.models import Q
 from asgiref.sync import sync_to_async
 
 from core.utils.scan_chain import match_transaction, check_confirmation, scan_chain
-from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal
+from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal, comma_seperated_int
 from core.models.statistics import Statistic
 from core.utils.logger import log_send
 from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
@@ -123,9 +123,9 @@ async def on_component(ctx: ComponentContext):
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
         embed = discord.Embed(title="Scan Completed", color=0xe81111)
-        embed.add_field(name='New Balance', value=convert_to_int(tnbc_wallet.balance))
-        embed.add_field(name='Locked Amount', value=convert_to_int(tnbc_wallet.locked))
-        embed.add_field(name='Available Balance', value=convert_to_int(tnbc_wallet.get_available_balance()))
+        embed.add_field(name='New Balance', value=comma_seperated_int(tnbc_wallet.balance))
+        embed.add_field(name='Locked Amount', value=comma_seperated_int(tnbc_wallet.locked))
+        embed.add_field(name='Available Balance', value=comma_seperated_int(tnbc_wallet.get_available_balance()))
         embed.add_field(name='Deposit did not come through?', value="Leave a message on #help")
         embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
@@ -197,9 +197,9 @@ async def on_component(ctx: ComponentContext):
                         await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
-                    embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                    embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
                     embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
@@ -238,8 +238,8 @@ async def on_component(ctx: ComponentContext):
             if escrow_obj.status == Escrow.OPEN:
 
                 embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
-                embed.add_field(name='ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
 
                 if escrow_obj.side == Escrow.BUY:
                     seller_wallet = get_or_create_tnbc_wallet(discord_user)
@@ -261,8 +261,8 @@ async def on_component(ctx: ComponentContext):
                     seller_profile.total_tnbc_escrowed += escrow_obj.amount + escrow_obj.fee
                     seller_profile.save()
 
-                    embed.add_field(name='Seller Paid', value=f"{convert_to_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Seller Paid', value=f"{comma_seperated_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Received', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
 
                 else:
                     seller_wallet = get_or_create_tnbc_wallet(discord_user)
@@ -284,8 +284,8 @@ async def on_component(ctx: ComponentContext):
                     seller_profile.total_tnbc_escrowed += escrow_obj.amount
                     seller_profile.save()
 
-                    embed.add_field(name='Fee', value=f"{convert_to_int(escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Received', value=f"{convert_to_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Buyer Received', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
 
                 escrow_obj.status = Escrow.COMPLETED
                 escrow_obj.save()
@@ -303,8 +303,7 @@ async def on_component(ctx: ComponentContext):
 
                 recent_trade_channel = bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-                comma_seperated_amount = "{:,}".format(convert_to_int(escrow_obj.amount))
-                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_amount} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
+                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_int(escrow_obj.amount)} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
                 await log_send(bot=bot, message=f"{ctx.author.mention} released the escrow. Escrow ID: {escrow_obj.uuid_hex}")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
