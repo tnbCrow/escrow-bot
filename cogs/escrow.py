@@ -190,7 +190,7 @@ class escrow(commands.Cog):
                 sell_advertisement.save()
 
                 sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.SELL, 20)
+                offer_table = create_offer_table(Advertisement.SELL, 10)
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
