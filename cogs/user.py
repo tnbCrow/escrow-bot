@@ -229,7 +229,7 @@ class user(commands.Cog):
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
 
                 buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.BUY, 10)
+                offer_table = create_offer_table(Advertisement.BUY, 8)
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
@@ -238,7 +238,7 @@ class user(commands.Cog):
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
                 sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.SELL, 10)
+                offer_table = create_offer_table(Advertisement.SELL, 8)
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
@@ -301,7 +301,7 @@ class user(commands.Cog):
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
 
                 buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.BUY, 10)
+                offer_table = create_offer_table(Advertisement.BUY, 8)
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
@@ -310,7 +310,7 @@ class user(commands.Cog):
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
                 sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.SELL, 10)
+                offer_table = create_offer_table(Advertisement.SELL, 8)
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()

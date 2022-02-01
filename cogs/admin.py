@@ -533,7 +533,7 @@ class admin(commands.Cog):
             if Advertisement.objects.filter(uuid_hex=advertisement_id, side=Advertisement.BUY).exists():
                 Advertisement.objects.filter(uuid_hex=advertisement_id).delete()
                 buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.BUY, 10)
+                offer_table = create_offer_table(Advertisement.BUY, 8)
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()

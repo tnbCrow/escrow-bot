@@ -167,7 +167,7 @@ async def on_component(ctx: ComponentContext):
                         buy_advertisement.save()
 
                         buy_offer_channel = bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                        offer_table = create_offer_table(Advertisement.BUY, 10)
+                        offer_table = create_offer_table(Advertisement.BUY, 8)
 
                         seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
                         seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
@@ -190,7 +190,7 @@ async def on_component(ctx: ComponentContext):
                         seller_wallet.save()
 
                         sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offer_table = create_offer_table(Advertisement.SELL, 10)
+                        offer_table = create_offer_table(Advertisement.SELL, 8)
 
                         async for oldMessage in sell_order_channel.history():
                             await oldMessage.delete()
