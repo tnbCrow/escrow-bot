@@ -229,21 +229,28 @@ class user(commands.Cog):
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
 
                 buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.BUY, 8)
+                offers = create_offer_table(Advertisement.BUY, 16)
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
-                await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+
+                await buy_offer_channel.send("**Buy Advertisements**")
+                for offer in offers:
+                    await buy_offer_channel.send(f"```{offer}```")
+                await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
                 sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.SELL, 8)
+                offers = create_offer_table(Advertisement.SELL, 16)
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
 
-                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await sell_order_channel.send("**Sell Advertisements**")
+                for offer in offers:
+                    await sell_order_channel.send(f"```{offer}```")
+                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
         else:
             embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
@@ -301,20 +308,28 @@ class user(commands.Cog):
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
 
                 buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.BUY, 8)
+                offers = create_offer_table(Advertisement.BUY, 16)
 
                 async for oldMessage in buy_offer_channel.history():
                     await oldMessage.delete()
-                await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+
+                await buy_offer_channel.send("**Buy Advertisements**")
+                for offer in offers:
+                    await buy_offer_channel.send(f"```{offer}```")
+                await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
                 sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.SELL, 8)
+                offers = create_offer_table(Advertisement.SELL, 16)
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
-                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+
+                await sell_order_channel.send("**Sell Advertisements**")
+                for offer in offers:
+                    await sell_order_channel.send(f"```{offer}```")
+                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)

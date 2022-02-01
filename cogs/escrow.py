@@ -190,12 +190,16 @@ class escrow(commands.Cog):
                 sell_advertisement.save()
 
                 sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offer_table = create_offer_table(Advertisement.SELL, 8)
+                offers = create_offer_table(Advertisement.SELL, 16)
 
                 async for oldMessage in sell_order_channel.history():
                     await oldMessage.delete()
 
-                await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await sell_order_channel.send("**Sell Advertisements**")
+                for offer in offers:
+                    await sell_order_channel.send(f"```{offer}```")
+                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+
                 await log_send(bot=self.bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                 embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)

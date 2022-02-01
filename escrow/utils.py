@@ -24,6 +24,8 @@ def create_offer_table(side, number_of_data):
         advertisements = Advertisement.objects.filter(status=Advertisement.OPEN, side=Advertisement.SELL).order_by('price')[:number_of_data]
 
     message = ""
+    offers = []
+    index = 0
 
     for advertisement in reversed(advertisements):
 
@@ -38,7 +40,16 @@ def create_offer_table(side, number_of_data):
 
         message += f"AdvID: {advertisement.uuid_hex}; Amount: {comma_seperated_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)};\nPayment Method(s): {payment_method_message}\nMerchant Stats - Total Trades: {advertisement_owner_stats.total_escrows} | Vol: {comma_seperated_int(advertisement_owner_stats.total_tnbc_escrowed)} TNBC | Positive Feedback: {advertisement_owner_stats.get_positive_feeback_percentage()}%\n\n"
 
-    return message
+        if index % 8 == 0:
+            offers.append(message)
+            message = ""
+
+        index += 1
+
+    if message:
+        offers.append(message)
+
+    return offers
 
 
 def post_trade_to_api(amount, price):

@@ -167,7 +167,7 @@ async def on_component(ctx: ComponentContext):
                         buy_advertisement.save()
 
                         buy_offer_channel = bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                        offer_table = create_offer_table(Advertisement.BUY, 8)
+                        offers = create_offer_table(Advertisement.BUY, 16)
 
                         seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
                         seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
@@ -176,7 +176,11 @@ async def on_component(ctx: ComponentContext):
                         async for oldMessage in buy_offer_channel.history():
                             await oldMessage.delete()
 
-                        await buy_offer_channel.send(f"**Buy Advertisements.**```{offer_table}```\nUse the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                        await buy_offer_channel.send("**Buy Advertisements**")
+                        for offer in offers:
+                            await buy_offer_channel.send(f"```{offer}```")
+                        await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+
                         await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.Escrow ID: {escrow_obj.uuid_hex}.\nBuy Adv Id: {buy_advertisement.uuid_hex}")
 
                     else:
@@ -190,12 +194,16 @@ async def on_component(ctx: ComponentContext):
                         seller_wallet.save()
 
                         sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offer_table = create_offer_table(Advertisement.SELL, 8)
+                        offers = create_offer_table(Advertisement.SELL, 16)
 
                         async for oldMessage in sell_order_channel.history():
                             await oldMessage.delete()
 
-                        await sell_order_channel.send(f"**Sell Advertisements - Escrow Protected.**\n```{offer_table}```\nUse the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                        await sell_order_channel.send("**Sell Advertisements**")
+                        for offer in offers:
+                            await sell_order_channel.send(f"```{offer}```")
+                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+
                         await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
