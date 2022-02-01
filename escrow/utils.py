@@ -33,10 +33,10 @@ def create_offer_table(side, number_of_data):
 
         for payment_method in payment_methods:
             payment_method_message += f"{payment_method.name} | "
-        
+
         advertisement_owner_stats = get_or_create_user_profile(advertisement.owner)
 
-        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {comma_seperated_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)};\nPayment Method(s): {payment_method_message}\nMerchant Stats - Total Trades: {advertisement_owner_stats.total_escrows} | Volume: {comma_seperated_int(advertisement_owner_stats.total_tnbc_escrowed)} TNBC\n\n"
+        message += f"Advertisement ID: {advertisement.uuid_hex}; Amount: {comma_seperated_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)};\nPayment Method(s): {payment_method_message}\nMerchant Stats - Total Trades: {advertisement_owner_stats.total_escrows} | Vol: {comma_seperated_int(advertisement_owner_stats.total_tnbc_escrowed)} TNBC | Positive Feedback: {advertisement_owner_stats.get_positive_feeback_percentage()}%\n\n"
 
     return message
 

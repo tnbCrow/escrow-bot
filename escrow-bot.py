@@ -22,9 +22,11 @@ from core.utils.scan_chain import match_transaction, check_confirmation, scan_ch
 from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_or_create_discord_user, convert_to_decimal, comma_seperated_int
 from core.models.statistics import Statistic
 from core.utils.logger import log_send
+
 from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
 from escrow.models.escrow import Escrow
 from escrow.models.advertisement import Advertisement
+from escrow.models.escrow_review import EscrowReview
 
 # Environment Variables
 TOKEN = os.environ['CROW_DISCORD_TOKEN']
@@ -299,7 +301,29 @@ async def on_component(ctx: ComponentContext):
 
                 conversation_channel = bot.get_channel(int(escrow_obj.conversation_channel_id))
                 if conversation_channel:
-                    await conversation_channel.send(embed=embed)
+                    buyer = await bot.fetch_user(int(escrow_obj.successor.discord_id))
+                    await conversation_channel.send(f"{buyer.mention} the escrow is released successfully. Please use `/balance` to check your new balance.\nOr, `/withdraw tnbc` to withdraw tnbc into your wallet.",
+                                                    embed=embed)
+                    await conversation_channel.send(f"{buyer.mention} {ctx.author.mention} How was your trade experience with the buyer/ seller?",
+                                                    components=[
+                                                        create_actionrow(
+                                                            create_button(
+                                                                custom_id=f"escrowreview_{escrow_obj.uuid_hex}_GOOD",
+                                                                style=ButtonStyle.green,
+                                                                label="👍"
+                                                            ),
+                                                            create_button(
+                                                                custom_id=f"escrowreview_{escrow_obj.uuid_hex}_NEUTRAL",
+                                                                style=ButtonStyle.blue,
+                                                                label="😐"
+                                                            ),
+                                                            create_button(
+                                                                custom_id=f"escrowreview_{escrow_obj.uuid_hex}_BAD",
+                                                                style=ButtonStyle.red,
+                                                                label="👎"
+                                                            )
+                                                        )
+                                                    ])
 
                 recent_trade_channel = bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
@@ -334,6 +358,56 @@ async def on_component(ctx: ComponentContext):
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chainscan", style=ButtonStyle.green, label="Sent? Check new balance."))])
 
+    elif button_type == "escrowreview":
+
+        escrow_id = button[1]
+        feedback_type = button[2]
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Escrow.objects.filter(Q(initiator=discord_user) |
+                                 Q(successor=discord_user),
+                                 Q(uuid_hex=escrow_id)).exists():
+
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
+
+            escrow_review, created = EscrowReview.objects.get_or_create(escrow=escrow_obj, feedback_by=discord_user, defaults={'feedback': feedback_type})
+
+            if discord_user == escrow_obj.successor:
+                user_profile = get_or_create_user_profile(escrow_obj.initiator)
+            else:
+                user_profile = get_or_create_user_profile(escrow_obj.successor)
+
+            if created:
+                user_profile.total_feedback += 1
+                user_profile.save()
+            else:
+                if escrow_review.feedback == EscrowReview.GOOD:
+                    user_profile.positive_feeback -= 1
+                elif escrow_review.feedback == EscrowReview.BAD:
+                    user_profile.negative_feedback -= 1
+                else:
+                    user_profile.neutral_feedback -= 1
+                user_profile.save()
+
+            if feedback_type == "GOOD":
+                escrow_review.feedback = EscrowReview.GOOD
+                user_profile.positive_feeback += 1
+            elif feedback_type == "BAD":
+                escrow_review.feedback = EscrowReview.BAD
+                user_profile.negative_feedback += 1
+            else:
+                escrow_review.feedback = EscrowReview.NEUTRAL
+                user_profile.neutral_feedback += 1
+
+            escrow_review.save()
+            user_profile.save()
+
+            await ctx.send(f"{ctx.author.mention} gave a review of their experience while trading.")
+
+        else:
+            embed = discord.Embed(title="Error!", description="You do not have permission to perform the action.", color=0xe81111)
+            await ctx.send(embed=embed, hidden=True)
     else:
         await ctx.send("Where did you find this button??", hidden=True)
 

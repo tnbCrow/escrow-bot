@@ -16,8 +16,20 @@ class Profile(models.Model):
     total_escrows = models.IntegerField(default=0)
     total_disputes = models.IntegerField(default=0)
 
+    total_feedback = models.IntegerField(default=0)
+    positive_feeback = models.IntegerField(default=0)
+    negative_feedback = models.IntegerField(default=0)
+    neutral_feedback = models.IntegerField(default=0)
+
     def get_int_total_tnbc_escrowed(self):
         return int(self.total_tnbc_escrowed / settings.TNBC_MULTIPLICATION_FACTOR)
+
+    def get_positive_feeback_percentage(self):
+
+        if self.total_feedback == 0:
+            return 0
+
+        return int(self.positive_feeback / self.total_feedback * 100)
 
     def __str__(self):
         return f"User: {self.user};"

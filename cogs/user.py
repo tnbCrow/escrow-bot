@@ -180,6 +180,7 @@ class user(commands.Cog):
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Total Trade(s)', value=user_profile.total_escrows)
         embed.add_field(name='Total Dispute(s)', value=user_profile.total_disputes)
+        embed.add_field(name='Positive Feedback', value=f"{user_profile.get_positive_feeback_percentage()}%")
 
         await ctx.send(embed=embed)
 
