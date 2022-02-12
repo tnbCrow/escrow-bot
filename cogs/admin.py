@@ -513,39 +513,55 @@ class admin(commands.Cog):
         await ctx.send(embed=embed, hidden=True)
 
     @cog_ext.cog_subcommand(base="admin",
-                            name="remove_buy_adv",
-                            description="The buy advertisement that you want to remove.",
+                            name="remove_adv",
+                            description="The advertisement that you want to remove.",
                             options=[
                                 create_option(
                                     name="advertisement_id",
-                                    description="Enter the advertisement id you want to check the status of.",
+                                    description="the ID of the advertisement you want to delete.",
                                     option_type=3,
                                     required=True
                                 )
                             ]
                             )
-    async def admin_remove_buy_adv(self, ctx, advertisement_id: str):
+    async def admin_remove_adv(self, ctx, advertisement_id: str):
 
         await ctx.defer(hidden=True)
 
         if int(settings.ADMIN_ROLE_ID) in [y.id for y in ctx.author.roles]:
 
-            if Advertisement.objects.filter(uuid_hex=advertisement_id, side=Advertisement.BUY).exists():
-                Advertisement.objects.filter(uuid_hex=advertisement_id).delete()
-                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offers = create_offer_table(Advertisement.BUY, 16)
+            if Advertisement.objects.filter(uuid_hex=advertisement_id).exists():
 
-                async for oldMessage in buy_offer_channel.history():
-                    await oldMessage.delete()
+                advertisement = Advertisement.objects.get(uuid_hex=advertisement_id)
+                advertisement.delete()
 
-                await buy_offer_channel.send("**Buy Advertisements**")
-                for offer in offers:
-                    await buy_offer_channel.send(f"```{offer}```")
-                await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                if advertisement.side == Advertisement.BUY:
+                    buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+                    offers = create_offer_table(Advertisement.BUY, 16)
+
+                    async for oldMessage in buy_offer_channel.history():
+                        await oldMessage.delete()
+
+                    await buy_offer_channel.send("**Buy Advertisements**")
+                    for offer in offers:
+                        await buy_offer_channel.send(f"```{offer}```")
+                    await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+
+                else:
+                    sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+                    offers = create_offer_table(Advertisement.SELL, 16)
+
+                    async for oldMessage in sell_order_channel.history():
+                        await oldMessage.delete()
+
+                    await sell_order_channel.send("**Sell Advertisements**")
+                    for offer in offers:
+                        await sell_order_channel.send(f"```{offer}```")
+                    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
                 embed = discord.Embed(title="Success!", description="Advertisement removed successfully.", color=0xe81111)
             else:
-                embed = discord.Embed(title="Error!", description="The buy advertisement your're tryig to delete does not exist.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description="The advertisement you're tryig to delete does not exist.", color=0xe81111)
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
 
