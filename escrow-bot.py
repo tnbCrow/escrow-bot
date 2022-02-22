@@ -340,7 +340,9 @@ async def on_component(ctx: ComponentContext):
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
 
-                await ctx.guild.me.edit(nick=f"Price: {convert_to_decimal(escrow_obj.price)}")
+                guild = bot.get_guild(int(settings.GUILD_ID))
+                await guild.me.edit(nick=f"Price: {convert_to_decimal(escrow_obj.price)}")
+
                 await ctx.send(embed=embed, hidden=True)
 
             else:

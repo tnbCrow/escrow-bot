@@ -503,7 +503,10 @@ class admin(commands.Cog):
             if success:
                 comma_seperated_amount = "{:,}".format(amount)
                 await recent_trade_channel.send(f"Verified Trade: {comma_seperated_amount} TNBC at {price} each. Payment Method: {payment_method}")
-                await ctx.guild.me.edit(nick=f"Price: {price} USDC")
+
+                guild = self.bot.get_guild(int(settings.GUILD_ID))
+                await guild.me.edit(nick=f"Price: {price} USDC")
+
                 embed = discord.Embed(title="Success!", description="Posted trade successfully.", color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description=f"Could not post the trade to API. {message}", color=0xe81111)

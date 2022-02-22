@@ -41,7 +41,7 @@ def create_offer_table(side, number_of_data):
         updated_at = humanize.naturalday(advertisement.updated_at)
 
         message += (
-            f"AdvID: {advertisement.uuid_hex};"
+            f"AdvID: {advertisement.uuid_hex}; "
             f"Amount: {comma_seperated_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)};"
             f"\nPayment Method(s): {payment_method_message}"
             f"\nMerchant Stats - Total Trades: {advertisement_owner_stats.total_escrows} | Vol: {comma_seperated_int(advertisement_owner_stats.total_tnbc_escrowed)} TNBC"
