@@ -291,10 +291,17 @@ class escrow(commands.Cog):
                         embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
                         conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+
                         if conversation_channel:
                             buyer = await self.bot.fetch_user(int(escrow_obj.successor.discord_id))
                             await conversation_channel.send(embed=embed)
-                            await conversation_channel.send(f"{buyer.mention}, escrow is funded successfully. You can now transfer payment to {ctx.author.mention}.")
+                            await conversation_channel.send(
+                                f"{buyer.mention}, escrow is funded successfully. "
+                                f"You can now transfer payment to the seller.\n\n"
+                                f"{buyer.mention}, please use the command `/escrow paid escrow_id: {escrow_obj.uuid_hex}` command "
+                                f"to notify {ctx.author.mention} that you have sent the payment."
+                            )
+
                     else:
                         embed = discord.Embed(title="Error!",
                                               description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {comma_seperated_int(escrow_obj.amount)} TNBC.\n\nPlease deposit extra {comma_seperated_int(escrow_obj.amount - seller_tnbc_wallet.get_available_balance())} TNBC using `/deposit tnbc` command.",
@@ -303,6 +310,45 @@ class escrow(commands.Cog):
                     embed = discord.Embed(title="Error!", description=f"You cannot fund the escrow of status {escrow_obj.status}.", color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description="This escrow is funded when selling TNBC to the buy advertisement.", color=0xe81111)
+        else:
+            embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
+
+        await ctx.send(embed=embed, hidden=True)
+
+    @cog_ext.cog_subcommand(base="escrow",
+                            name="paid",
+                            description="Mark the escrow as paid.",
+                            options=[
+                                create_option(
+                                    name="escrow_id",
+                                    description="Enter escrow id you want to fund.",
+                                    option_type=3,
+                                    required=True
+                                )
+                            ]
+                            )
+    async def escrow_paid(self, ctx, escrow_id: str):
+
+        await ctx.defer(hidden=True)
+
+        discord_user = get_or_create_discord_user(ctx.author.id)
+
+        if Escrow.objects.filter(Q(successor=discord_user), Q(uuid_hex=escrow_id)).exists():
+
+            escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
+
+            conversation_channel = self.bot.get_channel(int(escrow_obj.conversation_channel_id))
+
+            embed = discord.Embed(title="Escrow Marked Paid", description="Successfully notified the buyer.", color=0xe81111)
+
+            if conversation_channel:
+                seller = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
+                await conversation_channel.send(
+                    f"{seller.mention}, {ctx.author.mention} has notified that they have sent the payment.\n\n"
+                    f"Please use the command `/escrow release escrow_id: {escrow_obj.uuid_hex}` to release TNBC "
+                    "**ONLY IF YOU HAVE RECEIVED THE PAYMENT (THIS ACTION CAN NOT BE REVERTED)**"
+                )
+
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
