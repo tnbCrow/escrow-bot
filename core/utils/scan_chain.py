@@ -20,7 +20,7 @@ def check_confirmation():
     for txs in waiting_confirmations_txs:
 
         try:
-            r = requests.get(f"http://{settings.BANK_IP}/confirmation_blocks?block={txs.block}").json()
+            r = requests.get(f"http://{settings.BANK_IP}/confirmation_blocks?block__signature={txs.signature}").json()
 
         except requests.exceptions.RequestException:
             return False
