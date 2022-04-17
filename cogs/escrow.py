@@ -372,9 +372,10 @@ class escrow(commands.Cog):
 
         discord_user = get_or_create_discord_user(ctx.author.id)
 
-        if Escrow.objects.filter(Q(initiator=discord_user) |
-                                 Q(successor=discord_user),
-                                 Q(uuid_hex=escrow_id)).exists():
+        if Escrow.objects.filter(
+            Q(initiator=discord_user) |
+            Q(successor=discord_user),
+            Q(uuid_hex=escrow_id)).exists():
 
             escrow_obj = await sync_to_async(Escrow.objects.get)(uuid_hex=escrow_id)
 

@@ -288,14 +288,16 @@ class advertisement(commands.Cog):
                         integer_fee = amount_of_tnbc - int(amount_of_tnbc * (100 - settings.CROW_BOT_FEE) / 100)
                         database_fee = integer_fee * settings.TNBC_MULTIPLICATION_FACTOR
 
-                        escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
-                                                                                fee=database_fee,
-                                                                                price=advertisement.price,
-                                                                                initiator=advertisement.owner,
-                                                                                successor=buyer_discord_user,
-                                                                                side=Escrow.SELL,
-                                                                                conversation_channel_id=trade_chat_channel.id,
-                                                                                status=Escrow.NEW)
+                        escrow_obj = await sync_to_async(Escrow.objects.create)(
+                            amount=database_amount,
+                            fee=database_fee,
+                            price=advertisement.price,
+                            initiator=advertisement.owner,
+                            successor=buyer_discord_user,
+                            side=Escrow.SELL,
+                            conversation_channel_id=trade_chat_channel.id,
+                            status=Escrow.NEW
+                        )
                         embed = discord.Embed(title="Success.", description="", color=0xe81111)
                         embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
                         embed.add_field(name='Amount', value=comma_seperate_amount(amount_of_tnbc))
@@ -405,14 +407,16 @@ class advertisement(commands.Cog):
 
                             trade_chat_channel = await guild.create_text_channel(f"{ctx.author.name}-{buyer.name}", overwrites=overwrites, category=trade_chat_category)
 
-                            escrow_obj = await sync_to_async(Escrow.objects.create)(amount=database_amount,
-                                                                                    fee=database_fee,
-                                                                                    price=advertisement.price,
-                                                                                    initiator=seller_discord_user,
-                                                                                    successor=advertisement.owner,
-                                                                                    side=Escrow.BUY,
-                                                                                    conversation_channel_id=trade_chat_channel.id,
-                                                                                    status=Escrow.OPEN)
+                            escrow_obj = await sync_to_async(Escrow.objects.create)(
+                                amount=database_amount,
+                                fee=database_fee,
+                                price=advertisement.price,
+                                initiator=seller_discord_user,
+                                successor=advertisement.owner,
+                                side=Escrow.BUY,
+                                conversation_channel_id=trade_chat_channel.id,
+                                status=Escrow.OPEN
+                            )
                             seller_tnbc_wallet.locked += fee_plus_amount
                             seller_tnbc_wallet.save()
 
@@ -433,7 +437,7 @@ class advertisement(commands.Cog):
                                 payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
 
                             await trade_chat_channel.send(f"{buyer.name}, {ctx.author.name} is selling {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
-                            await trade_chat_channel.send(f"{buyer.mention}, You can now send payment to {ctx.author.name}")
+                            await trade_chat_channel.send(f"{buyer.mention}, TNBC is escrowed successfully. You can now send payment to {ctx.author.name}")
                             await trade_chat_channel.send(f"{ctx.author.mention}, Please use the command `/escrow release escrow_id: ESCROW_ID` to release TNBC into buyer's account **ONLY WHEN YOUR HAVE RECEIVED THE PAYMENT**.")
 
                         else:
