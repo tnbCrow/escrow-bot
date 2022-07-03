@@ -43,7 +43,11 @@ def get_wallet_balance(account_number):
     try:
         bank_config = requests.get(f'http://{settings.BANK_IP}/config?format=json').json()
         wallet_balance = requests.get(f"{bank_config['primary_validator']['protocol']}://{bank_config['primary_validator']['ip_address']}/accounts/{account_number}/balance?format=json").json()['balance']
-        return wallet_balance
+
+        if wallet_balance:
+            return wallet_balance
+
+        return 0
 
     except Exception:
 
