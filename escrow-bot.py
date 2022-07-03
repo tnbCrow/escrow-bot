@@ -53,9 +53,9 @@ async def help_general(ctx):
     await ctx.defer(hidden=True)
     embed = discord.Embed(title="General Commands", color=0xe81111)
     embed.add_field(name="/balance", value="Check your crow bot balance.", inline=False)
-    embed.add_field(name="/deposit tnbc", value="Deposit Leap Coin into your crow bot account.", inline=False)
-    embed.add_field(name="/withdraw tnbc tnbc_address: ADDRESS amount: AMOUNT", value="Withdraw Leap Coin into your Leap Coin wallet.", inline=False)
-    embed.add_field(name="/transactions tnbc", value="Check Leap Coin transaction history.", inline=False)
+    embed.add_field(name="/deposit", value="Deposit Leap Coin into your crow bot account.", inline=False)
+    embed.add_field(name="/withdraw tnbc_address: ADDRESS amount: AMOUNT", value="Withdraw Leap Coin into your Leap Coin wallet.", inline=False)
+    embed.add_field(name="/transactions", value="Check Leap Coin transaction history.", inline=False)
     embed.add_field(name="/payment_method add", value="Add a new payment method.", inline=False)
     embed.add_field(name="/payment_method all", value="List all your payment methods.", inline=False)
     embed.add_field(name="/payment_method remove", value="Delete particular payment method.", inline=False)
@@ -129,7 +129,7 @@ async def on_component(ctx: ComponentContext):
         embed.add_field(name='Locked Amount', value=comma_seperated_int(tnbc_wallet.locked))
         embed.add_field(name='Available Balance', value=comma_seperated_int(tnbc_wallet.get_available_balance()))
         embed.add_field(name='Deposit did not come through?', value="Leave a message on #help")
-        embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
+        embed.set_footer(text="Use /transactions command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="chainscan", style=ButtonStyle.green, label="Check Again"))])
 
@@ -310,7 +310,7 @@ async def on_component(ctx: ComponentContext):
                 conversation_channel = bot.get_channel(int(escrow_obj.conversation_channel_id))
                 if conversation_channel:
                     buyer = await bot.fetch_user(int(escrow_obj.successor.discord_id))
-                    await conversation_channel.send(f"{buyer.mention} the escrow is released successfully. Please use `/balance` to check your new balance.\nOr, `/withdraw tnbc` to withdraw tnbc into your wallet.",
+                    await conversation_channel.send(f"{buyer.mention} the escrow is released successfully. Please use `/balance` to check your new balance.\nOr, `/withdraw` to withdraw tnbc into your wallet.",
                                                     embed=embed)
                     await conversation_channel.send(f"{buyer.mention} {ctx.author.mention} How was your trade experience with the buyer/ seller?",
                                                     components=[

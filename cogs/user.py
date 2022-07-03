@@ -24,7 +24,7 @@ class user(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @cog_ext.cog_subcommand(base="deposit", name="tnbc", description="Deposit Leap Coin into your crow account.")
+    @cog_ext.cog_slash(name="deposit", description="Deposit Leap Coin into your crow account.")
     async def user_deposit(self, ctx):
 
         await ctx.defer(hidden=True)
@@ -54,28 +54,28 @@ class user(commands.Cog):
         embed.add_field(name='Balance (Leap Coin)', value=comma_seperated_int(tnbc_wallet.balance))
         embed.add_field(name='Locked (Leap Coin)', value=comma_seperated_int(tnbc_wallet.locked))
         embed.add_field(name='Available (Leap Coin)', value=comma_seperated_int(tnbc_wallet.get_available_balance()), inline=False)
-        embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
+        embed.set_footer(text="Use /transactions command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="deposittnbc", style=ButtonStyle.green, label="👛Deposit"))])
 
-    @cog_ext.cog_subcommand(base="withdraw",
-                            name="tnbc",
-                            description="Withdraw Leap Coin into your external wallet.",
-                            options=[
-                                create_option(
-                                    name="tnbc_address",
-                                    description="Leap Coin address to send Leap Coin to.",
-                                    option_type=3,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="amount",
-                                    description="No of Leap Coin to withdraw.",
-                                    option_type=4,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_slash(
+        name="withdraw",
+        description="Withdraw Leap Coin into your external wallet.",
+        options=[
+            create_option(
+                name="tnbc_address",
+                description="Leap Coin address to send Leap Coin to.",
+                option_type=3,
+                required=True
+            ),
+            create_option(
+                name="amount",
+                description="No of Leap Coin to withdraw.",
+                option_type=4,
+                required=True
+            )
+        ]
+    )
     async def user_withdraw(self, ctx, tnbc_address: str, amount: int):
 
         await ctx.defer(hidden=True)
@@ -89,9 +89,11 @@ class user(commands.Cog):
             if response:
                 if not amount < 1:
                     if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
-                        embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable Leap Coin (network fees included) available.",
-                                              color=0xe81111)
+                        embed = discord.Embed(
+                            title="Inadequate Funds!",
+                            description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable Leap Coin (network fees included) available.",
+                            color=0xe81111
+                        )
 
                     else:
                         hot_wallet_balance = get_wallet_balance(settings.TNBCROW_BOT_ACCOUNT_NUMBER)
@@ -102,15 +104,17 @@ class user(commands.Cog):
 
                             if block_response:
                                 if block_response.status_code == 201:
-                                    txs = Transaction.objects.create(confirmation_status=Transaction.WAITING_CONFIRMATION,
-                                                                     transaction_status=Transaction.IDENTIFIED,
-                                                                     direction=Transaction.OUTGOING,
-                                                                     account_number=tnbc_address,
-                                                                     amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
-                                                                     fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
-                                                                     signature=block_response.json()['signature'],
-                                                                     block=block_response.json()['id'],
-                                                                     memo=tnbc_wallet.memo)
+                                    txs = Transaction.objects.create(
+                                        confirmation_status=Transaction.WAITING_CONFIRMATION,
+                                        transaction_status=Transaction.IDENTIFIED,
+                                        direction=Transaction.OUTGOING,
+                                        account_number=tnbc_address,
+                                        amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
+                                        fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
+                                        signature=block_response.json()['signature'],
+                                        block=block_response.json()['id'],
+                                        memo=tnbc_wallet.memo
+                                    )
                                     converted_amount_plus_fee = (amount + fee) * settings.TNBC_MULTIPLICATION_FACTOR
 
                                     tnbc_wallet.balance -= converted_amount_plus_fee
@@ -122,9 +126,11 @@ class user(commands.Cog):
                                     statistic.total_balance -= converted_amount_plus_fee
                                     statistic.save()
 
-                                    embed = discord.Embed(title="Coins Withdrawn.",
-                                                          description=f"Successfully withdrawn {amount} Leap Coin to {tnbc_address} \n Use `/balance` to check your new balance.",
-                                                          color=0xe81111)
+                                    embed = discord.Embed(
+                                        title="Coins Withdrawn.",
+                                        description=f"Successfully withdrawn {amount} Leap Coin to {tnbc_address} \n Use `/balance` to check your new balance.",
+                                        color=0xe81111
+                                    )
                                 else:
                                     embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
                             else:
@@ -140,7 +146,7 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="transactions", name="tnbc", description="Check Transaction History.")
+    @cog_ext.cog_slash(name="transactions", description="Check Transaction History.")
     async def user_transactions(self, ctx):
 
         await ctx.defer(hidden=True)
@@ -159,16 +165,17 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_slash(name="profile",
-                       description="Check User Profile.",
-                       options=[
-                           create_option(
-                               name="user",
-                               description="User you want to check the profile of.",
-                               option_type=6,
-                               required=True
-                           )
-                       ])
+    @cog_ext.cog_slash(
+        name="profile",
+        description="Check User Profile.",
+        options=[
+            create_option(
+                name="user",
+                description="User you want to check the profile of.",
+                option_type=6,
+                required=True
+            )
+        ])
     async def user_profile(self, ctx, user: discord.Member):
 
         await ctx.defer()
@@ -184,30 +191,31 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @cog_ext.cog_subcommand(base="payment_method",
-                            name="add",
-                            description="Add a new payment method.",
-                            options=[
-                                create_option(
-                                    name="name_of_payment_method",
-                                    description="Eg: Bitcoin, Paypal, Bank Of America.",
-                                    option_type=3,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="details",
-                                    description="Eg: BITCOIN ADDRESS, PAYPAL_EMAIL, BANK_ACCOUNT_DETAILS.",
-                                    option_type=3,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="conditions",
-                                    description="Additional conditions for trade. Eg: Dont send less than 0.01 BTC, send as friend on paypal.",
-                                    option_type=3,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_subcommand(
+        base="payment_method",
+        name="add",
+        description="Add a new payment method.",
+        options=[
+            create_option(
+                name="name_of_payment_method",
+                description="Eg: Bitcoin, Paypal, Bank Of America.",
+                option_type=3,
+                required=True
+            ),
+            create_option(
+                name="details",
+                description="Eg: BITCOIN ADDRESS, PAYPAL_EMAIL, BANK_ACCOUNT_DETAILS.",
+                option_type=3,
+                required=True
+            ),
+            create_option(
+                name="conditions",
+                description="Additional conditions for trade. Eg: Dont send less than 0.01 BTC, send as friend on paypal.",
+                option_type=3,
+                required=True
+            )
+        ]
+    )
     async def payment_method_add(self, ctx, name_of_payment_method: str, details: str, conditions: str):
 
         await ctx.defer(hidden=True)
@@ -283,18 +291,19 @@ class user(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="payment_method",
-                            name="remove",
-                            description="Remove a particular payment method.",
-                            options=[
-                                create_option(
-                                    name="payment_method_id",
-                                    description="ID of the payment method.",
-                                    option_type=3,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_subcommand(
+        base="payment_method",
+        name="remove",
+        description="Remove a particular payment method.",
+        options=[
+            create_option(
+                name="payment_method_id",
+                description="ID of the payment method.",
+                option_type=3,
+                required=True
+            )
+        ]
+    )
     async def payment_method_remove(self, ctx, payment_method_id: str):
 
         await ctx.defer(hidden=True)

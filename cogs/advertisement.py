@@ -18,40 +18,41 @@ class advertisement(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @cog_ext.cog_subcommand(base="adv",
-                            name="create",
-                            description="Create a new advertisement.",
-                            options=[
-                                create_option(
-                                    name="order_type",
-                                    description="Type of order you want to create.",
-                                    option_type=3,
-                                    required=True,
-                                    choices=[
-                                        create_choice(
-                                            name="Buying",
-                                            value="BUY"
-                                        ),
-                                        create_choice(
-                                            name="Selling",
-                                            value="SELL"
-                                        )
-                                    ]
-                                ),
-                                create_option(
-                                    name="amount_of_tnbc",
-                                    description="Enter Leap Coin you want to put in for advertisement.",
-                                    option_type=4,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="price_per_tnbc",
-                                    description="Rate you want to sell your Leap Coin at.",
-                                    option_type=10,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_subcommand(
+        base="adv",
+        name="create",
+        description="Create a new advertisement.",
+        options=[
+            create_option(
+                name="order_type",
+                description="Type of order you want to create.",
+                option_type=3,
+                required=True,
+                choices=[
+                    create_choice(
+                        name="Buying",
+                        value="BUY"
+                    ),
+                    create_choice(
+                        name="Selling",
+                        value="SELL"
+                    )
+                ]
+            ),
+            create_option(
+                name="amount_of_tnbc",
+                description="Enter Leap Coin you want to put in for advertisement.",
+                option_type=4,
+                required=True
+            ),
+            create_option(
+                name="price_per_tnbc",
+                description="Rate you want to sell your Leap Coin at.",
+                option_type=10,
+                required=True
+            )
+        ]
+    )
     async def advertisement_create(self, ctx, order_type: str, amount_of_tnbc: int, price_per_tnbc: float):
 
         await ctx.defer(hidden=True)
@@ -94,27 +95,32 @@ class advertisement(commands.Cog):
 
                         await log_send(bot=self.bot, message=f"{ctx.author.mention} created BUY Advertisement.\nAmount: {amount_of_tnbc} Leap Coin.\nID: {advertisement.uuid_hex}\nPrice: {price_per_tnbc}.")
 
-                        embed = discord.Embed(title="Yaay!",
-                                              description="Buy order created successfully. Use the command `/adv cancel` to remove the advertisement.",
-                                              color=0xe81111)
+                        embed = discord.Embed(
+                            title="Yaay!",
+                            description="Buy order created successfully. Use the command `/adv cancel` to remove the advertisement.",
+                            color=0xe81111
+                        )
                 else:
-                    embed = discord.Embed(title="Error!",
-                                          description="The price can not be less than 0.0 and more than 100.",
-                                          color=0xe81111)
+                    embed = discord.Embed(
+                        title="Error!",
+                        description="The price can not be less than 0.0 and more than 100.",
+                        color=0xe81111
+                    )
             else:
-                embed = discord.Embed(title="Error!",
-                                      description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} Leap Coin and more than 500,000 Leap Coin.",
-                                      color=0xe81111)
+                embed = discord.Embed(
+                    title="Error!",
+                    description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} Leap Coin and more than 500,000 Leap Coin.",
+                    color=0xe81111
+                )
         else:
-            embed = discord.Embed(title="No Payment Method Set.",
-                                  description="Please use the command `/payment_method add` to add the payment method you'd like to receive money in.",
-                                  color=0xe81111)
+            embed = discord.Embed(
+                title="No Payment Method Set.",
+                description="Please use the command `/payment_method add` to add the payment method you'd like to receive money in.",
+                color=0xe81111
+            )
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="adv",
-                            name="my",
-                            description="List all your advertisements.",
-                            )
+    @cog_ext.cog_subcommand(base="adv", name="my", description="List all your advertisements.")
     async def advertisement_my(self, ctx):
 
         await ctx.defer(hidden=True)
@@ -139,18 +145,19 @@ class advertisement(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="adv",
-                            name="cancel",
-                            description="Cancel the particular advertisement.",
-                            options=[
-                                create_option(
-                                    name="advertisement_id",
-                                    description="Enter the advertisement id you want to check the status of.",
-                                    option_type=3,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_subcommand(
+        base="adv",
+        name="cancel",
+        description="Cancel the particular advertisement.",
+        options=[
+            create_option(
+                name="advertisement_id",
+                description="Enter the advertisement id you want to check the status of.",
+                option_type=3,
+                required=True
+            )
+        ]
+    )
     async def advertisement_cancel(self, ctx, advertisement_id: str):
 
         await ctx.defer(hidden=True)
@@ -181,24 +188,25 @@ class advertisement(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="adv",
-                            name="buy",
-                            description="Buy Leap Coin from the advertisement.",
-                            options=[
-                                create_option(
-                                    name="advertisement_id",
-                                    description="ID of the advertisement you want to buy from.",
-                                    option_type=3,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="amount_of_tnbc",
-                                    description="Amount of Leap Coin you'd like to buy.",
-                                    option_type=4,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_subcommand(
+        base="adv",
+        name="buy",
+        description="Buy Leap Coin from the advertisement.",
+        options=[
+            create_option(
+                name="advertisement_id",
+                description="ID of the advertisement you want to buy from.",
+                option_type=3,
+                required=True
+            ),
+            create_option(
+                name="amount_of_tnbc",
+                description="Amount of Leap Coin you'd like to buy.",
+                option_type=4,
+                required=True
+            )
+        ]
+    )
     async def advertisement_buy(self, ctx, advertisement_id: str, amount_of_tnbc: int):
 
         await ctx.defer(hidden=True)
@@ -276,9 +284,11 @@ class advertisement(commands.Cog):
                     else:
                         embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} Leap Coin available to buy.", color=0xe81111)
                 else:
-                    embed = discord.Embed(title="Error!",
-                                          description=f"You can not buy less than {settings.MIN_TNBC_ALLOWED} Leap Coin from an advertisement.",
-                                          color=0xe81111)
+                    embed = discord.Embed(
+                        title="Error!",
+                        description=f"You can not buy less than {settings.MIN_TNBC_ALLOWED} Leap Coin from an advertisement.",
+                        color=0xe81111
+                    )
             else:
                 embed = discord.Embed(title="Error!", description="You can not buy Leap Coin from your own advertisement.", color=0xe81111)
 
@@ -287,24 +297,25 @@ class advertisement(commands.Cog):
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_subcommand(base="adv",
-                            name="sell",
-                            description="Buy Leap Coin to the advertisement.",
-                            options=[
-                                create_option(
-                                    name="advertisement_id",
-                                    description="ID of the advertisement you want to sell.",
-                                    option_type=3,
-                                    required=True
-                                ),
-                                create_option(
-                                    name="amount_of_tnbc",
-                                    description="Amount of Leap Coin you'd like to sell.",
-                                    option_type=4,
-                                    required=True
-                                )
-                            ]
-                            )
+    @cog_ext.cog_subcommand(
+        base="adv",
+        name="sell",
+        description="Buy Leap Coin to the advertisement.",
+        options=[
+            create_option(
+                name="advertisement_id",
+                description="ID of the advertisement you want to sell.",
+                option_type=3,
+                required=True
+            ),
+            create_option(
+                name="amount_of_tnbc",
+                description="Amount of Leap Coin you'd like to sell.",
+                option_type=4,
+                required=True
+            )
+        ]
+        )
     async def advertisement_sell(self, ctx, advertisement_id: str, amount_of_tnbc: int):
 
         await ctx.defer(hidden=True)
@@ -390,7 +401,7 @@ class advertisement(commands.Cog):
                             embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} Leap Coin available to sell.", color=0xe81111)
                     else:
                         embed = discord.Embed(title="Error!",
-                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} Leap Coin out of required {comma_seperated_int(fee_plus_amount)} Leap Coin (including fees).\nPlease deposit the extra {comma_seperated_int(fee_plus_amount - seller_tnbc_wallet.get_available_balance())} Leap Coin using `/deposit tnbc` command.",
+                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} Leap Coin out of required {comma_seperated_int(fee_plus_amount)} Leap Coin (including fees).\nPlease deposit the extra {comma_seperated_int(fee_plus_amount - seller_tnbc_wallet.get_available_balance())} Leap Coin using `/deposit` command.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
