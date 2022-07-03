@@ -1,0 +1,855 @@
+{
+    "count": 53,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "uuid": "79aa9013-24e7-4750-ad98-d53958f4f017",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "ce108b13-0f42-4e4d-9cfd-8d9e06ebf014",
+                "discord_id": "694233104986144828",
+                "created_at": "2021-10-27T05:19:22.203844Z",
+                "updated_at": "2021-10-27T05:19:22.203868Z"
+            }
+        },
+        {
+            "uuid": "44788451-0848-4045-b313-ac6676c16dcf",
+            "total_tnbc_escrowed": 7350000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "e7bcafa5-2302-455e-affe-4ca722ad788c",
+                "discord_id": "554554719482281986",
+                "created_at": "2021-10-04T10:44:03.982936Z",
+                "updated_at": "2021-10-04T10:44:03.982970Z"
+            }
+        },
+        {
+            "uuid": "fbf791d6-3e79-4fe2-853d-0709cd856401",
+            "total_tnbc_escrowed": 4900000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "7712ec8e-4a24-4e7c-b6a3-9887478352b4",
+                "discord_id": "393451651496673280",
+                "created_at": "2021-10-04T12:59:04.888404Z",
+                "updated_at": "2021-10-04T12:59:04.888428Z"
+            }
+        },
+        {
+            "uuid": "9958cc39-accb-436a-8e43-e2c9ed70ce49",
+            "total_tnbc_escrowed": 98000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "6beb5d61-7dcf-4172-952f-0e83d2307b8f",
+                "discord_id": "762901205256110100",
+                "created_at": "2021-10-04T14:46:21.660306Z",
+                "updated_at": "2021-10-04T14:46:21.660336Z"
+            }
+        },
+        {
+            "uuid": "c3f48bac-c9b2-4fa2-88f0-c76024db940c",
+            "total_tnbc_escrowed": 1000000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "6ea3203b-871e-4534-9cb2-d092092f937c",
+                "discord_id": "639379746509160469",
+                "created_at": "2021-10-04T13:54:44.580311Z",
+                "updated_at": "2021-10-04T13:54:44.580343Z"
+            }
+        },
+        {
+            "uuid": "5f74ff78-711d-46af-b213-227eb8280bed",
+            "total_tnbc_escrowed": 980000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "5787519b-198e-44b6-8fc0-21087d586453",
+                "discord_id": "298596958858117120",
+                "created_at": "2021-10-12T23:52:20.736050Z",
+                "updated_at": "2021-10-12T23:52:20.736077Z"
+            }
+        },
+        {
+            "uuid": "fe8480a6-4e03-42b5-96a4-9a991f394f85",
+            "total_tnbc_escrowed": 2300000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "ebb1c557-e6e8-4e96-b604-74bc9ccd2831",
+                "discord_id": "463167370265886722",
+                "created_at": "2021-10-09T21:54:28.393777Z",
+                "updated_at": "2021-10-09T21:54:28.393805Z"
+            }
+        },
+        {
+            "uuid": "e3ceacc0-11d4-409d-bf7c-e3e2d7b09fa5",
+            "total_tnbc_escrowed": 1960000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "bae48561-a3bc-4aab-bdc4-292ab850b4c4",
+                "discord_id": "840624303472902214",
+                "created_at": "2021-10-22T01:19:22.125714Z",
+                "updated_at": "2021-10-22T01:19:22.125737Z"
+            }
+        },
+        {
+            "uuid": "e59ce81f-22f1-44e6-ac9e-7cf3831b7488",
+            "total_tnbc_escrowed": 1000000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "490d6cd0-7051-40d1-a489-1ec10983abd1",
+                "discord_id": "665654086678347786",
+                "created_at": "2021-10-19T10:50:34.698866Z",
+                "updated_at": "2021-10-19T10:50:34.698889Z"
+            }
+        },
+        {
+            "uuid": "c4468194-1311-4684-b030-bd5256ff59bd",
+            "total_tnbc_escrowed": 1960000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "8c5eb710-0b9e-49d9-bcdd-399a96e20106",
+                "discord_id": "875386457437667328",
+                "created_at": "2021-10-28T08:47:38.926665Z",
+                "updated_at": "2021-10-28T08:47:38.926694Z"
+            }
+        },
+        {
+            "uuid": "6f81ac4b-fdd7-479d-97f5-6569ff759bb3",
+            "total_tnbc_escrowed": 1000000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "b0b3a0e8-294e-4d40-957b-bd8386bc39b5",
+                "discord_id": "812317889951957022",
+                "created_at": "2021-11-06T17:07:38.922645Z",
+                "updated_at": "2021-11-06T17:07:38.922705Z"
+            }
+        },
+        {
+            "uuid": "7bdda72d-0853-49b1-81a6-30c453d0f6af",
+            "total_tnbc_escrowed": 1960000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "a6184aef-afb2-4423-a529-f6992f59be3b",
+                "discord_id": "279368409672581120",
+                "created_at": "2021-11-08T11:33:47.884377Z",
+                "updated_at": "2021-11-08T11:33:47.884409Z"
+            }
+        },
+        {
+            "uuid": "4c16f9d8-7f79-462b-8fde-30d42032d6b4",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "e83aa144-2a3e-4b14-81bd-d93491e500bf",
+                "discord_id": "779731127337484298",
+                "created_at": "2021-11-06T05:31:45.224674Z",
+                "updated_at": "2021-11-06T05:31:45.224700Z"
+            }
+        },
+        {
+            "uuid": "376b5756-3b95-4cca-8c30-b608864a08e0",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "24773ed2-019a-44a4-bedb-3b10886b6693",
+                "discord_id": "457520790053584907",
+                "created_at": "2021-10-07T06:02:16.900269Z",
+                "updated_at": "2021-10-07T06:02:16.900300Z"
+            }
+        },
+        {
+            "uuid": "e38b658f-6b16-426a-bf41-e6bdc5c05611",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "d18eea07-3313-4796-be4c-64bc884cfaa0",
+                "discord_id": "436790540726435840",
+                "created_at": "2021-10-07T08:50:36.749326Z",
+                "updated_at": "2021-10-07T08:50:36.749348Z"
+            }
+        },
+        {
+            "uuid": "5dc50d42-251f-4e0a-8fd5-9279abe477b6",
+            "total_tnbc_escrowed": 2254000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "2159ee37-88b1-4c83-8dd7-affe2fb53778",
+                "discord_id": "896596733021290499",
+                "created_at": "2021-10-15T01:04:46.432347Z",
+                "updated_at": "2021-10-15T01:04:46.432496Z"
+            }
+        },
+        {
+            "uuid": "30dc7b33-fd46-4cf0-b3d1-9f76c9f0a3a3",
+            "total_tnbc_escrowed": 2870000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "dbab3748-9776-490e-8257-4617ada317d1",
+                "discord_id": "632870840056283161",
+                "created_at": "2021-11-01T11:52:59.493848Z",
+                "updated_at": "2021-11-01T11:52:59.493870Z"
+            }
+        },
+        {
+            "uuid": "f51103a1-22d6-4c9c-8cd3-23357f6a8b8d",
+            "total_tnbc_escrowed": 600000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "a8b1382b-d849-4972-adb1-ed1d6a912322",
+                "discord_id": "682369399520493646",
+                "created_at": "2021-10-04T11:34:47.778379Z",
+                "updated_at": "2021-10-04T11:34:47.778423Z"
+            }
+        },
+        {
+            "uuid": "5ded31ca-c377-436e-a342-3feefa9c5d6b",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "92005d52-a9c3-407b-b5ec-c70fe27f8623",
+                "discord_id": "788824582576406539",
+                "created_at": "2021-10-19T19:52:52.434258Z",
+                "updated_at": "2021-10-19T19:52:52.434287Z"
+            }
+        },
+        {
+            "uuid": "0a7d0b57-836f-4e4d-83fb-b45d0481a02d",
+            "total_tnbc_escrowed": 500000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "9489d0d9-1cc1-455c-a281-4e73d00ff843",
+                "discord_id": "135723242978672640",
+                "created_at": "2021-11-22T18:21:08.167564Z",
+                "updated_at": "2021-11-22T18:21:08.167593Z"
+            }
+        },
+        {
+            "uuid": "f478b6b7-8bf0-4bb7-bde1-c727b597cf1b",
+            "total_tnbc_escrowed": 1225000000000,
+            "total_escrows": 3,
+            "total_disputes": 0,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "dbfe85e0-71ea-43eb-9f91-56713c7c4d10",
+                "discord_id": "744095526022021201",
+                "created_at": "2021-12-21T10:13:34.619286Z",
+                "updated_at": "2021-12-21T10:13:34.619313Z"
+            }
+        },
+        {
+            "uuid": "c7ff5543-cf46-4c0f-897c-53542cfbb6a8",
+            "total_tnbc_escrowed": 1146600000000,
+            "total_escrows": 3,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "3547e725-2e68-4951-852f-6330fc9edb91",
+                "discord_id": "786919767311253515",
+                "created_at": "2021-11-01T19:00:16.081328Z",
+                "updated_at": "2021-11-01T19:00:16.081359Z"
+            }
+        },
+        {
+            "uuid": "55137417-1380-46c8-b42b-c8e93f62d9b7",
+            "total_tnbc_escrowed": 300000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "2de4046d-75af-4abc-a040-43983f7f1eee",
+                "discord_id": "559572838890078208",
+                "created_at": "2021-10-30T05:47:49.423270Z",
+                "updated_at": "2021-10-30T05:47:49.423293Z"
+            }
+        },
+        {
+            "uuid": "7338048a-6829-4f94-9d49-bd8ec4ece15c",
+            "total_tnbc_escrowed": 490000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "395a314c-e46b-45c5-bbfa-82675b37fb21",
+                "discord_id": "866246279453868032",
+                "created_at": "2021-11-23T14:35:05.035853Z",
+                "updated_at": "2021-11-23T14:35:05.035874Z"
+            }
+        },
+        {
+            "uuid": "a44d63a4-7572-4f1f-bdec-af33195a16d1",
+            "total_tnbc_escrowed": 500000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "757dffdd-1251-4cb8-a1d3-8fa3a4b416a9",
+                "discord_id": "909104499208097792",
+                "created_at": "2021-11-13T17:10:13.477882Z",
+                "updated_at": "2021-11-13T17:10:13.477911Z"
+            }
+        },
+        {
+            "uuid": "c683249b-3a93-4d69-8bed-e64aac8a0bca",
+            "total_tnbc_escrowed": 514500000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "9a3bcbbd-3bc4-495b-9327-95744073bcf6",
+                "discord_id": "848965596330721330",
+                "created_at": "2021-11-29T15:04:45.854270Z",
+                "updated_at": "2021-11-29T15:04:45.854303Z"
+            }
+        },
+        {
+            "uuid": "c5d3528d-27ca-4864-977d-cb717aeb281a",
+            "total_tnbc_escrowed": 294000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "efc68175-0a8a-4875-9c81-dabfb022b148",
+                "discord_id": "192133271818076161",
+                "created_at": "2021-12-03T00:39:32.426195Z",
+                "updated_at": "2021-12-03T00:39:32.426217Z"
+            }
+        },
+        {
+            "uuid": "e015b51d-f5fc-4a6a-b43d-b5fdd4c5926c",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "5ab3118b-8347-4a21-a23a-80f276899540",
+                "discord_id": "914457775910834227",
+                "created_at": "2021-12-09T02:00:34.785782Z",
+                "updated_at": "2021-12-09T02:00:34.785814Z"
+            }
+        },
+        {
+            "uuid": "bbd5a894-27b8-48f1-beb9-c428fc94939f",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "e87604a6-5953-4ec3-9d9d-b17bab4925a6",
+                "discord_id": "301509428572585985",
+                "created_at": "2021-10-09T12:03:16.511204Z",
+                "updated_at": "2021-10-09T12:03:16.511226Z"
+            }
+        },
+        {
+            "uuid": "b9e09471-06d1-4ab0-b693-35fbc00ba0b8",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "08032821-2b1d-4912-bc02-fe46bbd8f852",
+                "discord_id": "903507721960189962",
+                "created_at": "2021-11-23T14:59:14.644458Z",
+                "updated_at": "2021-11-23T14:59:14.644489Z"
+            }
+        },
+        {
+            "uuid": "da4cfb18-53a6-4b7c-a599-3c55caec9639",
+            "total_tnbc_escrowed": 9800000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "262d6d1f-1156-4089-8add-1d4f1c208730",
+                "discord_id": "631986191385755648",
+                "created_at": "2021-10-10T09:16:30.974949Z",
+                "updated_at": "2021-10-10T09:16:30.974969Z"
+            }
+        },
+        {
+            "uuid": "dbe0c592-3049-4dfa-a6dc-03d7d2efda6a",
+            "total_tnbc_escrowed": 5166000000000,
+            "total_escrows": 11,
+            "total_disputes": 0,
+            "total_feedback": 2,
+            "positive_feeback": 2,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "635a6d43-ccb8-4f2a-8b3d-8ffc36061fa0",
+                "discord_id": "534628936571813889",
+                "created_at": "2021-10-02T08:20:28.431657Z",
+                "updated_at": "2021-10-02T08:20:28.431681Z"
+            }
+        },
+        {
+            "uuid": "fc18a6a7-1367-4518-8ef0-149afec690ca",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 1,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "5f2fc4d4-a094-455a-a984-6e4d902068c4",
+                "discord_id": "135521715378847744",
+                "created_at": "2021-12-05T23:06:03.300766Z",
+                "updated_at": "2021-12-05T23:06:03.300791Z"
+            }
+        },
+        {
+            "uuid": "39037144-26ac-4f2a-9ab4-17dfa61edba6",
+            "total_tnbc_escrowed": 7500000000000,
+            "total_escrows": 3,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "8d6de1b5-e237-4ea5-ba71-763c249833a3",
+                "discord_id": "692847919258402898",
+                "created_at": "2021-10-04T12:53:24.117945Z",
+                "updated_at": "2021-10-04T12:53:24.117974Z"
+            }
+        },
+        {
+            "uuid": "ba211922-7813-491a-ac89-3724978dfdbd",
+            "total_tnbc_escrowed": 200000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "230e4a5f-f2b1-427d-b105-5deb42374382",
+                "discord_id": "719244337510088774",
+                "created_at": "2022-03-14T16:23:42.481293Z",
+                "updated_at": "2022-03-14T16:23:42.481316Z"
+            }
+        },
+        {
+            "uuid": "3ee1a678-c77f-4924-b45b-844dd85f3a81",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "9ad7d00a-1035-4229-abbe-95d458cafe1b",
+                "discord_id": "788469793296613386",
+                "created_at": "2022-03-20T21:17:16.976460Z",
+                "updated_at": "2022-03-20T21:17:16.976860Z"
+            }
+        },
+        {
+            "uuid": "cddf33a0-6870-40a5-8db7-a2bde7c82324",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "019573b3-3190-439c-8057-45f201828a6f",
+                "discord_id": "217686388680818688",
+                "created_at": "2021-10-15T04:57:41.743537Z",
+                "updated_at": "2021-10-15T04:57:41.743557Z"
+            }
+        },
+        {
+            "uuid": "0e3e09d2-430e-4309-832e-4848229537a6",
+            "total_tnbc_escrowed": 5047000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "c1c359ec-76f0-48e1-9e64-76e1b8bab38a",
+                "discord_id": "723409971093438517",
+                "created_at": "2022-01-08T19:57:48.325092Z",
+                "updated_at": "2022-01-08T19:57:48.325132Z"
+            }
+        },
+        {
+            "uuid": "840d459c-5ad7-4899-b7b2-e26a9719cac8",
+            "total_tnbc_escrowed": 21000000000000,
+            "total_escrows": 3,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "e22edc41-87b6-4a5a-8488-b30050cf6329",
+                "discord_id": "542725192313602089",
+                "created_at": "2021-10-04T10:38:33.912118Z",
+                "updated_at": "2021-10-04T10:38:33.912147Z"
+            }
+        },
+        {
+            "uuid": "c5a3657d-09cb-426d-b42f-0927ae30055a",
+            "total_tnbc_escrowed": 4900000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "0f837a0a-9ab9-40da-b980-047c51a4000b",
+                "discord_id": "843827493869191198",
+                "created_at": "2021-10-04T14:47:04.429925Z",
+                "updated_at": "2021-10-04T14:47:04.429952Z"
+            }
+        },
+        {
+            "uuid": "8888db35-813a-477f-9a47-5136b097b6d4",
+            "total_tnbc_escrowed": 2500000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "92112a2a-0d60-4f15-8b3a-1d32cfb4ebec",
+                "discord_id": "646688005385486346",
+                "created_at": "2021-12-08T22:59:23.737913Z",
+                "updated_at": "2021-12-08T22:59:23.737943Z"
+            }
+        },
+        {
+            "uuid": "fd1f88ee-2740-45df-af93-f6831254f8db",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "ea2732fb-6b81-4900-b66a-230f6e8592c7",
+                "discord_id": "799724688451436564",
+                "created_at": "2021-10-11T10:11:02.719360Z",
+                "updated_at": "2021-10-11T10:11:02.719390Z"
+            }
+        },
+        {
+            "uuid": "c702c54f-e041-4ec7-b251-079c20de77b9",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "d110102e-dd44-45e2-a477-5fdbddf40c3a",
+                "discord_id": "493817314337357824",
+                "created_at": "2022-01-24T18:14:47.983055Z",
+                "updated_at": "2022-01-24T18:14:47.983079Z"
+            }
+        },
+        {
+            "uuid": "17b5c34a-c50f-491b-8449-65a4b8da0db2",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "ee66c672-e1f1-42a2-b4f5-6eacf1e0f522",
+                "discord_id": "791272673379614730",
+                "created_at": "2021-10-10T10:44:56.354924Z",
+                "updated_at": "2021-10-10T10:44:56.354952Z"
+            }
+        },
+        {
+            "uuid": "aa5c70b4-7f9b-4fbe-843a-5f2b84a2790f",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "6b4d4ce2-35a7-4af4-9d20-5e7f4dd5ce74",
+                "discord_id": "558875229292724234",
+                "created_at": "2021-10-20T21:38:04.703677Z",
+                "updated_at": "2021-10-20T21:38:04.703697Z"
+            }
+        },
+        {
+            "uuid": "2f37cdd3-d959-4036-9260-57647c0d832a",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "d855e482-6ee9-4085-a5a6-73da5446e2db",
+                "discord_id": "327582793423126528",
+                "created_at": "2022-02-20T03:29:24.647505Z",
+                "updated_at": "2022-02-20T03:29:24.647536Z"
+            }
+        },
+        {
+            "uuid": "d7b2838b-7173-4c49-bcd3-1513faef3b82",
+            "total_tnbc_escrowed": 18053400000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "46ff48f6-b4b7-40f5-8d41-9597a3336d39",
+                "discord_id": "287232616711847936",
+                "created_at": "2022-01-17T10:20:14.734138Z",
+                "updated_at": "2022-01-17T10:20:14.734172Z"
+            }
+        },
+        {
+            "uuid": "e3ee52d6-2a40-4367-84a6-ffb09de0f735",
+            "total_tnbc_escrowed": 3330000000000,
+            "total_escrows": 2,
+            "total_disputes": 0,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "76b292f2-7bec-485a-bc08-e2c88cc61822",
+                "discord_id": "592238047697829901",
+                "created_at": "2021-11-22T22:49:37.925838Z",
+                "updated_at": "2021-11-22T22:49:37.925861Z"
+            }
+        },
+        {
+            "uuid": "05a4ee3f-4fa1-4d41-b3b4-6433ec5dd18d",
+            "total_tnbc_escrowed": 1499400000000,
+            "total_escrows": 3,
+            "total_disputes": 0,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "a850bace-c794-4622-8b97-5f31cac77c8e",
+                "discord_id": "217388441191579648",
+                "created_at": "2021-11-23T14:39:25.288461Z",
+                "updated_at": "2021-11-23T14:39:25.288483Z"
+            }
+        },
+        {
+            "uuid": "cf6f440f-1357-4e17-8cd0-f7f5071984cb",
+            "total_tnbc_escrowed": 18234000000000,
+            "total_escrows": 1,
+            "total_disputes": 0,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "40785cb6-0e0e-4c7f-b164-ef357072ba10",
+                "discord_id": "536760335214837761",
+                "created_at": "2021-11-29T15:10:36.721333Z",
+                "updated_at": "2021-11-29T15:10:36.721354Z"
+            }
+        },
+        {
+            "uuid": "80011f61-9386-433c-b837-e75b0380d0ca",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "13189b34-8b75-45e2-a694-e8fd47f8145e",
+                "discord_id": "839544042165370891",
+                "created_at": "2022-04-12T10:35:22.108454Z",
+                "updated_at": "2022-04-12T10:35:22.108477Z"
+            }
+        },
+        {
+            "uuid": "d1f32756-0afd-4e35-a5e4-1651faf33350",
+            "total_tnbc_escrowed": 0,
+            "total_escrows": 0,
+            "total_disputes": 0,
+            "total_feedback": 0,
+            "positive_feeback": 0,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "d39dcee9-e596-4ae4-8d54-f7f150392dd1",
+                "discord_id": "226670922440900608",
+                "created_at": "2022-04-08T16:10:19.563900Z",
+                "updated_at": "2022-04-08T16:10:19.563930Z"
+            }
+        },
+        {
+            "uuid": "304b5189-7604-4182-b6bb-39ac30b39505",
+            "total_tnbc_escrowed": 925000000000,
+            "total_escrows": 2,
+            "total_disputes": 1,
+            "total_feedback": 1,
+            "positive_feeback": 1,
+            "negative_feedback": 0,
+            "neutral_feedback": 0,
+            "user": {
+                "uuid": "2d1349b8-29a2-4069-8f92-97f562cf0bca",
+                "discord_id": "803595983883730965",
+                "created_at": "2021-10-28T17:25:03.397509Z",
+                "updated_at": "2021-10-28T17:25:03.397540Z"
+            }
+        }
+    ]
+}
