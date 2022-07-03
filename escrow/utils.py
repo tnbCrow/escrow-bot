@@ -107,3 +107,31 @@ def get_advertisement_stats():
         total_tnbc += adv.amount
 
     return total_advertisements, total_tnbc
+
+
+async def update_buy_advertisements(bot):
+
+    buy_offer_channel = bot.get_channel(int(settings.TRADE_CHANNEL_ID))
+    offers = create_offer_table(Advertisement.BUY, 16)
+
+    async for oldMessage in buy_offer_channel.history():
+        await oldMessage.delete()
+
+    await buy_offer_channel.send("**Buy Advertisements**")
+    for offer in offers:
+        await buy_offer_channel.send(f"```{offer}```")
+    await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+
+
+async def update_sell_advertisements(bot):
+
+    sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
+    offers = create_offer_table(Advertisement.SELL, 16)
+
+    async for oldMessage in sell_order_channel.history():
+        await oldMessage.delete()
+
+    await sell_order_channel.send("**Sell Advertisements**")
+    for offer in offers:
+        await sell_order_channel.send(f"```{offer}```")
+    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
