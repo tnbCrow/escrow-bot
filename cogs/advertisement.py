@@ -40,13 +40,13 @@ class advertisement(commands.Cog):
                                 ),
                                 create_option(
                                     name="amount_of_tnbc",
-                                    description="Enter TNBC you want to put in for advertisement.",
+                                    description="Enter Leap Coin you want to put in for advertisement.",
                                     option_type=4,
                                     required=True
                                 ),
                                 create_option(
                                     name="price_per_tnbc",
-                                    description="Rate you want to sell your TNBC at.",
+                                    description="Rate you want to sell your Leap Coin at.",
                                     option_type=10,
                                     required=True
                                 )
@@ -76,12 +76,12 @@ class advertisement(commands.Cog):
 
                         await update_sell_advertisements(self.bot)
 
-                        await log_send(bot=self.bot, message=f"{ctx.author.mention} created SELL Advertisement.\nAmount: {amount_of_tnbc} TNBC.\nID: {advertisement.uuid_hex}\nPrice: {price_per_tnbc}")
+                        await log_send(bot=self.bot, message=f"{ctx.author.mention} created SELL Advertisement.\nAmount: {amount_of_tnbc} Leap Coin.\nID: {advertisement.uuid_hex}\nPrice: {price_per_tnbc}")
 
                         embed = discord.Embed(title="Advertisement Created Successfully", description="", color=0xe81111)
                         embed.add_field(name='Advertisement ID', value=f"{advertisement.uuid_hex}", inline=False)
                         embed.add_field(name='Amount', value=comma_seperate_amount(amount_of_tnbc))
-                        embed.add_field(name='Price Per TNBC (USDT)', value=price_per_tnbc)
+                        embed.add_field(name='Price Per Leap Coin (USDT)', value=price_per_tnbc)
                         embed.set_footer(text="Use /adv my command list all your active advertisements.")
 
                     else:
@@ -92,7 +92,7 @@ class advertisement(commands.Cog):
 
                         await update_buy_advertisements(self.bot)
 
-                        await log_send(bot=self.bot, message=f"{ctx.author.mention} created BUY Advertisement.\nAmount: {amount_of_tnbc} TNBC.\nID: {advertisement.uuid_hex}\nPrice: {price_per_tnbc}.")
+                        await log_send(bot=self.bot, message=f"{ctx.author.mention} created BUY Advertisement.\nAmount: {amount_of_tnbc} Leap Coin.\nID: {advertisement.uuid_hex}\nPrice: {price_per_tnbc}.")
 
                         embed = discord.Embed(title="Yaay!",
                                               description="Buy order created successfully. Use the command `/adv cancel` to remove the advertisement.",
@@ -103,7 +103,7 @@ class advertisement(commands.Cog):
                                           color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!",
-                                      description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} TNBC and more than 500,000 TNBC.",
+                                      description=f"You can not create an advertisement of less than {settings.MIN_TNBC_ALLOWED} Leap Coin and more than 500,000 Leap Coin.",
                                       color=0xe81111)
         else:
             embed = discord.Embed(title="No Payment Method Set.",
@@ -130,7 +130,7 @@ class advertisement(commands.Cog):
             for advertisement in advertisements:
                 embed.add_field(name='Advertisement ID', value=f"{advertisement.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=comma_seperated_int(advertisement.amount))
-                embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+                embed.add_field(name='Price Per Leap Coin (USDT)', value=convert_to_decimal(advertisement.price))
                 embed.add_field(name='Side', value=advertisement.side)
             embed.set_footer(text="Use `/adv cancel` command cancel particular advertisement.")
 
@@ -166,13 +166,13 @@ class advertisement(commands.Cog):
 
                 await update_buy_advertisements(self.bot)
 
-                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted BUY advertisement.\nAmount: {comma_seperated_int(advertisement.amount)} TNBC\nPrice: {convert_to_decimal(advertisement.price)}.")
+                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted BUY advertisement.\nAmount: {comma_seperated_int(advertisement.amount)} Leap Coin\nPrice: {convert_to_decimal(advertisement.price)}.")
 
             else:
 
                 await update_sell_advertisements(self.bot)
 
-                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted SELL advertisement.\nAmount: {comma_seperated_int(advertisement.amount)} TNBC\nPrice: {convert_to_decimal(advertisement.price)}.")
+                await log_send(bot=self.bot, message=f"{ctx.author.mention} deleted SELL advertisement.\nAmount: {comma_seperated_int(advertisement.amount)} Leap Coin\nPrice: {convert_to_decimal(advertisement.price)}.")
 
             embed = discord.Embed(title="Advertisement Cancelled Successfully", description="", color=0xe81111)
             embed.set_footer(text="Use `/adv create` command create a new advertisement.")
@@ -183,7 +183,7 @@ class advertisement(commands.Cog):
 
     @cog_ext.cog_subcommand(base="adv",
                             name="buy",
-                            description="Buy TNBC from the advertisement.",
+                            description="Buy Leap Coin from the advertisement.",
                             options=[
                                 create_option(
                                     name="advertisement_id",
@@ -193,7 +193,7 @@ class advertisement(commands.Cog):
                                 ),
                                 create_option(
                                     name="amount_of_tnbc",
-                                    description="Amount of TNBC you'd like to buy.",
+                                    description="Amount of Leap Coin you'd like to buy.",
                                     option_type=4,
                                     required=True
                                 )
@@ -226,7 +226,7 @@ class advertisement(commands.Cog):
 
                         await update_sell_advertisements(self.bot)
 
-                        await log_send(bot=self.bot, message=f"{ctx.author.mention} is buying TNBC from the sell advertisement.\nAmount: {amount_of_tnbc} TNBC.\nID: {advertisement.uuid_hex}")
+                        await log_send(bot=self.bot, message=f"{ctx.author.mention} is buying Leap Coin from the sell advertisement.\nAmount: {amount_of_tnbc} Leap Coin.\nID: {advertisement.uuid_hex}")
 
                         seller = await self.bot.fetch_user(int(advertisement.owner.discord_id))
                         agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))
@@ -270,17 +270,17 @@ class advertisement(commands.Cog):
                         for payment_method in payment_methods:
                             payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
 
-                        await trade_chat_channel.send(f"{seller.name}, {ctx.author.name} is buying {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
+                        await trade_chat_channel.send(f"{seller.name}, {ctx.author.name} is buying {amount_of_tnbc} Leap Coin at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
                         await trade_chat_channel.send(f"{seller.mention} Please use the command `/escrow fund escrow_id: {escrow_obj.uuid_hex}` to fund the escrow.")
                         await trade_chat_channel.send(f"{ctx.author.mention} **NEVER SEND ANY PAYMENT** before the status of escrow is **OPEN**.")
                     else:
-                        embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} TNBC available to buy.", color=0xe81111)
+                        embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} Leap Coin available to buy.", color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
-                                          description=f"You can not buy less than {settings.MIN_TNBC_ALLOWED} TNBC from an advertisement.",
+                                          description=f"You can not buy less than {settings.MIN_TNBC_ALLOWED} Leap Coin from an advertisement.",
                                           color=0xe81111)
             else:
-                embed = discord.Embed(title="Error!", description="You can not buy TNBC from your own advertisement.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description="You can not buy Leap Coin from your own advertisement.", color=0xe81111)
 
         else:
             embed = discord.Embed(title="404!", description=f"Sell advertisement with id {advertisement_id} does not exist.", color=0xe81111)
@@ -289,7 +289,7 @@ class advertisement(commands.Cog):
 
     @cog_ext.cog_subcommand(base="adv",
                             name="sell",
-                            description="Buy TNBC to the advertisement.",
+                            description="Buy Leap Coin to the advertisement.",
                             options=[
                                 create_option(
                                     name="advertisement_id",
@@ -299,7 +299,7 @@ class advertisement(commands.Cog):
                                 ),
                                 create_option(
                                     name="amount_of_tnbc",
-                                    description="Amount of TNBC you'd like to sell.",
+                                    description="Amount of Leap Coin you'd like to sell.",
                                     option_type=4,
                                     required=True
                                 )
@@ -339,7 +339,7 @@ class advertisement(commands.Cog):
 
                             await update_buy_advertisements(self.bot)
 
-                            await log_send(bot=self.bot, message=f"{ctx.author.mention} is selling TNBC to the buy advertisement.\nAmount: {amount_of_tnbc} TNBC.\nID: {advertisement.uuid_hex}")
+                            await log_send(bot=self.bot, message=f"{ctx.author.mention} is selling Leap Coin to the buy advertisement.\nAmount: {amount_of_tnbc} Leap Coin.\nID: {advertisement.uuid_hex}")
 
                             buyer = await self.bot.fetch_user(int(advertisement.owner.discord_id))
                             agent_role = discord.utils.get(guild.roles, id=int(settings.AGENT_ROLE_ID))
@@ -382,22 +382,22 @@ class advertisement(commands.Cog):
                             for payment_method in payment_methods:
                                 payment_method_message += f"Payment Method: {payment_method.name}\nDetails: {payment_method.detail}\nConditions: {payment_method.condition}\n------\n"
 
-                            await trade_chat_channel.send(f"{buyer.name}, {ctx.author.name} is selling {amount_of_tnbc} TNBC at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
-                            await trade_chat_channel.send(f"{buyer.mention}, TNBC is escrowed successfully. You can now send payment to {ctx.author.name}")
-                            await trade_chat_channel.send(f"{ctx.author.mention}, Please use the command `/escrow release escrow_id: ESCROW_ID` to release TNBC into buyer's account **ONLY WHEN YOUR HAVE RECEIVED THE PAYMENT**.")
+                            await trade_chat_channel.send(f"{buyer.name}, {ctx.author.name} is selling {amount_of_tnbc} Leap Coin at {convert_to_decimal(escrow_obj.price)}.\n{payment_method_message}", embed=embed)
+                            await trade_chat_channel.send(f"{buyer.mention}, Leap Coin is escrowed successfully. You can now send payment to {ctx.author.name}")
+                            await trade_chat_channel.send(f"{ctx.author.mention}, Please use the command `/escrow release escrow_id: ESCROW_ID` to release Leap Coin into buyer's account **ONLY WHEN YOUR HAVE RECEIVED THE PAYMENT**.")
 
                         else:
-                            embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} TNBC available to sell.", color=0xe81111)
+                            embed = discord.Embed(title="Error!", description=f"Advertisement only has {comma_seperated_int(advertisement.amount)} Leap Coin available to sell.", color=0xe81111)
                     else:
                         embed = discord.Embed(title="Error!",
-                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {comma_seperated_int(fee_plus_amount)} TNBC (including fees).\nPlease deposit the extra {comma_seperated_int(fee_plus_amount - seller_tnbc_wallet.get_available_balance())} TNBC using `/deposit tnbc` command.",
+                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} Leap Coin out of required {comma_seperated_int(fee_plus_amount)} Leap Coin (including fees).\nPlease deposit the extra {comma_seperated_int(fee_plus_amount - seller_tnbc_wallet.get_available_balance())} Leap Coin using `/deposit tnbc` command.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!",
-                                          description=f"You can not sell less than {settings.MIN_TNBC_ALLOWED} TNBC to an advertisement.",
+                                          description=f"You can not sell less than {settings.MIN_TNBC_ALLOWED} Leap Coin to an advertisement.",
                                           color=0xe81111)
             else:
-                embed = discord.Embed(title="Error!", description="You can not sell TNBC to your own advertisement.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description="You can not sell Leap Coin to your own advertisement.", color=0xe81111)
 
         else:
             embed = discord.Embed(title="404!", description=f"Buy advertisement with id {advertisement_id} does not exist.", color=0xe81111)

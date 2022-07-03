@@ -23,7 +23,7 @@ class escrow(commands.Cog):
 
     @cog_ext.cog_subcommand(base="escrow",
                             name="status",
-                            description="Escrow TNBC with another user.",
+                            description="Escrow Leap Coin with another user.",
                             options=[
                                 create_option(
                                     name="escrow_id",
@@ -44,9 +44,9 @@ class escrow(commands.Cog):
 
             embed = discord.Embed(color=0xe81111)
             embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-            embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
-            embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
-            embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+            embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
+            embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} Leap Coin")
+            embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} Leap Coin")
             embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
             if discord_user == escrow_obj.successor:
                 initiator = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
@@ -83,18 +83,18 @@ class escrow(commands.Cog):
             for escrow in escrows:
 
                 embed.add_field(name='Escrow ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)} TNBC")
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)} Leap Coin")
 
                 if escrow.side == Escrow.BUY:
-                    embed.add_field(name='Seller Pays', value=f"{comma_seperated_int(escrow.amount + escrow.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow.amount)} TNBC")
+                    embed.add_field(name='Seller Pays', value=f"{comma_seperated_int(escrow.amount + escrow.fee)} Leap Coin")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow.amount)} Leap Coin")
                 else:
-                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow.amount - escrow.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)} Leap Coin")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow.amount - escrow.fee)} Leap Coin")
 
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
-                embed.set_footer(text="Use /escrow release to release the TNBC once you've received payment or /escrow cancel to cancel the escrow.")
+                embed.set_footer(text="Use /escrow release to release the Leap Coin once you've received payment or /escrow cancel to cancel the escrow.")
 
                 if discord_user == escrow.successor:
                     initiator = await self.bot.fetch_user(int(escrow.initiator.discord_id))
@@ -198,14 +198,14 @@ class escrow(commands.Cog):
                 await sell_order_channel.send("**Sell Advertisements**")
                 for offer in offers:
                     await sell_order_channel.send(f"```{offer}```")
-                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
                 await log_send(bot=self.bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                 embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                 embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
+                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} Leap Coin")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
@@ -285,8 +285,8 @@ class escrow(commands.Cog):
 
                         embed = discord.Embed(title="Escrow Funded Successfully", description="", color=0xe81111)
                         embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                        embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
-                        embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
+                        embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
+                        embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} Leap Coin")
                         embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                         embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
@@ -304,12 +304,12 @@ class escrow(commands.Cog):
 
                     else:
                         embed = discord.Embed(title="Error!",
-                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} TNBC out of required {comma_seperated_int(escrow_obj.amount)} TNBC.\n\nPlease deposit extra {comma_seperated_int(escrow_obj.amount - seller_tnbc_wallet.get_available_balance())} TNBC using `/deposit tnbc` command.",
+                                              description=f"You only have {comma_seperated_int(seller_tnbc_wallet.get_available_balance())} Leap Coin out of required {comma_seperated_int(escrow_obj.amount)} Leap Coin.\n\nPlease deposit extra {comma_seperated_int(escrow_obj.amount - seller_tnbc_wallet.get_available_balance())} Leap Coin using `/deposit tnbc` command.",
                                               color=0xe81111)
                 else:
                     embed = discord.Embed(title="Error!", description=f"You cannot fund the escrow of status {escrow_obj.status}.", color=0xe81111)
             else:
-                embed = discord.Embed(title="Error!", description="This escrow is funded when selling TNBC to the buy advertisement.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description="This escrow is funded when selling Leap Coin to the buy advertisement.", color=0xe81111)
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)
 
@@ -345,7 +345,7 @@ class escrow(commands.Cog):
                 seller = await self.bot.fetch_user(int(escrow_obj.initiator.discord_id))
                 await conversation_channel.send(
                     f"{seller.mention}, {ctx.author.mention} has notified that they have sent the payment.\n\n"
-                    f"Please use the command `/escrow release escrow_id: {escrow_obj.uuid_hex}` to release TNBC "
+                    f"Please use the command `/escrow release escrow_id: {escrow_obj.uuid_hex}` to release Leap Coin "
                     "**ONLY IF YOU HAVE RECEIVED THE PAYMENT (THIS ACTION CAN NOT BE REVERTED)**"
                 )
 
@@ -407,14 +407,14 @@ class escrow(commands.Cog):
 
                 embed = discord.Embed(title="Escrow Disputed Successfully", description="", color=0xe81111)
                 embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
 
                 if escrow_obj.side == Escrow.BUY:
-                    embed.add_field(name='Seller Pays', value=f"{comma_seperated_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Seller Pays', value=f"{comma_seperated_int(escrow_obj.amount + escrow_obj.fee)} Leap Coin")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
                 else:
-                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} Leap Coin")
+                    embed.add_field(name='Buyer Receives', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} Leap Coin")
 
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                 embed.add_field(name='Seller', value=f"{initiator.mention}")
@@ -448,8 +448,8 @@ class escrow(commands.Cog):
             for escrow in escrows:
 
                 embed.add_field(name='Escrow ID', value=f"{escrow.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)} TNBC")
-                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)} TNBC")
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow.amount)} Leap Coin")
+                embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow.fee)} Leap Coin")
                 embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow.price))
                 embed.add_field(name='Status', value=f"{escrow.status}")
 

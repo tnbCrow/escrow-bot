@@ -53,9 +53,9 @@ async def help_general(ctx):
     await ctx.defer(hidden=True)
     embed = discord.Embed(title="General Commands", color=0xe81111)
     embed.add_field(name="/balance", value="Check your crow bot balance.", inline=False)
-    embed.add_field(name="/deposit tnbc", value="Deposit TNBC into your crow bot account.", inline=False)
-    embed.add_field(name="/withdraw tnbc tnbc_address: ADDRESS amount: AMOUNT", value="Withdraw TNBC into your TNBC wallet.", inline=False)
-    embed.add_field(name="/transactions tnbc", value="Check TNBC transaction history.", inline=False)
+    embed.add_field(name="/deposit tnbc", value="Deposit Leap Coin into your crow bot account.", inline=False)
+    embed.add_field(name="/withdraw tnbc tnbc_address: ADDRESS amount: AMOUNT", value="Withdraw Leap Coin into your Leap Coin wallet.", inline=False)
+    embed.add_field(name="/transactions tnbc", value="Check Leap Coin transaction history.", inline=False)
     embed.add_field(name="/payment_method add", value="Add a new payment method.", inline=False)
     embed.add_field(name="/payment_method all", value="List all your payment methods.", inline=False)
     embed.add_field(name="/payment_method remove", value="Delete particular payment method.", inline=False)
@@ -72,8 +72,8 @@ async def help_advertisement(ctx):
     embed.add_field(name="/adv create amount: AMOUNT price: PRICE", value="Create a new advertisement.", inline=False)
     embed.add_field(name="/adv my", value="List all your active advertisements.", inline=False)
     embed.add_field(name="/adv cancel advertisement_id: ID", value="Cancel an active advertisement.", inline=False)
-    embed.add_field(name="/adv buy advertisement_id: ID amount_of_tnbc: AMOUNT", value="Buy TNBC from the advertisement.", inline=False)
-    embed.add_field(name="/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT", value="Sell TNBC to the advertisement.", inline=False)
+    embed.add_field(name="/adv buy advertisement_id: ID amount_of_tnbc: AMOUNT", value="Buy Leap Coin from the advertisement.", inline=False)
+    embed.add_field(name="/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT", value="Sell Leap Coin to the advertisement.", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
     await ctx.send(embed=embed, hidden=True)
 
@@ -82,7 +82,7 @@ async def help_advertisement(ctx):
 async def help_escrow(ctx):
     embed = discord.Embed(title="Escrow Related Commands", color=0xe81111)
     embed.add_field(name="/escrow all", value="List all of your ongoing escrows.", inline=False)
-    embed.add_field(name="/escrow release escrow_id: ESCROW_ID", value="Release TNBC to the buyer's account.", inline=False)
+    embed.add_field(name="/escrow release escrow_id: ESCROW_ID", value="Release Leap Coin to the buyer's account.", inline=False)
     embed.add_field(name="/escrow cancel escrow_id: ESCROW_ID", value="Cancel the particular escrow. Both buyer and seller needs to use the command for escrow cancellation.")
     embed.add_field(name="/escrow dispute escrow_id: ESCROW_ID", value="In the case of disagreement while trading, raise dispute and take the case to tnbcrow agent.", inline=False)
     embed.set_thumbnail(url=bot.user.avatar_url)
@@ -202,14 +202,14 @@ async def on_component(ctx: ComponentContext):
                         await sell_order_channel.send("**Sell Advertisements**")
                         for offer in offers:
                             await sell_order_channel.send(f"```{offer}```")
-                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
                         await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                    embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
-                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} Leap Coin")
                     embed.add_field(name='Price (USDT)', value=convert_to_decimal(escrow_obj.price))
                     embed.add_field(name='Status', value=f"{escrow_obj.status}")
 
@@ -249,7 +249,7 @@ async def on_component(ctx: ComponentContext):
 
                 embed = discord.Embed(title="Escrow Released Successfully", description="", color=0xe81111)
                 embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
-                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                embed.add_field(name='Amount', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
 
                 if escrow_obj.side == Escrow.BUY:
                     seller_wallet = get_or_create_tnbc_wallet(discord_user)
@@ -271,8 +271,8 @@ async def on_component(ctx: ComponentContext):
                     seller_profile.total_tnbc_escrowed += escrow_obj.amount + escrow_obj.fee
                     seller_profile.save()
 
-                    embed.add_field(name='Seller Paid', value=f"{comma_seperated_int(escrow_obj.amount + escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Received', value=f"{comma_seperated_int(escrow_obj.amount)} TNBC")
+                    embed.add_field(name='Seller Paid', value=f"{comma_seperated_int(escrow_obj.amount + escrow_obj.fee)} Leap Coin")
+                    embed.add_field(name='Buyer Received', value=f"{comma_seperated_int(escrow_obj.amount)} Leap Coin")
 
                 else:
                     seller_wallet = get_or_create_tnbc_wallet(discord_user)
@@ -294,8 +294,8 @@ async def on_component(ctx: ComponentContext):
                     seller_profile.total_tnbc_escrowed += escrow_obj.amount
                     seller_profile.save()
 
-                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} TNBC")
-                    embed.add_field(name='Buyer Received', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} TNBC")
+                    embed.add_field(name='Fee', value=f"{comma_seperated_int(escrow_obj.fee)} Leap Coin")
+                    embed.add_field(name='Buyer Received', value=f"{comma_seperated_int(escrow_obj.amount - escrow_obj.fee)} Leap Coin")
 
                 escrow_obj.status = Escrow.COMPLETED
                 escrow_obj.save()
@@ -335,7 +335,7 @@ async def on_component(ctx: ComponentContext):
 
                 recent_trade_channel = bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_int(escrow_obj.amount)} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
+                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_int(escrow_obj.amount)} Leap Coin at {convert_to_decimal(escrow_obj.price)} USDC each.")
                 await log_send(bot=bot, message=f"{ctx.author.mention} released the escrow. Escrow ID: {escrow_obj.uuid_hex}")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
@@ -360,7 +360,7 @@ async def on_component(ctx: ComponentContext):
 
         qr_data = f"{{\"address\":\"{settings.TNBCROW_BOT_ACCOUNT_NUMBER}\",\"memo\":\"{tnbc_wallet.memo}\"}}"
 
-        embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
+        embed = discord.Embed(title="Send Leap Coin to the address with memo.", color=0xe81111)
         embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
         embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
         embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")

@@ -11,11 +11,12 @@ Try `/help` for commands in tnbCrow discord server.
 - Install the requirements using `pip install -r requirements.txt`
 
 - Set environment variables:
+
 ```shell
-TNBCROW_BOT_ACCOUNT_NUMBER (TNBC Account Number for receiving payment)
-SIGNING_KEY (TNBC Signing Key handling payments)
+TNBCROW_BOT_ACCOUNT_NUMBER (Leap Coin Account Number for receiving payment)
+SIGNING_KEY (Leap Coin Signing Key handling payments)
 CHECK_TNBC_CONFIRMATION (True or False)
-BANK_IP (Bank IP to handle TNBC payment)
+BANK_IP (Bank IP to handle Leap Coin payment)
 
 CROW_DISCORD_TOKEN (Discord bot token)
 DJANGO_SETTINGS_MODULE (config.settings.development or config.settings.production)

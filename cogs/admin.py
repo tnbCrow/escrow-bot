@@ -144,7 +144,7 @@ class admin(commands.Cog):
 
     @cog_ext.cog_subcommand(base="admin",
                             name="refund",
-                            description="Refund TNBC to user!",
+                            description="Refund Leap Coin to user!",
                             options=[
                                 create_option(
                                     name="user",
@@ -154,7 +154,7 @@ class admin(commands.Cog):
                                 ),
                                 create_option(
                                     name="amount",
-                                    description="Enter TNBC amount you want to refund.",
+                                    description="Enter Leap Coin amount you want to refund.",
                                     option_type=4,
                                     required=True
                                 ),
@@ -194,17 +194,17 @@ class admin(commands.Cog):
 
     @cog_ext.cog_subcommand(base="admin",
                             name="takeback",
-                            description="Takeback TNBC from the user!",
+                            description="Takeback Leap Coin from the user!",
                             options=[
                                 create_option(
                                     name="user",
-                                    description="User from whom you have to take back TNBC.",
+                                    description="User from whom you have to take back Leap Coin.",
                                     option_type=6,
                                     required=True
                                 ),
                                 create_option(
                                     name="amount",
-                                    description="Enter TNBC amount you want to take back.",
+                                    description="Enter Leap Coin amount you want to take back.",
                                     option_type=4,
                                     required=True
                                 ),
@@ -240,7 +240,7 @@ class admin(commands.Cog):
                 embed.add_field(name='Available Balance', value=comma_seperated_int(tnbc_wallet.get_available_balance()))
 
             else:
-                embed = discord.Embed(title="Error!", description="The user does not have enough TNBC in their wallet to take back.", color=0xe81111)
+                embed = discord.Embed(title="Error!", description="The user does not have enough Leap Coin in their wallet to take back.", color=0xe81111)
 
         else:
             embed = discord.Embed(title="Error!", description="You donot have permission to perform this action.", color=0xe81111)
@@ -371,11 +371,11 @@ class admin(commands.Cog):
 
     @cog_ext.cog_subcommand(base="admin",
                             name="transfer_to_cold_wallet",
-                            description="Transfer TNBC from Hot to Cold wallet!",
+                            description="Transfer Leap Coin from Hot to Cold wallet!",
                             options=[
                                 create_option(
                                     name="amount",
-                                    description="Enter TNBC amount you want to transfer.",
+                                    description="Enter Leap Coin amount you want to transfer.",
                                     option_type=4,
                                     required=True
                                 ),
@@ -412,16 +412,16 @@ class admin(commands.Cog):
                                 statistic.save()
 
                                 embed = discord.Embed(title="Coins Withdrawn.",
-                                                      description=f"Successfully withdrawn {amount} TNBC to the cold wallet.",
+                                                      description=f"Successfully withdrawn {amount} Leap Coin to the cold wallet.",
                                                       color=0xe81111)
                             else:
                                 embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
                         else:
                             embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.", color=0xe81111)
                     else:
-                        embed = discord.Embed(title="Error!", description="Not enough TNBC available in the hot wallet.", color=0xe81111)
+                        embed = discord.Embed(title="Error!", description="Not enough Leap Coin available in the hot wallet.", color=0xe81111)
                 else:
-                    embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.", color=0xe81111)
+                    embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 Leap Coin.", color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
         else:
@@ -456,7 +456,7 @@ class admin(commands.Cog):
                 embed = discord.Embed(color=0xe81111)
                 embed.add_field(name='Advertisement ID', value=f"{advertisement.uuid_hex}", inline=False)
                 embed.add_field(name='Amount', value=comma_seperated_int(advertisement.amount))
-                embed.add_field(name='Price Per TNBC (USDT)', value=convert_to_decimal(advertisement.price))
+                embed.add_field(name='Price Per Leap Coin (USDT)', value=convert_to_decimal(advertisement.price))
                 embed.add_field(name="Owner", value=adv_owner.mention, inline=False)
 
             else:
@@ -472,7 +472,7 @@ class admin(commands.Cog):
                             options=[
                                 create_option(
                                     name="amount",
-                                    description="Amount of TNBC that was traded.",
+                                    description="Amount of Leap Coin that was traded.",
                                     option_type=4,
                                     required=True
                                 ),
@@ -502,7 +502,7 @@ class admin(commands.Cog):
 
             if success:
                 comma_seperated_amount = "{:,}".format(amount)
-                await recent_trade_channel.send(f"Verified Trade: {comma_seperated_amount} TNBC at {price} each. Payment Method: {payment_method}")
+                await recent_trade_channel.send(f"Verified Trade: {comma_seperated_amount} Leap Coin at {price} each. Payment Method: {payment_method}")
 
                 guild = self.bot.get_guild(int(settings.GUILD_ID))
                 await guild.me.edit(nick=f"Price: {price} USDC")
@@ -560,7 +560,7 @@ class admin(commands.Cog):
                     await sell_order_channel.send("**Sell Advertisements**")
                     for offer in offers:
                         await sell_order_channel.send(f"```{offer}```")
-                    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
                 embed = discord.Embed(title="Success!", description="Advertisement removed successfully.", color=0xe81111)
             else:

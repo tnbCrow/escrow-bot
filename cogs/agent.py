@@ -107,7 +107,7 @@ class agent(commands.Cog):
 
                 recent_trade_channel = self.bot.get_channel(int(settings.RECENT_TRADE_CHANNEL_ID))
 
-                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_int(escrow_obj.amount)} TNBC at {convert_to_decimal(escrow_obj.price)} USDC each.")
+                await recent_trade_channel.send(f"Recent Trade: {comma_seperated_int(escrow_obj.amount)} Leap Coin at {convert_to_decimal(escrow_obj.price)} USDC each.")
 
                 post_trade_to_api(convert_to_int(escrow_obj.amount), escrow_obj.price)
 
@@ -196,7 +196,7 @@ class agent(commands.Cog):
                         await sell_order_channel.send("**Sell Advertisements**")
                         for offer in offers:
                             await sell_order_channel.send(f"```{offer}```")
-                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)

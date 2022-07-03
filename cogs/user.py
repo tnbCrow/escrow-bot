@@ -24,7 +24,7 @@ class user(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @cog_ext.cog_subcommand(base="deposit", name="tnbc", description="Deposit TNBC into your crow account.")
+    @cog_ext.cog_subcommand(base="deposit", name="tnbc", description="Deposit Leap Coin into your crow account.")
     async def user_deposit(self, ctx):
 
         await ctx.defer(hidden=True)
@@ -34,7 +34,7 @@ class user(commands.Cog):
 
         qr_data = f"{{\"address\":\"{settings.TNBCROW_BOT_ACCOUNT_NUMBER}\",\"memo\":\"{tnbc_wallet.memo}\"}}"
 
-        embed = discord.Embed(title="Send TNBC to the address with memo.", color=0xe81111)
+        embed = discord.Embed(title="Send Leap Coin to the address with memo.", color=0xe81111)
         embed.add_field(name='Address', value=settings.TNBCROW_BOT_ACCOUNT_NUMBER, inline=False)
         embed.add_field(name='MEMO (MEMO is required, or you will lose your coins)', value=tnbc_wallet.memo, inline=False)
         embed.set_image(url=f"https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl={qr_data}")
@@ -51,26 +51,26 @@ class user(commands.Cog):
         tnbc_wallet = get_or_create_tnbc_wallet(discord_user)
 
         embed = discord.Embed(color=0xe81111)
-        embed.add_field(name='Balance (TNBC)', value=comma_seperated_int(tnbc_wallet.balance))
-        embed.add_field(name='Locked (TNBC)', value=comma_seperated_int(tnbc_wallet.locked))
-        embed.add_field(name='Available (TNBC)', value=comma_seperated_int(tnbc_wallet.get_available_balance()), inline=False)
+        embed.add_field(name='Balance (Leap Coin)', value=comma_seperated_int(tnbc_wallet.balance))
+        embed.add_field(name='Locked (Leap Coin)', value=comma_seperated_int(tnbc_wallet.locked))
+        embed.add_field(name='Available (Leap Coin)', value=comma_seperated_int(tnbc_wallet.get_available_balance()), inline=False)
         embed.set_footer(text="Use /transactions tnbc command check your transaction history.")
 
         await ctx.send(embed=embed, hidden=True, components=[create_actionrow(create_button(custom_id="deposittnbc", style=ButtonStyle.green, label="👛Deposit"))])
 
     @cog_ext.cog_subcommand(base="withdraw",
                             name="tnbc",
-                            description="Withdraw TNBC into your external wallet.",
+                            description="Withdraw Leap Coin into your external wallet.",
                             options=[
                                 create_option(
                                     name="tnbc_address",
-                                    description="TNBC address to send TNBC to.",
+                                    description="Leap Coin address to send Leap Coin to.",
                                     option_type=3,
                                     required=True
                                 ),
                                 create_option(
                                     name="amount",
-                                    description="No of TNBC to withdraw.",
+                                    description="No of Leap Coin to withdraw.",
                                     option_type=4,
                                     required=True
                                 )
@@ -90,7 +90,7 @@ class user(commands.Cog):
                 if not amount < 1:
                     if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
                         embed = discord.Embed(title="Inadequate Funds!",
-                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable TNBC (network fees included) available.",
+                                              description=f"You only have {convert_to_int(tnbc_wallet.get_available_balance()) - fee} withdrawable Leap Coin (network fees included) available.",
                                               color=0xe81111)
 
                     else:
@@ -123,20 +123,20 @@ class user(commands.Cog):
                                     statistic.save()
 
                                     embed = discord.Embed(title="Coins Withdrawn.",
-                                                          description=f"Successfully withdrawn {amount} TNBC to {tnbc_address} \n Use `/balance` to check your new balance.",
+                                                          description=f"Successfully withdrawn {amount} Leap Coin to {tnbc_address} \n Use `/balance` to check your new balance.",
                                                           color=0xe81111)
                                 else:
                                     embed = discord.Embed(title="Error!", description="Please try again later.", color=0xe81111)
                             else:
                                 embed = discord.Embed(title="Error!", description="Can not send transaction block to the bank, Try Again.", color=0xe81111)
                         else:
-                            embed = discord.Embed(title="Error!", description="Not enough TNBC available in the hot wallet, contact @admin.", color=0xe81111)
+                            embed = discord.Embed(title="Error!", description="Not enough Leap Coin available in the hot wallet, contact @admin.", color=0xe81111)
                 else:
-                    embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 TNBC.", color=0xe81111)
+                    embed = discord.Embed(title="Error!", description="You cannot withdraw less than 1 Leap Coin.", color=0xe81111)
             else:
                 embed = discord.Embed(title="Error!", description="Could not load fee info from the bank.", color=0xe81111)
         else:
-            embed = discord.Embed(title="Error!", description="Invalid TNBC withdrawal address.", color=0xe81111)
+            embed = discord.Embed(title="Error!", description="Invalid Leap Coin withdrawal address.", color=0xe81111)
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -155,7 +155,7 @@ class user(commands.Cog):
 
             natural_day = humanize.naturalday(txs.created_at)
 
-            embed.add_field(name='\u200b', value=f"{txs.type} - {comma_seperated_int(txs.amount)} TNBC - {natural_day}", inline=False)
+            embed.add_field(name='\u200b', value=f"{txs.type} - {comma_seperated_int(txs.amount)} Leap Coin - {natural_day}", inline=False)
 
         await ctx.send(embed=embed, hidden=True)
 
@@ -250,7 +250,7 @@ class user(commands.Cog):
                 await sell_order_channel.send("**Sell Advertisements**")
                 for offer in offers:
                     await sell_order_channel.send(f"```{offer}```")
-                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
         else:
             embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
@@ -329,7 +329,7 @@ class user(commands.Cog):
                 await sell_order_channel.send("**Sell Advertisements**")
                 for offer in offers:
                     await sell_order_channel.send(f"```{offer}```")
-                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)

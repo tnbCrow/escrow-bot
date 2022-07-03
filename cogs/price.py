@@ -26,11 +26,11 @@ class price(commands.Cog):
             comma_seperated_amount = "{:,}".format(trade['amount'])
             transaction_time = datetime.strptime(trade['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
             humanized_date = humanize.naturaltime(transaction_time)
-            embed.add_field(name="\u200b", value=f"{comma_seperated_amount} TNBC at {trade['rate']/10000} USDC - {humanized_date}", inline=False)
+            embed.add_field(name="\u200b", value=f"{comma_seperated_amount} Leap Coin at {trade['rate']/10000} USDC - {humanized_date}", inline=False)
 
         await ctx.send(embed=embed, hidden=True)
 
-    @cog_ext.cog_slash(name="rate", description="TNBC Price Statistics.")
+    @cog_ext.cog_slash(name="rate", description="Leap Coin Price Statistics.")
     async def rate(self, ctx):
 
         await ctx.defer()

@@ -42,9 +42,9 @@ def create_offer_table(side, number_of_data):
 
         message += (
             f"AdvID: {advertisement.uuid_hex}; "
-            f"Amount: {comma_seperated_int(advertisement.amount)} TNBC; Price: {convert_to_decimal(advertisement.price)};"
+            f"Amount: {comma_seperated_int(advertisement.amount)} Leap Coin; Price: {convert_to_decimal(advertisement.price)};"
             f"\nPayment Method(s): {payment_method_message}"
-            f"\nMerchant Stats - Total Trades: {advertisement_owner_stats.total_escrows} | Vol: {comma_seperated_int(advertisement_owner_stats.total_tnbc_escrowed)} TNBC"
+            f"\nMerchant Stats - Total Trades: {advertisement_owner_stats.total_escrows} | Vol: {comma_seperated_int(advertisement_owner_stats.total_tnbc_escrowed)} Leap Coin"
             f"| Positive Feedback: {advertisement_owner_stats.get_positive_feeback_percentage()}%\n"
             f"Last Updated: {updated_at}\n\n"
         )
@@ -134,4 +134,4 @@ async def update_sell_advertisements(bot):
     await sell_order_channel.send("**Sell Advertisements**")
     for offer in offers:
         await sell_order_channel.send(f"```{offer}```")
-    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy TNBC from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
