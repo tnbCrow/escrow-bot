@@ -120,7 +120,7 @@ async def update_buy_advertisements(bot):
     await buy_offer_channel.send("**Buy Advertisements**")
     for offer in offers:
         await buy_offer_channel.send(f"```{offer}```")
-    await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+    await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell Leap Coin to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
 
 
 async def update_sell_advertisements(bot):

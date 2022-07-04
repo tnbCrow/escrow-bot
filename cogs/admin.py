@@ -16,7 +16,7 @@ from core.utils.shortcuts import get_or_create_discord_user, get_or_create_tnbc_
 from core.utils.send_tnbc import estimate_fee, withdraw_tnbc
 
 from escrow.models.escrow import Escrow
-from escrow.utils import get_total_balance_of_all_user, post_trade_to_api, create_offer_table
+from escrow.utils import get_total_balance_of_all_user, post_trade_to_api, update_buy_advertisements, update_sell_advertisements
 from escrow.models.advertisement import Advertisement
 
 
@@ -539,28 +539,12 @@ class admin(commands.Cog):
                 advertisement.delete()
 
                 if advertisement.side == Advertisement.BUY:
-                    buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                    offers = create_offer_table(Advertisement.BUY, 16)
 
-                    async for oldMessage in buy_offer_channel.history():
-                        await oldMessage.delete()
-
-                    await buy_offer_channel.send("**Buy Advertisements**")
-                    for offer in offers:
-                        await buy_offer_channel.send(f"```{offer}```")
-                    await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                    await update_buy_advertisements(self.bot)
 
                 else:
-                    sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                    offers = create_offer_table(Advertisement.SELL, 16)
 
-                    async for oldMessage in sell_order_channel.history():
-                        await oldMessage.delete()
-
-                    await sell_order_channel.send("**Sell Advertisements**")
-                    for offer in offers:
-                        await sell_order_channel.send(f"```{offer}```")
-                    await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                    await update_sell_advertisements(self.bot)
 
                 embed = discord.Embed(title="Success!", description="Advertisement removed successfully.", color=0xe81111)
             else:

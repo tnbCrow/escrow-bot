@@ -315,7 +315,7 @@ class advertisement(commands.Cog):
                 required=True
             )
         ]
-        )
+    )
     async def advertisement_sell(self, ctx, advertisement_id: str, amount_of_tnbc: int):
 
         await ctx.defer(hidden=True)

@@ -17,7 +17,7 @@ from core.utils.shortcuts import get_wallet_balance
 from escrow.models.advertisement import Advertisement
 
 from escrow.models.payment_method import PaymentMethod
-from escrow.utils import get_or_create_user_profile, create_offer_table
+from escrow.utils import get_or_create_user_profile, update_buy_advertisements, update_sell_advertisements
 
 
 class user(commands.Cog):
@@ -63,7 +63,7 @@ class user(commands.Cog):
         description="Withdraw Leap Coin into your external wallet.",
         options=[
             create_option(
-                name="tnbc_address",
+                name="address",
                 description="Leap Coin address to send Leap Coin to.",
                 option_type=3,
                 required=True
@@ -76,7 +76,7 @@ class user(commands.Cog):
             )
         ]
     )
-    async def user_withdraw(self, ctx, tnbc_address: str, amount: int):
+    async def user_withdraw(self, ctx, address: str, amount: int):
 
         await ctx.defer(hidden=True)
 
@@ -85,7 +85,7 @@ class user(commands.Cog):
 
         response, fee = estimate_fee()
 
-        if check_withdrawal_address_valid(tnbc_address):
+        if check_withdrawal_address_valid(address):
             if response:
                 if not amount < 1:
                     if convert_to_int(tnbc_wallet.get_available_balance()) < amount + fee:
@@ -100,7 +100,7 @@ class user(commands.Cog):
 
                         if hot_wallet_balance >= amount + fee:
 
-                            block_response, fee = withdraw_tnbc(tnbc_address, amount, tnbc_wallet.memo)
+                            block_response, fee = withdraw_tnbc(address, amount, tnbc_wallet.memo)
 
                             if block_response:
                                 if block_response.status_code == 201:
@@ -108,7 +108,7 @@ class user(commands.Cog):
                                         confirmation_status=Transaction.WAITING_CONFIRMATION,
                                         transaction_status=Transaction.IDENTIFIED,
                                         direction=Transaction.OUTGOING,
-                                        account_number=tnbc_address,
+                                        account_number=address,
                                         amount=amount * settings.TNBC_MULTIPLICATION_FACTOR,
                                         fee=fee * settings.TNBC_MULTIPLICATION_FACTOR,
                                         signature=block_response.json()['signature'],
@@ -128,7 +128,7 @@ class user(commands.Cog):
 
                                     embed = discord.Embed(
                                         title="Coins Withdrawn.",
-                                        description=f"Successfully withdrawn {amount} Leap Coin to {tnbc_address} \n Use `/balance` to check your new balance.",
+                                        description=f"Successfully withdrawn {amount} Leap Coin to {address} \n Use `/balance` to check your new balance.",
                                         color=0xe81111
                                     )
                                 else:
@@ -236,29 +236,11 @@ class user(commands.Cog):
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
 
-                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offers = create_offer_table(Advertisement.BUY, 16)
-
-                async for oldMessage in buy_offer_channel.history():
-                    await oldMessage.delete()
-
-                await buy_offer_channel.send("**Buy Advertisements**")
-                for offer in offers:
-                    await buy_offer_channel.send(f"```{offer}```")
-                await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                await update_buy_advertisements(self.bot)
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
-                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offers = create_offer_table(Advertisement.SELL, 16)
-
-                async for oldMessage in sell_order_channel.history():
-                    await oldMessage.delete()
-
-                await sell_order_channel.send("**Sell Advertisements**")
-                for offer in offers:
-                    await sell_order_channel.send(f"```{offer}```")
-                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await update_sell_advertisements(self.bot)
 
         else:
             embed.add_field(name="Error", value="You cannot add more than five payment methods. Try /payment_method remove command to remove payment methods.")
@@ -316,29 +298,11 @@ class user(commands.Cog):
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.BUY).exists():
 
-                buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                offers = create_offer_table(Advertisement.BUY, 16)
-
-                async for oldMessage in buy_offer_channel.history():
-                    await oldMessage.delete()
-
-                await buy_offer_channel.send("**Buy Advertisements**")
-                for offer in offers:
-                    await buy_offer_channel.send(f"```{offer}```")
-                await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                await update_buy_advertisements(self.bot)
 
             if Advertisement.objects.filter(owner=discord_user, side=Advertisement.SELL).exists():
 
-                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offers = create_offer_table(Advertisement.SELL, 16)
-
-                async for oldMessage in sell_order_channel.history():
-                    await oldMessage.delete()
-
-                await sell_order_channel.send("**Sell Advertisements**")
-                for offer in offers:
-                    await sell_order_channel.send(f"```{offer}```")
-                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                await update_sell_advertisements(self.bot)
 
         else:
             embed = discord.Embed(title="Error!", description="404 Not Found.", color=0xe81111)

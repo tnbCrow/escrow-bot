@@ -11,7 +11,7 @@ from asgiref.sync import sync_to_async
 
 from escrow.models.escrow import Escrow
 from escrow.models.advertisement import Advertisement
-from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
+from escrow.utils import get_or_create_user_profile, post_trade_to_api, update_buy_advertisements, update_sell_advertisements
 
 from core.utils.shortcuts import convert_to_int, convert_to_decimal, comma_seperated_int
 from core.models.wallets import ThenewbostonWallet
@@ -162,20 +162,11 @@ class agent(commands.Cog):
                         buy_advertisement.status = Advertisement.OPEN
                         buy_advertisement.save()
 
-                        buy_offer_channel = self.bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                        offers = create_offer_table(Advertisement.BUY, 16)
-
                         seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
                         seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
                         seller_wallet.save()
 
-                        async for oldMessage in buy_offer_channel.history():
-                            await oldMessage.delete()
-
-                        await buy_offer_channel.send("**Buy Advertisements**")
-                        for offer in offers:
-                            await buy_offer_channel.send(f"```{offer}```")
-                        await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                        await update_buy_advertisements(self.bot)
 
                     else:
                         sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
@@ -187,16 +178,7 @@ class agent(commands.Cog):
                         seller_wallet.locked -= escrow_obj.amount
                         seller_wallet.save()
 
-                        sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offers = create_offer_table(Advertisement.SELL, 16)
-
-                        async for oldMessage in sell_order_channel.history():
-                            await oldMessage.delete()
-
-                        await sell_order_channel.send("**Sell Advertisements**")
-                        for offer in offers:
-                            await sell_order_channel.send(f"```{offer}```")
-                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                        await update_sell_advertisements(self.bot)
 
                     embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                     embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)

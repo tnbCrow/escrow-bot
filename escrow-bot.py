@@ -23,7 +23,7 @@ from core.utils.shortcuts import convert_to_int, get_or_create_tnbc_wallet, get_
 from core.models.statistics import Statistic
 from core.utils.logger import log_send
 
-from escrow.utils import get_or_create_user_profile, post_trade_to_api, create_offer_table
+from escrow.utils import get_or_create_user_profile, post_trade_to_api, update_buy_advertisements, update_sell_advertisements
 from escrow.models.escrow import Escrow
 from escrow.models.advertisement import Advertisement
 from escrow.models.escrow_review import EscrowReview
@@ -54,7 +54,7 @@ async def help_general(ctx):
     embed = discord.Embed(title="General Commands", color=0xe81111)
     embed.add_field(name="/balance", value="Check your crow bot balance.", inline=False)
     embed.add_field(name="/deposit", value="Deposit Leap Coin into your crow bot account.", inline=False)
-    embed.add_field(name="/withdraw tnbc_address: ADDRESS amount: AMOUNT", value="Withdraw Leap Coin into your Leap Coin wallet.", inline=False)
+    embed.add_field(name="/withdraw address: ADDRESS amount: AMOUNT", value="Withdraw Leap Coin into your Leap Coin wallet.", inline=False)
     embed.add_field(name="/transactions", value="Check Leap Coin transaction history.", inline=False)
     embed.add_field(name="/payment_method add", value="Add a new payment method.", inline=False)
     embed.add_field(name="/payment_method all", value="List all your payment methods.", inline=False)
@@ -166,20 +166,11 @@ async def on_component(ctx: ComponentContext):
                         buy_advertisement.status = Advertisement.OPEN
                         buy_advertisement.save()
 
-                        buy_offer_channel = bot.get_channel(int(settings.TRADE_CHANNEL_ID))
-                        offers = create_offer_table(Advertisement.BUY, 16)
-
                         seller_wallet = get_or_create_tnbc_wallet(escrow_obj.initiator)
                         seller_wallet.locked -= escrow_obj.amount + escrow_obj.fee
                         seller_wallet.save()
 
-                        async for oldMessage in buy_offer_channel.history():
-                            await oldMessage.delete()
-
-                        await buy_offer_channel.send("**Buy Advertisements**")
-                        for offer in offers:
-                            await buy_offer_channel.send(f"```{offer}```")
-                        await buy_offer_channel.send("Use the command `/adv sell advertisement_id: ID amount_of_tnbc: AMOUNT` to sell tnbc to above advertisement.\nOr `/adv create` command to create your own buy/ sell advertisements.")
+                        await update_buy_advertisements(bot)
 
                         await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow.Escrow ID: {escrow_obj.uuid_hex}.\nBuy Adv Id: {buy_advertisement.uuid_hex}")
 
@@ -193,16 +184,7 @@ async def on_component(ctx: ComponentContext):
                         seller_wallet.locked -= escrow_obj.amount
                         seller_wallet.save()
 
-                        sell_order_channel = bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                        offers = create_offer_table(Advertisement.SELL, 16)
-
-                        async for oldMessage in sell_order_channel.history():
-                            await oldMessage.delete()
-
-                        await sell_order_channel.send("**Sell Advertisements**")
-                        for offer in offers:
-                            await sell_order_channel.send(f"```{offer}```")
-                        await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
+                        await update_sell_advertisements(bot)
 
                         await log_send(bot=bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
 
@@ -310,7 +292,7 @@ async def on_component(ctx: ComponentContext):
                 conversation_channel = bot.get_channel(int(escrow_obj.conversation_channel_id))
                 if conversation_channel:
                     buyer = await bot.fetch_user(int(escrow_obj.successor.discord_id))
-                    await conversation_channel.send(f"{buyer.mention} the escrow is released successfully. Please use `/balance` to check your new balance.\nOr, `/withdraw` to withdraw tnbc into your wallet.",
+                    await conversation_channel.send(f"{buyer.mention} the escrow is released successfully. Please use `/balance` to check your new balance.\nOr, `/withdraw` to withdraw leap coin into your wallet.",
                                                     embed=embed)
                     await conversation_channel.send(f"{buyer.mention} {ctx.author.mention} How was your trade experience with the buyer/ seller?",
                                                     components=[

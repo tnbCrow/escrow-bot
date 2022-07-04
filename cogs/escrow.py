@@ -13,8 +13,7 @@ from core.utils.logger import log_send
 from core.utils.shortcuts import convert_to_decimal, get_or_create_tnbc_wallet, comma_seperated_int
 
 from escrow.models.escrow import Escrow
-from escrow.models.advertisement import Advertisement
-from escrow.utils import get_or_create_user_profile, create_offer_table
+from escrow.utils import get_or_create_user_profile
 
 
 class escrow(commands.Cog):
@@ -189,23 +188,7 @@ class escrow(commands.Cog):
                 escrow_obj.status = Escrow.CANCELLED
                 escrow_obj.save()
 
-                sell_advertisement, created = Advertisement.objects.get_or_create(owner=escrow_obj.initiator, price=escrow_obj.price, side=Advertisement.SELL, defaults={'amount': 0})
-                sell_advertisement.amount += escrow_obj.amount
-                sell_advertisement.status = Advertisement.OPEN
-                sell_advertisement.save()
-
-                sell_order_channel = self.bot.get_channel(int(settings.OFFER_CHANNEL_ID))
-                offers = create_offer_table(Advertisement.SELL, 16)
-
-                async for oldMessage in sell_order_channel.history():
-                    await oldMessage.delete()
-
-                await sell_order_channel.send("**Sell Advertisements**")
-                for offer in offers:
-                    await sell_order_channel.send(f"```{offer}```")
-                await sell_order_channel.send("Use the command `/adv buy advertisement_id: ID amount: AMOUNT` to buy Leap Coin from the above advertisements.\nOr `/adv create` to create your own buy/ sell advertisement.")
-
-                await log_send(bot=self.bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}. Sell Adv Id: {sell_advertisement.uuid_hex}")
+                await log_send(bot=self.bot, message=f"{ctx.author.mention} just cancelled the escrow. Escrow ID: {escrow_obj.uuid_hex}.")
 
                 embed = discord.Embed(title="Escrow Cancelled Successfully", description="", color=0xe81111)
                 embed.add_field(name='Escrow ID', value=f"{escrow_obj.uuid_hex}", inline=False)
